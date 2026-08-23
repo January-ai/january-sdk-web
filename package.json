@@ -1,0 +1,36 @@
+{
+  "name": "@januaryai/partner-sdk",
+  "version": "0.1.0",
+  "description": "January Partner API SDK for server-side TypeScript and Node.js",
+  "license": "UNLICENSED",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "Contract/sdk-contract.lock.json",
+    "README.md"
+  ],
+  "scripts": {
+    "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
+    "build": "npm run clean && tsc -p tsconfig.json",
+    "test": "npm run build && node --test test/*.test.mjs",
+    "check:generated": "./scripts/check-generated-transport.sh",
+    "smoke:live": "npm run build && node scripts/live-search.mjs",
+    "smoke:all": "npm run build && node scripts/live-all.mjs",
+    "pack:check": "npm pack --dry-run"
+  },
+  "devDependencies": {
+    "typescript": "7.0.2"
+  }
+}

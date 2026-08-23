@@ -1,0 +1,19 @@
+additionalProperties:
+  npmName: "@januaryai/partner-transport-compatibility"
+  npmVersion: 0.0.0
+  supportsES6: true
+  modelPropertyNaming: camelCase
+  paramNaming: camelCase
+  enumPropertyNaming: camelCase
+  enumUnknownDefaultCase: true
+  useSingleRequestParameter: true
+  disallowAdditionalPropertiesIfNotPresent: false
+  nullSafeAdditionalProps: true
+  withoutRuntimeChecks: false
+  hideGenerationTimestamp: true
+globalProperties:
+  apiDocs: false
+  apiTests: false
+  modelDocs: false
+  modelTests: false
+
