@@ -3,7 +3,23 @@
   "version": "0.1.0",
   "description": "January Partner API SDK for server-side TypeScript and Node.js",
   "license": "UNLICENSED",
-  "private": true,
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/January-ai/partner-sdk-node.git"
+  },
+  "homepage": "https://github.com/January-ai/partner-sdk-node#readme",
+  "bugs": {
+    "url": "https://github.com/January-ai/partner-sdk-node/issues"
+  },
+  "keywords": [
+    "january",
+    "nutrition",
+    "partner-api",
+    "typescript"
+  ],
   "type": "module",
   "engines": {
     "node": ">=22"
