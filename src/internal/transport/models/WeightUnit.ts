@@ -17,18 +17,18 @@
  *
  * @export
  */
-export const MedicalCondition = {
-    type2Diabetes: 'type_2_diabetes',
-    prediabetes: 'prediabetes',
+export const WeightUnit = {
+    lb: 'lb',
+    kg: 'kg',
     unknownDefaultOpenApi: '11184809'
 } as const;
-export type MedicalCondition = typeof MedicalCondition[keyof typeof MedicalCondition];
+export type WeightUnit = typeof WeightUnit[keyof typeof WeightUnit];
 
 
-export function instanceOfMedicalCondition(value: any): boolean {
-    for (const key in MedicalCondition) {
-        if (Object.prototype.hasOwnProperty.call(MedicalCondition, key)) {
-            if (MedicalCondition[key as keyof typeof MedicalCondition] === value) {
+export function instanceOfWeightUnit(value: any): boolean {
+    for (const key in WeightUnit) {
+        if (Object.prototype.hasOwnProperty.call(WeightUnit, key)) {
+            if (WeightUnit[key as keyof typeof WeightUnit] === value) {
                 return true;
             }
         }
@@ -36,18 +36,18 @@ export function instanceOfMedicalCondition(value: any): boolean {
     return false;
 }
 
-export function MedicalConditionFromJSON(json: any): MedicalCondition {
-    return MedicalConditionFromJSONTyped(json, false);
+export function WeightUnitFromJSON(json: any): WeightUnit {
+    return WeightUnitFromJSONTyped(json, false);
 }
 
-export function MedicalConditionFromJSONTyped(json: any, ignoreDiscriminator: boolean): MedicalCondition {
-    return json as MedicalCondition;
+export function WeightUnitFromJSONTyped(json: any, ignoreDiscriminator: boolean): WeightUnit {
+    return json as WeightUnit;
 }
 
-export function MedicalConditionToJSON(value?: MedicalCondition | null): any {
+export function WeightUnitToJSON(value?: WeightUnit | null): any {
     return value as any;
 }
 
-export function MedicalConditionToJSONTyped(value: any, ignoreDiscriminator: boolean): MedicalCondition {
-    return value as MedicalCondition;
+export function WeightUnitToJSONTyped(value: any, ignoreDiscriminator: boolean): WeightUnit {
+    return value as WeightUnit;
 }

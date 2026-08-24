@@ -20,67 +20,66 @@ import {
     CompleteScanNutritionFactsToJSON,
     CompleteScanNutritionFactsToJSONTyped,
 } from './CompleteScanNutritionFacts.js';
-import type { DetectedServing } from './DetectedServing.js';
+import type { AlternativeServing } from './AlternativeServing.js';
 import {
-    DetectedServingFromJSON,
-    DetectedServingFromJSONTyped,
-    DetectedServingToJSON,
-    DetectedServingToJSONTyped,
-} from './DetectedServing.js';
+    AlternativeServingFromJSON,
+    AlternativeServingFromJSONTyped,
+    AlternativeServingToJSON,
+    AlternativeServingToJSONTyped,
+} from './AlternativeServing.js';
 
 /**
  *
  * @export
- * @interface DetectedFood
+ * @interface AlternativeFood
  */
-export interface DetectedFood {
+export interface AlternativeFood {
     /**
      * Stable food identifier, provisionally narrowed to JavaScript's safe integer range.
      * @type {number}
-     * @memberof DetectedFood
+     * @memberof AlternativeFood
      */
     id?: number;
     /**
      *
      * @type {string}
-     * @memberof DetectedFood
+     * @memberof AlternativeFood
      */
     name: string;
     /**
      * Empty for generic (non-branded) foods.
      * @type {string}
-     * @memberof DetectedFood
+     * @memberof AlternativeFood
      */
     brandName?: string;
     /**
      *
      * @type {CompleteScanNutritionFacts}
-     * @memberof DetectedFood
+     * @memberof AlternativeFood
      */
     nutrients: CompleteScanNutritionFacts;
     /**
-     * Never empty: every detection producer guarantees at least one serving.
-     * @type {Array<DetectedServing>}
-     * @memberof DetectedFood
+     *
+     * @type {Array<AlternativeServing>}
+     * @memberof AlternativeFood
      */
-    servings: Array<DetectedServing>;
+    servings?: Array<AlternativeServing>;
 }
 
 /**
- * Check if a given object implements the DetectedFood interface.
+ * Check if a given object implements the AlternativeFood interface.
  */
-export function instanceOfDetectedFood(value: object): value is DetectedFood {
+export function instanceOfAlternativeFood(value: object): value is AlternativeFood {
     if (!('name' in value) || value['name'] === undefined) return false;
     if (!('nutrients' in value) || value['nutrients'] === undefined) return false;
-    if (!('servings' in value) || value['servings'] === undefined) return false;
     return true;
 }
 
-export function DetectedFoodFromJSON(json: any): DetectedFood {
-    return DetectedFoodFromJSONTyped(json, false);
+export function AlternativeFoodFromJSON(json: any): AlternativeFood {
+    return AlternativeFoodFromJSONTyped(json, false);
 }
 
-export function DetectedFoodFromJSONTyped(json: any, ignoreDiscriminator: boolean): DetectedFood {
+export function AlternativeFoodFromJSONTyped(json: any, ignoreDiscriminator: boolean): AlternativeFood {
     if (json == null) {
         return json;
     }
@@ -90,15 +89,15 @@ export function DetectedFoodFromJSONTyped(json: any, ignoreDiscriminator: boolea
         'name': json['name'],
         'brandName': json['brand_name'] == null ? undefined : json['brand_name'],
         'nutrients': CompleteScanNutritionFactsFromJSON(json['nutrients']),
-        'servings': ((json['servings'] as Array<any>).map(DetectedServingFromJSON)),
+        'servings': json['servings'] == null ? undefined : ((json['servings'] as Array<any>).map(AlternativeServingFromJSON)),
     };
 }
 
-export function DetectedFoodToJSON(json: any): DetectedFood {
-    return DetectedFoodToJSONTyped(json, false);
+export function AlternativeFoodToJSON(json: any): AlternativeFood {
+    return AlternativeFoodToJSONTyped(json, false);
 }
 
-export function DetectedFoodToJSONTyped(value?: DetectedFood | null, ignoreDiscriminator: boolean = false): any {
+export function AlternativeFoodToJSONTyped(value?: AlternativeFood | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
@@ -109,6 +108,6 @@ export function DetectedFoodToJSONTyped(value?: DetectedFood | null, ignoreDiscr
         'name': value['name'],
         'brand_name': value['brandName'],
         'nutrients': CompleteScanNutritionFactsToJSON(value['nutrients']),
-        'servings': ((value['servings'] as Array<any>).map(DetectedServingToJSON)),
+        'servings': value['servings'] == null ? undefined : ((value['servings'] as Array<any>).map(AlternativeServingToJSON)),
     };
 }

@@ -17,18 +17,18 @@
  *
  * @export
  */
-export const MedicalCondition = {
-    type2Diabetes: 'type_2_diabetes',
-    prediabetes: 'prediabetes',
+export const HeightUnit = {
+    in: 'in',
+    cm: 'cm',
     unknownDefaultOpenApi: '11184809'
 } as const;
-export type MedicalCondition = typeof MedicalCondition[keyof typeof MedicalCondition];
+export type HeightUnit = typeof HeightUnit[keyof typeof HeightUnit];
 
 
-export function instanceOfMedicalCondition(value: any): boolean {
-    for (const key in MedicalCondition) {
-        if (Object.prototype.hasOwnProperty.call(MedicalCondition, key)) {
-            if (MedicalCondition[key as keyof typeof MedicalCondition] === value) {
+export function instanceOfHeightUnit(value: any): boolean {
+    for (const key in HeightUnit) {
+        if (Object.prototype.hasOwnProperty.call(HeightUnit, key)) {
+            if (HeightUnit[key as keyof typeof HeightUnit] === value) {
                 return true;
             }
         }
@@ -36,18 +36,18 @@ export function instanceOfMedicalCondition(value: any): boolean {
     return false;
 }
 
-export function MedicalConditionFromJSON(json: any): MedicalCondition {
-    return MedicalConditionFromJSONTyped(json, false);
+export function HeightUnitFromJSON(json: any): HeightUnit {
+    return HeightUnitFromJSONTyped(json, false);
 }
 
-export function MedicalConditionFromJSONTyped(json: any, ignoreDiscriminator: boolean): MedicalCondition {
-    return json as MedicalCondition;
+export function HeightUnitFromJSONTyped(json: any, ignoreDiscriminator: boolean): HeightUnit {
+    return json as HeightUnit;
 }
 
-export function MedicalConditionToJSON(value?: MedicalCondition | null): any {
+export function HeightUnitToJSON(value?: HeightUnit | null): any {
     return value as any;
 }
 
-export function MedicalConditionToJSONTyped(value: any, ignoreDiscriminator: boolean): MedicalCondition {
-    return value as MedicalCondition;
+export function HeightUnitToJSONTyped(value: any, ignoreDiscriminator: boolean): HeightUnit {
+    return value as HeightUnit;
 }

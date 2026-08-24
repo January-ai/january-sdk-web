@@ -24,7 +24,7 @@ test('food search sends authentication, user context, and SDK identity', async (
   });
 
   assert.deepEqual(result, { totalCount: 0, items: [] });
-  assert.match(captured.url, /^https:\/\/example\.test\/v1\.2\/foods\/search\?/);
+  assert.match(captured.url, /^https:\/\/example\.test\/v1\.2\/foods\?/);
   assert.match(captured.url, /query=greek%20yogurt/);
   assert.match(captured.url, /limit=5/);
   const headers = new Headers(captured.init.headers);
@@ -32,4 +32,3 @@ test('food search sends authentication, user context, and SDK identity', async (
   assert.equal(headers.get('x-end-user-id'), 'partner-user-1');
   assert.match(headers.get('user-agent'), /^JanuaryPartnerSDK-Node\/0\.1\.0/);
 });
-

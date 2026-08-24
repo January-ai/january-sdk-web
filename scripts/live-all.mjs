@@ -1,10 +1,9 @@
 import {
   ActivityLevel,
-  DietPreference,
-  DietRestriction,
-  Gender,
+  HeightUnit,
   JanuaryPartnerClient,
-  MedicalCondition,
+  Sex,
+  WeightUnit,
 } from '../dist/index.js';
 import { readFile } from 'node:fs/promises';
 
@@ -32,8 +31,8 @@ pass('foods.searchNaturalLanguage', `${natural.detections.length} detections`);
 const alternatives = await client.foods.suggestAlternatives({
   foodId: food.id,
   endUserId,
-  dietRestrictions: [DietRestriction.none],
-  dietPreferences: [DietPreference.none],
+  dietRestrictions: [],
+  dietPreferences: [],
 });
 pass('foods.suggestAlternatives', `${alternatives.alternatives.length} alternatives`);
 
@@ -127,17 +126,17 @@ const prediction = await client.glucose.predict({
   endUserTimezone: timezone,
   userProfile: {
     age: 35,
-    gender: Gender.male,
-    height: 70,
-    weight: 175,
+    sex: Sex.male,
+    height: { value: 70, unit: HeightUnit.inches },
+    weight: { value: 175, unit: WeightUnit.pounds },
     activityLevel: ActivityLevel.moderatelyActive,
-    healthConditions: [MedicalCondition.noneOfTheAbove],
+    healthConditions: [],
   },
   foods: [selectedFood],
   startTime: new Date(),
 });
-if (!prediction.cgp.length) throw new Error('glucose.predict returned no points.');
-pass('glucose.predict', `${prediction.cgp.length} points`);
+if (!prediction.prediction.length) throw new Error('glucose.predict returned no points.');
+pass('glucose.predict', `${prediction.prediction.length} points`);
 
 console.log('PASS all 13 Partner API v1.2 operations through the public Node SDK');
 

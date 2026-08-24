@@ -12,42 +12,63 @@
  * Do not edit the class manually.
  */
 
-
+import { mapValues } from '../runtime.js';
 /**
  *
  * @export
+ * @interface GlucoseChart
  */
-export const MedicalCondition = {
-    type2Diabetes: 'type_2_diabetes',
-    prediabetes: 'prediabetes',
-    unknownDefaultOpenApi: '11184809'
-} as const;
-export type MedicalCondition = typeof MedicalCondition[keyof typeof MedicalCondition];
+export interface GlucoseChart {
+    /**
+     * Suggested Y-axis lower bound (mg/dL). A fixed target-range bound, not the minimum of the curve.
+     * @type {number}
+     * @memberof GlucoseChart
+     */
+    min: number;
+    /**
+     * Suggested Y-axis upper bound (mg/dL): 180 with Type 2 diabetes in health_conditions, otherwise 140. Not the maximum of the curve.
+     * @type {number}
+     * @memberof GlucoseChart
+     */
+    max: number;
+}
 
+/**
+ * Check if a given object implements the GlucoseChart interface.
+ */
+export function instanceOfGlucoseChart(value: object): value is GlucoseChart {
+    if (!('min' in value) || value['min'] === undefined) return false;
+    if (!('max' in value) || value['max'] === undefined) return false;
+    return true;
+}
 
-export function instanceOfMedicalCondition(value: any): boolean {
-    for (const key in MedicalCondition) {
-        if (Object.prototype.hasOwnProperty.call(MedicalCondition, key)) {
-            if (MedicalCondition[key as keyof typeof MedicalCondition] === value) {
-                return true;
-            }
-        }
+export function GlucoseChartFromJSON(json: any): GlucoseChart {
+    return GlucoseChartFromJSONTyped(json, false);
+}
+
+export function GlucoseChartFromJSONTyped(json: any, ignoreDiscriminator: boolean): GlucoseChart {
+    if (json == null) {
+        return json;
     }
-    return false;
+    return {
+
+        'min': json['min'],
+        'max': json['max'],
+    };
 }
 
-export function MedicalConditionFromJSON(json: any): MedicalCondition {
-    return MedicalConditionFromJSONTyped(json, false);
+export function GlucoseChartToJSON(json: any): GlucoseChart {
+    return GlucoseChartToJSONTyped(json, false);
 }
 
-export function MedicalConditionFromJSONTyped(json: any, ignoreDiscriminator: boolean): MedicalCondition {
-    return json as MedicalCondition;
-}
+export function GlucoseChartToJSONTyped(value?: GlucoseChart | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-export function MedicalConditionToJSON(value?: MedicalCondition | null): any {
-    return value as any;
-}
+    return {
 
-export function MedicalConditionToJSONTyped(value: any, ignoreDiscriminator: boolean): MedicalCondition {
-    return value as MedicalCondition;
+        'min': value['min'],
+        'max': value['max'],
+    };
 }
