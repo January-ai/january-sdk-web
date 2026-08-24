@@ -14,6 +14,7 @@ import { Route as FoodLogsRouteImport } from './routes/food-logs'
 import { Route as GlucoseRouteImport } from './routes/glucose'
 import { Route as ScanRouteImport } from './routes/scan'
 import { Route as SearchRouteImport } from './routes/search'
+import { Route as FoodFoodIdRouteImport } from './routes/food.$foodId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -40,6 +41,11 @@ const SearchRoute = SearchRouteImport.update({
   path: '/search',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FoodFoodIdRoute = FoodFoodIdRouteImport.update({
+  id: '/food/$foodId',
+  path: '/food/$foodId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -47,6 +53,7 @@ export interface FileRoutesByFullPath {
   '/glucose': typeof GlucoseRoute
   '/scan': typeof ScanRoute
   '/search': typeof SearchRoute
+  '/food/$foodId': typeof FoodFoodIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -54,6 +61,7 @@ export interface FileRoutesByTo {
   '/glucose': typeof GlucoseRoute
   '/scan': typeof ScanRoute
   '/search': typeof SearchRoute
+  '/food/$foodId': typeof FoodFoodIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -62,13 +70,22 @@ export interface FileRoutesById {
   '/glucose': typeof GlucoseRoute
   '/scan': typeof ScanRoute
   '/search': typeof SearchRoute
+  '/food/$foodId': typeof FoodFoodIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/food-logs' | '/glucose' | '/scan' | '/search'
+  fullPaths:
+    '/' | '/food-logs' | '/glucose' | '/scan' | '/search' | '/food/$foodId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/food-logs' | '/glucose' | '/scan' | '/search'
-  id: '__root__' | '/' | '/food-logs' | '/glucose' | '/scan' | '/search'
+  to: '/' | '/food-logs' | '/glucose' | '/scan' | '/search' | '/food/$foodId'
+  id:
+    | '__root__'
+    | '/'
+    | '/food-logs'
+    | '/glucose'
+    | '/scan'
+    | '/search'
+    | '/food/$foodId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -77,6 +94,7 @@ export interface RootRouteChildren {
   GlucoseRoute: typeof GlucoseRoute
   ScanRoute: typeof ScanRoute
   SearchRoute: typeof SearchRoute
+  FoodFoodIdRoute: typeof FoodFoodIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -116,6 +134,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SearchRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/food/$foodId': {
+      id: '/food/$foodId'
+      path: '/food/$foodId'
+      fullPath: '/food/$foodId'
+      preLoaderRoute: typeof FoodFoodIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -125,6 +150,7 @@ const rootRouteChildren: RootRouteChildren = {
   GlucoseRoute: GlucoseRoute,
   ScanRoute: ScanRoute,
   SearchRoute: SearchRoute,
+  FoodFoodIdRoute: FoodFoodIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

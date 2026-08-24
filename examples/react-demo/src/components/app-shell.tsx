@@ -29,7 +29,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="h-dvh overflow-hidden bg-stone-100 text-stone-950">
       <div className="mx-auto grid h-full max-w-[1600px] lg:grid-cols-[292px_minmax(0,1fr)]">
-        <aside className="hidden min-h-0 overflow-y-auto border-r border-stone-300/70 bg-[#eee8dc] p-6 lg:flex lg:flex-col xl:p-8">
+        <aside className="hidden min-h-0 overflow-y-auto border-r border-stone-300/70 bg-[#eee8dc] px-3 py-6 lg:flex lg:flex-col xl:px-4 xl:py-8">
           <Brand />
           <nav aria-label="Primary navigation" className="mt-14 space-y-2">
             {navigation.map((item) => <DesktopNavItem key={item.to} {...item} />)}

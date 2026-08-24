@@ -3,7 +3,7 @@ import type { ButtonHTMLAttributes, HTMLAttributes, ReactNode } from 'react'
 import { cn } from '~/lib/utils'
 
 export function Page({ children, className }: { children: ReactNode; className?: string }) {
-  return <div className={cn('mx-auto w-full max-w-7xl px-5 py-8 sm:px-8 lg:px-10 lg:py-12 xl:px-14', className)}>{children}</div>
+  return <div className={cn('mx-auto w-full max-w-7xl px-3 py-8 sm:px-4 lg:px-5 lg:py-12 xl:px-7', className)}>{children}</div>
 }
 
 export function PageHeader({ eyebrow, title, description, aside }: {

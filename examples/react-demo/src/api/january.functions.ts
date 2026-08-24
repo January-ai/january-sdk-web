@@ -27,6 +27,26 @@ export const searchFoods = createServerFn({ method: 'GET' })
   .validator(foodSearchSchema)
   .handler(({ data }) => getJanuaryClient().foods.search({ ...data, limit: 20 }))
 
+export const getFoodDetails = createServerFn({ method: 'GET' })
+  .validator(z.object({
+    foodId: z.number().int().positive(),
+    query: z.string().trim().min(1).max(256),
+    endUserId: optionalUserId,
+  }))
+  .handler(async ({ data }) => {
+    // Partner API v1.2 returns complete food records from search; it does not
+    // expose a separate GET /foods/:id operation. Re-query and select by ID so
+    // the detail URL remains reloadable without inventing an endpoint.
+    const response = await getJanuaryClient().foods.search({
+      query: data.query,
+      limit: 40,
+      ...(data.endUserId ? { endUserId: data.endUserId } : {}),
+    })
+    const food = response.items.find((item) => item.id === data.foodId)
+    if (!food) throw new Error('This food is no longer available in the search results.')
+    return food
+  })
+
 export const searchFoodCatalog = createServerFn({ method: 'GET' })
   .validator(z.object({
     query: z.string().trim().min(1).max(256),

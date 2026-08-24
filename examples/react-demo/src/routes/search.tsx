@@ -67,7 +67,6 @@ function SearchPage() {
   const [locationSource, setLocationSource] = useState<CityID | 'current'>(defaultCity.id)
   const [isLocating, setIsLocating] = useState(false)
   const [locationError, setLocationError] = useState<string | null>(null)
-  const [selectedFood, setSelectedFood] = useState<FoodSearchItem | null>(null)
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null)
   const submittedQuery = search.q?.trim() ?? ''
 
@@ -100,7 +99,6 @@ function SearchPage() {
     event.preventDefault()
     const q = draft.trim()
     if (!q) return
-    setSelectedFood(null)
     setSelectedRestaurant(null)
     void navigate({ search: { q } })
   }
@@ -152,7 +150,7 @@ function SearchPage() {
               <legend className="sr-only">Search source</legend>
               {(['foods', 'restaurants'] as const).map((value) => (
                 <label className={cn('flex min-h-12 cursor-pointer items-center justify-center rounded-xl text-sm font-bold', kind === value ? 'bg-white text-stone-950 shadow-sm' : 'text-stone-600')} key={value}>
-                  <input className="sr-only" checked={kind === value} name="catalog-kind" onChange={() => { setKind(value); setSelectedFood(null); setSelectedRestaurant(null) }} type="radio" value={value} />
+                  <input className="sr-only" checked={kind === value} name="catalog-kind" onChange={() => { setKind(value); setSelectedRestaurant(null) }} type="radio" value={value} />
                   {value === 'foods' ? 'Foods' : 'Restaurants'}
                 </label>
               ))}
@@ -236,7 +234,7 @@ function SearchPage() {
           ) : activeQuery.isError ? (
             <ErrorMessage error={activeQuery.error} />
           ) : kind === 'foods' && foods.data ? (
-            <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_320px]">
+            <div>
               {foods.data.items.length ? (
                 <Card className="overflow-hidden">
                   {foods.data.items.map((food) => (
@@ -244,7 +242,11 @@ function SearchPage() {
                       key={food.id}
                       media={food.photoUrl ? <img alt="" className="size-full object-cover" src={food.photoUrl} /> : <Utensils aria-hidden="true" className="size-6 text-stone-600" />}
                       meta={`${formatNumber(food.calories, 0)} cal · ${primaryServing(food)}`}
-                      onClick={() => setSelectedFood(food)}
+                      onClick={() => void navigate({
+                        to: '/food/$foodId',
+                        params: { foodId: String(food.id) },
+                        search: { q: food.name },
+                      })}
                       title={food.name}
                     />
                   ))}
@@ -252,7 +254,6 @@ function SearchPage() {
               ) : (
                 <EmptyState description="Try a broader name or a different search mode." icon={<Utensils aria-hidden="true" className="size-6" />} title="No foods matched" />
               )}
-              <FoodInspector food={selectedFood ?? foods.data.items[0] ?? null} />
             </div>
           ) : restaurants.data ? (
             <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_minmax(320px,0.85fr)]">
@@ -317,33 +318,6 @@ function LocationChooser({
         </span>
       </button>
     </fieldset>
-  )
-}
-
-function FoodInspector({ food }: { food: FoodSearchItem | null }) {
-  if (!food) return null
-  return (
-    <Card className="self-start p-6 2xl:sticky 2xl:top-8">
-      <SectionLabel>Selected food</SectionLabel>
-      <h3 className="mt-3 text-balance font-serif text-3xl">{food.name}</h3>
-      {food.brandName && <p className="mt-1 text-sm text-stone-500">{food.brandName}</p>}
-      <div className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-stone-200 bg-stone-200">
-        {[
-          ['Calories', food.calories, 'cal'],
-          ['Protein', food.protein, 'g'],
-          ['Carbs', food.carbohydrates, 'g'],
-          ['Fat', food.totalFat, 'g'],
-        ].map(([label, value, unit]) => (
-          <div className="bg-white p-4" key={String(label)}>
-            <div className="text-xs font-bold uppercase text-stone-500">{label}</div>
-            <div className="data-number mt-2 text-2xl font-bold">{formatNumber(value as number | null)} <span className="text-sm font-medium text-stone-500">{unit}</span></div>
-          </div>
-        ))}
-      </div>
-      <div className="mt-5 text-sm leading-6 text-stone-600">
-        {food.servings.length ? `${food.servings.length} serving option${food.servings.length === 1 ? '' : 's'} available.` : 'No serving options returned.'}
-      </div>
-    </Card>
   )
 }
 
