@@ -44,7 +44,9 @@
     "check:generated": "./scripts/check-generated-transport.sh",
     "smoke:live": "npm run build && node scripts/live-search.mjs",
     "smoke:all": "npm run build && node scripts/live-all.mjs",
-    "pack:check": "npm pack --dry-run"
+    "pack:check": "npm pack --dry-run",
+    "demo:web": "npm --prefix examples/react-demo run dev",
+    "demo:web:build": "npm --prefix examples/react-demo run build"
   },
   "devDependencies": {
     "typescript": "7.0.2"

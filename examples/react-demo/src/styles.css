@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light;
+  font-family: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  background: #f5f1e7;
+  color: #1c1917;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+@theme {
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Newsreader", ui-serif, Georgia, serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: #f5f1e7;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100dvh;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+a,
+input,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:focus-visible,
+a:focus-visible,
+select:focus-visible {
+  outline: 3px solid #d5a817;
+  outline-offset: 3px;
+}
+
+::selection {
+  background: #f5c842;
+  color: #1c1917;
+}
+
+.data-number {
+  font-variant-numeric: tabular-nums;
+}
+
+.scan-pattern {
+  background-color: #eee8dc;
+  background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgb(255 255 255 / 42%) 10px, rgb(255 255 255 / 42%) 20px);
+}
