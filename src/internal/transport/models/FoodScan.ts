@@ -13,6 +13,13 @@
  */
 
 import { mapValues } from '../runtime.js';
+import type { CompleteScanNutritionFacts } from './CompleteScanNutritionFacts.js';
+import {
+    CompleteScanNutritionFactsFromJSON,
+    CompleteScanNutritionFactsFromJSONTyped,
+    CompleteScanNutritionFactsToJSON,
+    CompleteScanNutritionFactsToJSONTyped,
+} from './CompleteScanNutritionFacts.js';
 import type { FoodDetection } from './FoodDetection.js';
 import {
     FoodDetectionFromJSON,
@@ -24,59 +31,58 @@ import {
 /**
  *
  * @export
- * @interface CorrectPhotoScanBody
+ * @interface FoodScan
  */
-export interface CorrectPhotoScanBody {
+export interface FoodScan {
     /**
-     * The meal name from the scan, when it returned one (photo scans do; text scans don't). Defaults to 'Meal'.
+     *
      * @type {string}
-     * @memberof CorrectPhotoScanBody
+     * @memberof FoodScan
      */
     mealName?: string;
     /**
-     * The detections array from a photo or text food scan, exactly as returned. Omitted zero-value nutrient keys are filled in automatically; each detection needs at least one serving.
+     *
+     * @type {CompleteScanNutritionFacts}
+     * @memberof FoodScan
+     */
+    totalNutrients?: CompleteScanNutritionFacts;
+    /**
+     * Detected foods. Always present — an empty array means nothing was recognized.
      * @type {Array<FoodDetection>}
-     * @memberof CorrectPhotoScanBody
+     * @memberof FoodScan
      */
     detections: Array<FoodDetection>;
-    /**
-     * Plain-English description of what to correct.
-     * @type {string}
-     * @memberof CorrectPhotoScanBody
-     */
-    userInput: string;
 }
 
 /**
- * Check if a given object implements the CorrectPhotoScanBody interface.
+ * Check if a given object implements the FoodScan interface.
  */
-export function instanceOfCorrectPhotoScanBody(value: object): value is CorrectPhotoScanBody {
+export function instanceOfFoodScan(value: object): value is FoodScan {
     if (!('detections' in value) || value['detections'] === undefined) return false;
-    if ((!('userInput' in (value as Record<string, any>)) && !('user_input' in (value as Record<string, any>))) || ((value as Record<string, any>)['userInput'] === undefined && (value as Record<string, any>)['user_input'] === undefined)) return false;
     return true;
 }
 
-export function CorrectPhotoScanBodyFromJSON(json: any): CorrectPhotoScanBody {
-    return CorrectPhotoScanBodyFromJSONTyped(json, false);
+export function FoodScanFromJSON(json: any): FoodScan {
+    return FoodScanFromJSONTyped(json, false);
 }
 
-export function CorrectPhotoScanBodyFromJSONTyped(json: any, ignoreDiscriminator: boolean): CorrectPhotoScanBody {
+export function FoodScanFromJSONTyped(json: any, ignoreDiscriminator: boolean): FoodScan {
     if (json == null) {
         return json;
     }
     return {
 
         'mealName': json['meal_name'] == null ? undefined : json['meal_name'],
+        'totalNutrients': json['total_nutrients'] == null ? undefined : CompleteScanNutritionFactsFromJSON(json['total_nutrients']),
         'detections': ((json['detections'] as Array<any>).map(FoodDetectionFromJSON)),
-        'userInput': json['user_input'],
     };
 }
 
-export function CorrectPhotoScanBodyToJSON(json: any): CorrectPhotoScanBody {
-    return CorrectPhotoScanBodyToJSONTyped(json, false);
+export function FoodScanToJSON(json: any): FoodScan {
+    return FoodScanToJSONTyped(json, false);
 }
 
-export function CorrectPhotoScanBodyToJSONTyped(value?: CorrectPhotoScanBody | null, ignoreDiscriminator: boolean = false): any {
+export function FoodScanToJSONTyped(value?: FoodScan | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
@@ -84,7 +90,7 @@ export function CorrectPhotoScanBodyToJSONTyped(value?: CorrectPhotoScanBody | n
     return {
 
         'meal_name': value['mealName'],
+        'total_nutrients': CompleteScanNutritionFactsToJSON(value['totalNutrients']),
         'detections': ((value['detections'] as Array<any>).map(FoodDetectionToJSON)),
-        'user_input': value['userInput'],
     };
 }

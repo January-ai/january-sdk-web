@@ -12,42 +12,54 @@
  * Do not edit the class manually.
  */
 
-
+import { mapValues } from '../runtime.js';
 /**
  *
  * @export
+ * @interface SearchFoodsByNaturalLanguageBody
  */
-export const MedicalCondition = {
-    type2Diabetes: 'type_2_diabetes',
-    prediabetes: 'prediabetes',
-    unknownDefaultOpenApi: '11184809'
-} as const;
-export type MedicalCondition = typeof MedicalCondition[keyof typeof MedicalCondition];
+export interface SearchFoodsByNaturalLanguageBody {
+    /**
+     * Natural-language description of what was eaten; parsed into detected foods with quantities.
+     * @type {string}
+     * @memberof SearchFoodsByNaturalLanguageBody
+     */
+    text: string;
+}
 
+/**
+ * Check if a given object implements the SearchFoodsByNaturalLanguageBody interface.
+ */
+export function instanceOfSearchFoodsByNaturalLanguageBody(value: object): value is SearchFoodsByNaturalLanguageBody {
+    if (!('text' in value) || value['text'] === undefined) return false;
+    return true;
+}
 
-export function instanceOfMedicalCondition(value: any): boolean {
-    for (const key in MedicalCondition) {
-        if (Object.prototype.hasOwnProperty.call(MedicalCondition, key)) {
-            if (MedicalCondition[key as keyof typeof MedicalCondition] === value) {
-                return true;
-            }
-        }
+export function SearchFoodsByNaturalLanguageBodyFromJSON(json: any): SearchFoodsByNaturalLanguageBody {
+    return SearchFoodsByNaturalLanguageBodyFromJSONTyped(json, false);
+}
+
+export function SearchFoodsByNaturalLanguageBodyFromJSONTyped(json: any, ignoreDiscriminator: boolean): SearchFoodsByNaturalLanguageBody {
+    if (json == null) {
+        return json;
     }
-    return false;
+    return {
+
+        'text': json['text'],
+    };
 }
 
-export function MedicalConditionFromJSON(json: any): MedicalCondition {
-    return MedicalConditionFromJSONTyped(json, false);
+export function SearchFoodsByNaturalLanguageBodyToJSON(json: any): SearchFoodsByNaturalLanguageBody {
+    return SearchFoodsByNaturalLanguageBodyToJSONTyped(json, false);
 }
 
-export function MedicalConditionFromJSONTyped(json: any, ignoreDiscriminator: boolean): MedicalCondition {
-    return json as MedicalCondition;
-}
+export function SearchFoodsByNaturalLanguageBodyToJSONTyped(value?: SearchFoodsByNaturalLanguageBody | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-export function MedicalConditionToJSON(value?: MedicalCondition | null): any {
-    return value as any;
-}
+    return {
 
-export function MedicalConditionToJSONTyped(value: any, ignoreDiscriminator: boolean): MedicalCondition {
-    return value as MedicalCondition;
+        'text': value['text'],
+    };
 }

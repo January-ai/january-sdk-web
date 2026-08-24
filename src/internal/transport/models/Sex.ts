@@ -14,21 +14,21 @@
 
 
 /**
- *
+ * Biological sex, as consumed by the prediction model.
  * @export
  */
-export const MedicalCondition = {
-    type2Diabetes: 'type_2_diabetes',
-    prediabetes: 'prediabetes',
+export const Sex = {
+    male: 'male',
+    female: 'female',
     unknownDefaultOpenApi: '11184809'
 } as const;
-export type MedicalCondition = typeof MedicalCondition[keyof typeof MedicalCondition];
+export type Sex = typeof Sex[keyof typeof Sex];
 
 
-export function instanceOfMedicalCondition(value: any): boolean {
-    for (const key in MedicalCondition) {
-        if (Object.prototype.hasOwnProperty.call(MedicalCondition, key)) {
-            if (MedicalCondition[key as keyof typeof MedicalCondition] === value) {
+export function instanceOfSex(value: any): boolean {
+    for (const key in Sex) {
+        if (Object.prototype.hasOwnProperty.call(Sex, key)) {
+            if (Sex[key as keyof typeof Sex] === value) {
                 return true;
             }
         }
@@ -36,18 +36,18 @@ export function instanceOfMedicalCondition(value: any): boolean {
     return false;
 }
 
-export function MedicalConditionFromJSON(json: any): MedicalCondition {
-    return MedicalConditionFromJSONTyped(json, false);
+export function SexFromJSON(json: any): Sex {
+    return SexFromJSONTyped(json, false);
 }
 
-export function MedicalConditionFromJSONTyped(json: any, ignoreDiscriminator: boolean): MedicalCondition {
-    return json as MedicalCondition;
+export function SexFromJSONTyped(json: any, ignoreDiscriminator: boolean): Sex {
+    return json as Sex;
 }
 
-export function MedicalConditionToJSON(value?: MedicalCondition | null): any {
+export function SexToJSON(value?: Sex | null): any {
     return value as any;
 }
 
-export function MedicalConditionToJSONTyped(value: any, ignoreDiscriminator: boolean): MedicalCondition {
-    return value as MedicalCondition;
+export function SexToJSONTyped(value: any, ignoreDiscriminator: boolean): Sex {
+    return value as Sex;
 }

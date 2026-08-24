@@ -12,42 +12,73 @@
  * Do not edit the class manually.
  */
 
+import { mapValues } from '../runtime.js';
+import type { WeightUnit } from './WeightUnit.js';
+import {
+    WeightUnitFromJSON,
+    WeightUnitFromJSONTyped,
+    WeightUnitToJSON,
+    WeightUnitToJSONTyped,
+} from './WeightUnit.js';
 
 /**
  *
  * @export
+ * @interface Weight
  */
-export const MedicalCondition = {
-    type2Diabetes: 'type_2_diabetes',
-    prediabetes: 'prediabetes',
-    unknownDefaultOpenApi: '11184809'
-} as const;
-export type MedicalCondition = typeof MedicalCondition[keyof typeof MedicalCondition];
+export interface Weight {
+    /**
+     *
+     * @type {number}
+     * @memberof Weight
+     */
+    value: number;
+    /**
+     *
+     * @type {WeightUnit}
+     * @memberof Weight
+     */
+    unit: WeightUnit;
+}
 
 
-export function instanceOfMedicalCondition(value: any): boolean {
-    for (const key in MedicalCondition) {
-        if (Object.prototype.hasOwnProperty.call(MedicalCondition, key)) {
-            if (MedicalCondition[key as keyof typeof MedicalCondition] === value) {
-                return true;
-            }
-        }
+
+/**
+ * Check if a given object implements the Weight interface.
+ */
+export function instanceOfWeight(value: object): value is Weight {
+    if (!('value' in value) || value['value'] === undefined) return false;
+    if (!('unit' in value) || value['unit'] === undefined) return false;
+    return true;
+}
+
+export function WeightFromJSON(json: any): Weight {
+    return WeightFromJSONTyped(json, false);
+}
+
+export function WeightFromJSONTyped(json: any, ignoreDiscriminator: boolean): Weight {
+    if (json == null) {
+        return json;
     }
-    return false;
+    return {
+
+        'value': json['value'],
+        'unit': WeightUnitFromJSON(json['unit']),
+    };
 }
 
-export function MedicalConditionFromJSON(json: any): MedicalCondition {
-    return MedicalConditionFromJSONTyped(json, false);
+export function WeightToJSON(json: any): Weight {
+    return WeightToJSONTyped(json, false);
 }
 
-export function MedicalConditionFromJSONTyped(json: any, ignoreDiscriminator: boolean): MedicalCondition {
-    return json as MedicalCondition;
-}
+export function WeightToJSONTyped(value?: Weight | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-export function MedicalConditionToJSON(value?: MedicalCondition | null): any {
-    return value as any;
-}
+    return {
 
-export function MedicalConditionToJSONTyped(value: any, ignoreDiscriminator: boolean): MedicalCondition {
-    return value as MedicalCondition;
+        'value': value['value'],
+        'unit': WeightUnitToJSON(value['unit']),
+    };
 }

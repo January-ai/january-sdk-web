@@ -13,76 +13,70 @@
  */
 
 import { mapValues } from '../runtime.js';
-import type { FoodLogInputFood } from './FoodLogInputFood.js';
-import {
-    FoodLogInputFoodFromJSON,
-    FoodLogInputFoodFromJSONTyped,
-    FoodLogInputFoodToJSON,
-    FoodLogInputFoodToJSONTyped,
-} from './FoodLogInputFood.js';
-
 /**
  *
  * @export
- * @interface UpdateFoodLogBody
+ * @interface AlternativeServing
  */
-export interface UpdateFoodLogBody {
+export interface AlternativeServing {
+    /**
+     * Stable serving identifier, provisionally narrowed to JavaScript's safe integer range.
+     * @type {number}
+     * @memberof AlternativeServing
+     */
+    id: number;
     /**
      *
-     * @type {Array<FoodLogInputFood>}
-     * @memberof UpdateFoodLogBody
+     * @type {number}
+     * @memberof AlternativeServing
      */
-    foods?: Array<FoodLogInputFood>;
-    /**
-     * UTC consumption time, ending in Z.
-     * @type {string}
-     * @memberof UpdateFoodLogBody
-     */
-    timestampUtc?: string;
+    quantity?: number;
     /**
      *
      * @type {string}
-     * @memberof UpdateFoodLogBody
+     * @memberof AlternativeServing
      */
-    name?: string;
+    unit: string;
 }
 
 /**
- * Check if a given object implements the UpdateFoodLogBody interface.
+ * Check if a given object implements the AlternativeServing interface.
  */
-export function instanceOfUpdateFoodLogBody(value: object): value is UpdateFoodLogBody {
+export function instanceOfAlternativeServing(value: object): value is AlternativeServing {
+    if (!('id' in value) || value['id'] === undefined) return false;
+    if (!('unit' in value) || value['unit'] === undefined) return false;
     return true;
 }
 
-export function UpdateFoodLogBodyFromJSON(json: any): UpdateFoodLogBody {
-    return UpdateFoodLogBodyFromJSONTyped(json, false);
+export function AlternativeServingFromJSON(json: any): AlternativeServing {
+    return AlternativeServingFromJSONTyped(json, false);
 }
 
-export function UpdateFoodLogBodyFromJSONTyped(json: any, ignoreDiscriminator: boolean): UpdateFoodLogBody {
+export function AlternativeServingFromJSONTyped(json: any, ignoreDiscriminator: boolean): AlternativeServing {
     if (json == null) {
         return json;
     }
     return {
 
-        'foods': json['foods'] == null ? undefined : ((json['foods'] as Array<any>).map(FoodLogInputFoodFromJSON)),
-        'timestampUtc': json['timestamp_utc'] == null ? undefined : json['timestamp_utc'],
-        'name': json['name'] == null ? undefined : json['name'],
+        'id': json['id'],
+        'quantity': json['quantity'] == null ? undefined : json['quantity'],
+        'unit': json['unit'],
     };
 }
 
-export function UpdateFoodLogBodyToJSON(json: any): UpdateFoodLogBody {
-    return UpdateFoodLogBodyToJSONTyped(json, false);
+export function AlternativeServingToJSON(json: any): AlternativeServing {
+    return AlternativeServingToJSONTyped(json, false);
 }
 
-export function UpdateFoodLogBodyToJSONTyped(value?: UpdateFoodLogBody | null, ignoreDiscriminator: boolean = false): any {
+export function AlternativeServingToJSONTyped(value?: AlternativeServing | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
 
     return {
 
-        'foods': value['foods'] == null ? undefined : ((value['foods'] as Array<any>).map(FoodLogInputFoodToJSON)),
-        'timestamp_utc': value['timestampUtc'],
-        'name': value['name'],
+        'id': value['id'],
+        'quantity': value['quantity'],
+        'unit': value['unit'],
     };
 }
