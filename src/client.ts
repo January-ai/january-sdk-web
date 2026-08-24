@@ -38,9 +38,10 @@ export class JanuaryPartnerClient {
       ...(options.fetch !== undefined ? { fetchApi: options.fetch } : {}),
     });
 
-    this.foods = new FoodsResource(new FoodsApi(configuration));
+    const photoScanningApi = new PhotoScanningApi(configuration);
+    this.foods = new FoodsResource(new FoodsApi(configuration), photoScanningApi);
     this.restaurants = new RestaurantsResource(new RestaurantsApi(configuration));
-    this.photoScanning = new PhotoScanningResource(new PhotoScanningApi(configuration));
+    this.photoScanning = new PhotoScanningResource(photoScanningApi);
     this.foodLogs = new FoodLogsResource(new FoodLogsApi(configuration));
     this.glucose = new GlucoseResource(new GlucoseApi(configuration));
   }

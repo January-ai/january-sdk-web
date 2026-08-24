@@ -9,9 +9,10 @@ import type {
 } from '../models.js';
 import { executeRequest } from '../errors.js';
 import { FoodsApi } from '../internal/transport/apis/FoodsApi.js';
+import { PhotoScanningApi } from '../internal/transport/apis/PhotoScanningApi.js';
 
 export class FoodsResource {
-  constructor(private readonly api: FoodsApi) {}
+  constructor(private readonly api: FoodsApi, private readonly photoScanningApi: PhotoScanningApi) {}
 
   async search(request: SearchFoodsRequest): Promise<FoodSearchResults> {
     const query = request.query.trim();
@@ -48,8 +49,8 @@ export class FoodsResource {
   ): Promise<SearchFoodsByNaturalLanguageResponse> {
     const query = request.query.trim();
     if (query.length === 0) throw new TypeError('A meal description is required.');
-    return executeRequest(() => this.api.searchFoodsByNaturalLanguage({
-      query,
+    return executeRequest(() => this.photoScanningApi.searchFoodsByNaturalLanguage({
+      searchFoodsByNaturalLanguageBody: { text: query },
       ...(request.endUserId !== undefined ? { xEndUserId: request.endUserId } : {}),
     }, request.signal ? { signal: request.signal } : undefined));
   }
@@ -74,28 +75,28 @@ function mapFoodSearchResults(response: import('../internal/transport/models/Foo
     items: response.items.map((item) => ({
       id: item.id,
       name: item.name,
-      brandName: item.brandName,
-      calories: item.energy,
-      protein: item.protein,
-      carbohydrates: item.carbs,
-      netCarbohydrates: item.netCarbs,
-      totalFat: item.fat,
-      saturatedFat: item.fatTotalSaturated,
-      fiber: item.fiber,
-      totalSugars: item.sugars,
-      addedSugars: item.addedSugars,
-      sodium: item.sodium,
-      potassium: item.potassium,
-      cholesterol: item.cholesterol,
-      glycemicIndex: item.gi,
-      glycemicLoad: item.gl,
-      photoUrl: item.photoUrl,
+      brandName: item.brandName ?? null,
+      calories: item.nutrients.calories?.value ?? null,
+      protein: item.nutrients.protein?.value ?? null,
+      carbohydrates: item.nutrients.carbohydrates?.value ?? null,
+      netCarbohydrates: item.nutrients.netCarbohydrates?.value ?? null,
+      totalFat: item.nutrients.totalFat?.value ?? null,
+      saturatedFat: item.nutrients.saturatedFat?.value ?? null,
+      fiber: item.nutrients.fiber?.value ?? null,
+      totalSugars: item.nutrients.totalSugars?.value ?? null,
+      addedSugars: item.nutrients.addedSugars?.value ?? null,
+      sodium: item.nutrients.sodium?.value ?? null,
+      potassium: item.nutrients.potassium?.value ?? null,
+      cholesterol: item.nutrients.cholesterol?.value ?? null,
+      glycemicIndex: item.glycemicIndex ?? null,
+      glycemicLoad: item.glycemicLoad ?? null,
+      photoUrl: item.imageUrl ?? null,
       servings: item.servings.map((serving) => ({
         id: serving.id,
         quantity: serving.quantity,
         unit: serving.unit,
-        scalingFactor: serving.scalingFactor,
-        weightGrams: serving.weightGrams,
+        scalingFactor: serving.scalingFactor ?? 1,
+        weightGrams: serving.weightGrams ?? null,
         isPrimary: serving.isPrimary,
       })),
     })),

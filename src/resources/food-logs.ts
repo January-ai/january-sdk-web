@@ -19,7 +19,7 @@ export class FoodLogsResource {
       ...(request.endUserTimezone !== undefined ? { xEndUserTimezone: request.endUserTimezone } : {}),
       createFoodLogBody: {
         foods: request.foods,
-        ...(request.timestampUtc !== undefined ? { timestampUtc: request.timestampUtc } : {}),
+        ...(request.timestampUtc !== undefined ? { timestampUtc: parseDateTime(request.timestampUtc, 'timestampUtc') } : {}),
         ...(request.name !== undefined ? { name: request.name } : {}),
       },
     }, init(request.signal)));
@@ -27,7 +27,9 @@ export class FoodLogsResource {
 
   async list(request: ListFoodLogsRequest): Promise<ListFoodLogsResponse> {
     return executeRequest(() => this.api.listFoodLogs({
-      xEndUserId: request.endUserId, start: request.start, end: request.end,
+      xEndUserId: request.endUserId,
+      start: parseDate(request.start, 'start'),
+      end: parseDate(request.end, 'end'),
       ...(request.endUserTimezone !== undefined ? { xEndUserTimezone: request.endUserTimezone } : {}),
     }, init(request.signal)));
   }
@@ -53,3 +55,16 @@ export class FoodLogsResource {
 }
 
 function init(signal?: AbortSignal): RequestInit | undefined { return signal ? { signal } : undefined }
+
+function parseDate(value: string, name: string): Date {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) throw new TypeError(`${name} must be an ISO-8601 date.`);
+  const result = new Date(`${value}T00:00:00.000Z`);
+  if (Number.isNaN(result.getTime())) throw new TypeError(`${name} must be an ISO-8601 date.`);
+  return result;
+}
+
+function parseDateTime(value: string, name: string): Date {
+  const result = new Date(value);
+  if (Number.isNaN(result.getTime())) throw new TypeError(`${name} must be an ISO-8601 date-time.`);
+  return result;
+}

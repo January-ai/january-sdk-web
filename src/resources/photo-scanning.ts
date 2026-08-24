@@ -17,7 +17,10 @@ export class PhotoScanningResource {
     return executeRequest(() => this.api.correctPhotoScan({
       correctPhotoScanBody: {
         mealName: request.mealName,
-        detections: request.detections,
+        detections: request.detections.map((detection) => ({
+          ...detection,
+          food: { ...detection.food, servings: detection.food.servings ?? [] },
+        })),
         userInput: request.userInput,
       },
       ...(request.endUserId !== undefined ? { xEndUserId: request.endUserId } : {}),

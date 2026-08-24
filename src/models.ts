@@ -108,23 +108,20 @@ export interface NaturalLanguageFoodDetection {
   food: NaturalLanguageFood;
 }
 
-export interface SearchFoodsByNaturalLanguageResponse {
-  totalNutrients?: CompleteScanNutritionFacts;
-  detections: NaturalLanguageFoodDetection[];
-}
+export type SearchFoodsByNaturalLanguageResponse = PhotoScan;
 
 export const DietRestriction = {
-  none: 'None', gluten: 'Gluten', lactose: 'Lactose', yeast: 'Yeast', treeNuts: 'Tree nuts',
-  peanuts: 'Peanuts', dairy: 'Dairy', eggs: 'Eggs', sulfites: 'Sulfites', soy: 'Soy', wheat: 'Wheat',
-  shellfish: 'Shellfish', fish: 'Fish', mushrooms: 'Mushrooms', sesame: 'Sesame',
-  monosodiumGlutamateMsg: 'Monosodium glutamate (MSG)', caffeine: 'Caffeine', fodmaps: 'FODMAPs',
+  gluten: 'gluten', lactose: 'lactose', yeast: 'yeast', treeNuts: 'tree_nuts',
+  peanuts: 'peanuts', dairy: 'dairy', eggs: 'eggs', sulfites: 'sulfites', soy: 'soy', wheat: 'wheat',
+  shellfish: 'shellfish', fish: 'fish', mushrooms: 'mushrooms', sesame: 'sesame',
+  monosodiumGlutamate: 'msg', caffeine: 'caffeine', fodmaps: 'fodmaps',
 } as const;
 export type DietRestriction = typeof DietRestriction[keyof typeof DietRestriction];
 
 export const DietPreference = {
-  none: 'None', vegetarian: 'Vegetarian', vegan: 'Vegan', keto: 'Keto', paleo: 'Paleo',
-  pescatarian: 'Pescatarian', lowCarbohydrate: 'Low carbohydrate', highProtein: 'High protein',
-  kosher: 'Kosher', halal: 'Halal',
+  vegetarian: 'vegetarian', vegan: 'vegan', keto: 'keto', paleo: 'paleo',
+  pescatarian: 'pescatarian', lowCarbohydrate: 'low_carbohydrate', highProtein: 'high_protein',
+  kosher: 'kosher', halal: 'halal',
 } as const;
 export type DietPreference = typeof DietPreference[keyof typeof DietPreference];
 
@@ -273,22 +270,30 @@ export interface FoodLog { id: string; foods: LoggedFood[]; timestampUtc: string
 export interface ListFoodLogsResponse { totalCount: number; items: FoodLog[] }
 export interface DeleteFoodLogResponse { status: string }
 
-export const Gender = { male: 'male', female: 'female' } as const;
-export type Gender = typeof Gender[keyof typeof Gender];
+export const Sex = { male: 'male', female: 'female' } as const;
+export type Sex = typeof Sex[keyof typeof Sex];
+export const Gender = Sex;
+export type Gender = Sex;
+export const HeightUnit = { inches: 'in', centimeters: 'cm' } as const;
+export type HeightUnit = typeof HeightUnit[keyof typeof HeightUnit];
+export interface Height { value: number; unit: HeightUnit }
+export const WeightUnit = { pounds: 'lb', kilograms: 'kg' } as const;
+export type WeightUnit = typeof WeightUnit[keyof typeof WeightUnit];
+export interface Weight { value: number; unit: WeightUnit }
 export const ActivityLevel = {
   sedentary: 'sedentary', lightlyActive: 'lightly_active', moderatelyActive: 'moderately_active', veryActive: 'very_active',
 } as const;
 export type ActivityLevel = typeof ActivityLevel[keyof typeof ActivityLevel];
 export const MedicalCondition = {
-  type2Diabetes: 'Type 2 diabetes', prediabetes: 'Prediabetes', noneOfTheAbove: 'None of the above',
+  type2Diabetes: 'type_2_diabetes', prediabetes: 'prediabetes',
 } as const;
 export type MedicalCondition = typeof MedicalCondition[keyof typeof MedicalCondition];
 
 export interface GlucosePredictionProfile {
   age: number;
-  gender: Gender;
-  height: number;
-  weight: number;
+  sex: Sex;
+  height: Height;
+  weight: Weight;
   activityLevel?: ActivityLevel;
   healthConditions?: MedicalCondition[];
 }
@@ -305,4 +310,9 @@ export interface PredictGlucoseRequest {
   endUserTimezone?: string;
   signal?: AbortSignal;
 }
-export interface GlucosePrediction { cgp: number[][]; scoring: string; cgpMin: number; cgpMax: number }
+export interface GlucoseChart { min: number; max: number }
+export interface GlucosePrediction {
+  prediction: GlucosePredictionPoint[];
+  impact: string;
+  chart: GlucoseChart;
+}
