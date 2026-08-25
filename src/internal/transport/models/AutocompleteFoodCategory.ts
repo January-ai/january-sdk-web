@@ -17,18 +17,18 @@
  *
  * @export
  */
-export const WeightUnit = {
-    lb: 'lb',
-    kg: 'kg',
+export const AutocompleteFoodCategory = {
+    general: 'general',
+    branded: 'branded',
     unknownDefaultOpenApi: '11184809'
 } as const;
-export type WeightUnit = typeof WeightUnit[keyof typeof WeightUnit];
+export type AutocompleteFoodCategory = typeof AutocompleteFoodCategory[keyof typeof AutocompleteFoodCategory];
 
 
-export function instanceOfWeightUnit(value: any): boolean {
-    for (const key in WeightUnit) {
-        if (Object.prototype.hasOwnProperty.call(WeightUnit, key)) {
-            if (WeightUnit[key as keyof typeof WeightUnit] === value) {
+export function instanceOfAutocompleteFoodCategory(value: any): boolean {
+    for (const key in AutocompleteFoodCategory) {
+        if (Object.prototype.hasOwnProperty.call(AutocompleteFoodCategory, key)) {
+            if (AutocompleteFoodCategory[key as keyof typeof AutocompleteFoodCategory] === value) {
                 return true;
             }
         }
@@ -36,18 +36,18 @@ export function instanceOfWeightUnit(value: any): boolean {
     return false;
 }
 
-export function WeightUnitFromJSON(json: any): WeightUnit {
-    return WeightUnitFromJSONTyped(json, false);
+export function AutocompleteFoodCategoryFromJSON(json: any): AutocompleteFoodCategory {
+    return AutocompleteFoodCategoryFromJSONTyped(json, false);
 }
 
-export function WeightUnitFromJSONTyped(json: any, ignoreDiscriminator: boolean): WeightUnit {
-    return json as WeightUnit;
+export function AutocompleteFoodCategoryFromJSONTyped(json: any, ignoreDiscriminator: boolean): AutocompleteFoodCategory {
+    return json as AutocompleteFoodCategory;
 }
 
-export function WeightUnitToJSON(value?: WeightUnit | null): any {
+export function AutocompleteFoodCategoryToJSON(value?: AutocompleteFoodCategory | null): any {
     return value as any;
 }
 
-export function WeightUnitToJSONTyped(value: any, ignoreDiscriminator: boolean): WeightUnit {
-    return value as WeightUnit;
+export function AutocompleteFoodCategoryToJSONTyped(value: any, ignoreDiscriminator: boolean): AutocompleteFoodCategory {
+    return value as AutocompleteFoodCategory;
 }

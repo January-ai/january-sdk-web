@@ -12,42 +12,62 @@
  * Do not edit the class manually.
  */
 
+import { mapValues } from '../runtime.js';
+import type { FoodSuggestion } from './FoodSuggestion.js';
+import {
+    FoodSuggestionFromJSON,
+    FoodSuggestionFromJSONTyped,
+    FoodSuggestionToJSON,
+    FoodSuggestionToJSONTyped,
+} from './FoodSuggestion.js';
 
 /**
  *
  * @export
+ * @interface AutocompleteFoodsResponse
  */
-export const WeightUnit = {
-    lb: 'lb',
-    kg: 'kg',
-    unknownDefaultOpenApi: '11184809'
-} as const;
-export type WeightUnit = typeof WeightUnit[keyof typeof WeightUnit];
+export interface AutocompleteFoodsResponse {
+    /**
+     * Ranked suggestions, generic foods before branded. Empty when nothing matches.
+     * @type {Array<FoodSuggestion>}
+     * @memberof AutocompleteFoodsResponse
+     */
+    items: Array<FoodSuggestion>;
+}
 
+/**
+ * Check if a given object implements the AutocompleteFoodsResponse interface.
+ */
+export function instanceOfAutocompleteFoodsResponse(value: object): value is AutocompleteFoodsResponse {
+    if (!('items' in value) || value['items'] === undefined) return false;
+    return true;
+}
 
-export function instanceOfWeightUnit(value: any): boolean {
-    for (const key in WeightUnit) {
-        if (Object.prototype.hasOwnProperty.call(WeightUnit, key)) {
-            if (WeightUnit[key as keyof typeof WeightUnit] === value) {
-                return true;
-            }
-        }
+export function AutocompleteFoodsResponseFromJSON(json: any): AutocompleteFoodsResponse {
+    return AutocompleteFoodsResponseFromJSONTyped(json, false);
+}
+
+export function AutocompleteFoodsResponseFromJSONTyped(json: any, ignoreDiscriminator: boolean): AutocompleteFoodsResponse {
+    if (json == null) {
+        return json;
     }
-    return false;
+    return {
+
+        'items': ((json['items'] as Array<any>).map(FoodSuggestionFromJSON)),
+    };
 }
 
-export function WeightUnitFromJSON(json: any): WeightUnit {
-    return WeightUnitFromJSONTyped(json, false);
+export function AutocompleteFoodsResponseToJSON(json: any): AutocompleteFoodsResponse {
+    return AutocompleteFoodsResponseToJSONTyped(json, false);
 }
 
-export function WeightUnitFromJSONTyped(json: any, ignoreDiscriminator: boolean): WeightUnit {
-    return json as WeightUnit;
-}
+export function AutocompleteFoodsResponseToJSONTyped(value?: AutocompleteFoodsResponse | null, ignoreDiscriminator: boolean = false): any {
+    if (value == null) {
+        return value;
+    }
 
-export function WeightUnitToJSON(value?: WeightUnit | null): any {
-    return value as any;
-}
+    return {
 
-export function WeightUnitToJSONTyped(value: any, ignoreDiscriminator: boolean): WeightUnit {
-    return value as WeightUnit;
+        'items': ((value['items'] as Array<any>).map(FoodSuggestionToJSON)),
+    };
 }

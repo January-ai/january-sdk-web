@@ -2,7 +2,7 @@
 /* eslint-disable */
 /**
  * January AI - Nutrition Intelligence APIs
- * Build food and metabolic intelligence into your product — one API for understanding what people eat and how food may affect them.  **Clinical-grade precision, consumer-grade experiences.** January builds the infrastructure underneath the product: turning messy health and nutrition data into reliable intelligence, so your team spends its time on the experience instead of the foundation.  **What you can build** - **Scan food** — detect foods and nutrition from a meal photo or a plain-English description, and correct results conversationally - **Search the food database** — by name or barcode — and get healthier alternatives for any food - **Log food** — a per-user diary with day-range queries - **Predict glucose response** to any meal — no sensor required  **Getting started** 1. Create an API key in the [Developer Dashboard](https://dashboard.january.ai) — the full key is shown once, at creation. 2. Send it as `Authorization: Bearer <your key>` — click **Authorize** here to make every example below a live request. 3. Identify your end user with the `x-end-user-id` header wherever a request acts on their data.  **Support** — [support@january.ai](mailto:support@january.ai) · [Discord community](https://discord.gg/cYQeh3UnC) · [docs.january.ai](https://docs.january.ai)
+ * Build food and metabolic intelligence into your product — one API for understanding what people eat and how food may affect them.  **Clinical-grade precision, consumer-grade experiences.** January builds the infrastructure underneath the product: turning messy health and nutrition data into reliable intelligence, so your team spends its time on the experience instead of the foundation.  **Security & compliance** — **SOC 2 Type II** · **HIPAA-aligned practices** · **BAA** and **Zero Data Retention (ZDR)** available  **What you can build** - **Scan food** — photo and text food recognition: detect foods and nutrition, then correct results conversationally - **Search the food database** — by name or barcode — and get healthier alternatives for any food - **Log food** — a per-user diary with day-range queries - **Predict glucose response** to any meal — no sensor required  **Getting started** 1. Create an API key in the [Developer Dashboard](https://dashboard.january.ai) — the full key is shown once, at creation. 2. Send it as `Authorization: Bearer <your key>` — click **Authorize** here to make every example below a live request. 3. Identify your end user with the `x-end-user-id` header wherever a request acts on their data.  **Support** — [support@january.ai](mailto:support@january.ai) · [Discord community](https://discord.gg/cYQeh3UnC) · [docs.january.ai](https://docs.january.ai)
  *
  * The version of the OpenAPI document: 1.2
  * Contact: support@january.ai
@@ -77,6 +77,12 @@ export interface FoodSearchItem {
      */
     imageUrl?: string;
     /**
+     * The product's barcode, for branded foods that have one.
+     * @type {string}
+     * @memberof FoodSearchItem
+     */
+    upc?: string;
+    /**
      *
      * @type {Array<ServingOption>}
      * @memberof FoodSearchItem
@@ -112,6 +118,7 @@ export function FoodSearchItemFromJSONTyped(json: any, ignoreDiscriminator: bool
         'glycemicIndex': json['glycemic_index'] == null ? undefined : json['glycemic_index'],
         'glycemicLoad': json['glycemic_load'] == null ? undefined : json['glycemic_load'],
         'imageUrl': json['image_url'] == null ? undefined : json['image_url'],
+        'upc': json['upc'] == null ? undefined : json['upc'],
         'servings': ((json['servings'] as Array<any>).map(ServingOptionFromJSON)),
     };
 }
@@ -134,6 +141,7 @@ export function FoodSearchItemToJSONTyped(value?: FoodSearchItem | null, ignoreD
         'glycemic_index': value['glycemicIndex'],
         'glycemic_load': value['glycemicLoad'],
         'image_url': value['imageUrl'],
+        'upc': value['upc'],
         'servings': ((value['servings'] as Array<any>).map(ServingOptionToJSON)),
     };
 }

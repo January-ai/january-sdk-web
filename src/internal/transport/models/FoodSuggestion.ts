@@ -13,63 +13,84 @@
  */
 
 import { mapValues } from '../runtime.js';
-import type { FoodLogInputServing } from './FoodLogInputServing.js';
+import type { NutritionFacts } from './NutritionFacts.js';
 import {
-    FoodLogInputServingFromJSON,
-    FoodLogInputServingFromJSONTyped,
-    FoodLogInputServingToJSON,
-    FoodLogInputServingToJSONTyped,
-} from './FoodLogInputServing.js';
+    NutritionFactsFromJSON,
+    NutritionFactsFromJSONTyped,
+    NutritionFactsToJSON,
+    NutritionFactsToJSONTyped,
+} from './NutritionFacts.js';
 
 /**
  *
  * @export
- * @interface FoodLogInputFood
+ * @interface FoodSuggestion
  */
-export interface FoodLogInputFood {
+export interface FoodSuggestion {
     /**
      * Stable food identifier, provisionally narrowed to JavaScript's safe integer range.
      * @type {number}
-     * @memberof FoodLogInputFood
+     * @memberof FoodSuggestion
      */
     id: number;
     /**
-     *
-     * @type {FoodLogInputServing}
-     * @memberof FoodLogInputFood
+     * Generic foods are lowercase; branded foods keep their product name.
+     * @type {string}
+     * @memberof FoodSuggestion
      */
-    serving: FoodLogInputServing;
+    name: string;
+    /**
+     * Absent for generic (non-branded) foods.
+     * @type {string}
+     * @memberof FoodSuggestion
+     */
+    brandName?: string;
+    /**
+     * Thumbnail of the food, when the database has one.
+     * @type {string}
+     * @memberof FoodSuggestion
+     */
+    imageUrl?: string;
+    /**
+     *
+     * @type {NutritionFacts}
+     * @memberof FoodSuggestion
+     */
+    nutrients?: NutritionFacts;
 }
 
 /**
- * Check if a given object implements the FoodLogInputFood interface.
+ * Check if a given object implements the FoodSuggestion interface.
  */
-export function instanceOfFoodLogInputFood(value: object): value is FoodLogInputFood {
+export function instanceOfFoodSuggestion(value: object): value is FoodSuggestion {
     if (!('id' in value) || value['id'] === undefined) return false;
-    if (!('serving' in value) || value['serving'] === undefined) return false;
+    if (!('name' in value) || value['name'] === undefined) return false;
     return true;
 }
 
-export function FoodLogInputFoodFromJSON(json: any): FoodLogInputFood {
-    return FoodLogInputFoodFromJSONTyped(json, false);
+export function FoodSuggestionFromJSON(json: any): FoodSuggestion {
+    return FoodSuggestionFromJSONTyped(json, false);
 }
 
-export function FoodLogInputFoodFromJSONTyped(json: any, ignoreDiscriminator: boolean): FoodLogInputFood {
+export function FoodSuggestionFromJSONTyped(json: any, ignoreDiscriminator: boolean): FoodSuggestion {
     if (json == null) {
         return json;
     }
     return {
 
         'id': json['id'],
-        'serving': FoodLogInputServingFromJSON(json['serving']),
+        'name': json['name'],
+        'brandName': json['brand_name'] == null ? undefined : json['brand_name'],
+        'imageUrl': json['image_url'] == null ? undefined : json['image_url'],
+        'nutrients': json['nutrients'] == null ? undefined : NutritionFactsFromJSON(json['nutrients']),
     };
 }
 
-export function FoodLogInputFoodToJSON(json: any): FoodLogInputFood {
-    return FoodLogInputFoodToJSONTyped(json, false);
+export function FoodSuggestionToJSON(json: any): FoodSuggestion {
+    return FoodSuggestionToJSONTyped(json, false);
 }
 
-export function FoodLogInputFoodToJSONTyped(value?: FoodLogInputFood | null, ignoreDiscriminator: boolean = false): any {
+export function FoodSuggestionToJSONTyped(value?: FoodSuggestion | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
@@ -77,6 +98,9 @@ export function FoodLogInputFoodToJSONTyped(value?: FoodLogInputFood | null, ign
     return {
 
         'id': value['id'],
-        'serving': FoodLogInputServingToJSON(value['serving']),
+        'name': value['name'],
+        'brand_name': value['brandName'],
+        'image_url': value['imageUrl'],
+        'nutrients': NutritionFactsToJSON(value['nutrients']),
     };
 }

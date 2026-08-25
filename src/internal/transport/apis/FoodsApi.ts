@@ -2,7 +2,7 @@
 /* eslint-disable */
 /**
  * January AI - Nutrition Intelligence APIs
- * Build food and metabolic intelligence into your product — one API for understanding what people eat and how food may affect them.  **Clinical-grade precision, consumer-grade experiences.** January builds the infrastructure underneath the product: turning messy health and nutrition data into reliable intelligence, so your team spends its time on the experience instead of the foundation.  **What you can build** - **Scan food** — detect foods and nutrition from a meal photo or a plain-English description, and correct results conversationally - **Search the food database** — by name or barcode — and get healthier alternatives for any food - **Log food** — a per-user diary with day-range queries - **Predict glucose response** to any meal — no sensor required  **Getting started** 1. Create an API key in the [Developer Dashboard](https://dashboard.january.ai) — the full key is shown once, at creation. 2. Send it as `Authorization: Bearer <your key>` — click **Authorize** here to make every example below a live request. 3. Identify your end user with the `x-end-user-id` header wherever a request acts on their data.  **Support** — [support@january.ai](mailto:support@january.ai) · [Discord community](https://discord.gg/cYQeh3UnC) · [docs.january.ai](https://docs.january.ai)
+ * Build food and metabolic intelligence into your product — one API for understanding what people eat and how food may affect them.  **Clinical-grade precision, consumer-grade experiences.** January builds the infrastructure underneath the product: turning messy health and nutrition data into reliable intelligence, so your team spends its time on the experience instead of the foundation.  **Security & compliance** — **SOC 2 Type II** · **HIPAA-aligned practices** · **BAA** and **Zero Data Retention (ZDR)** available  **What you can build** - **Scan food** — photo and text food recognition: detect foods and nutrition, then correct results conversationally - **Search the food database** — by name or barcode — and get healthier alternatives for any food - **Log food** — a per-user diary with day-range queries - **Predict glucose response** to any meal — no sensor required  **Getting started** 1. Create an API key in the [Developer Dashboard](https://dashboard.january.ai) — the full key is shown once, at creation. 2. Send it as `Authorization: Bearer <your key>` — click **Authorize** here to make every example below a live request. 3. Identify your end user with the `x-end-user-id` header wherever a request acts on their data.  **Support** — [support@january.ai](mailto:support@january.ai) · [Discord community](https://discord.gg/cYQeh3UnC) · [docs.january.ai](https://docs.january.ai)
  *
  * The version of the OpenAPI document: 1.2
  * Contact: support@january.ai
@@ -14,6 +14,16 @@
 
 import * as runtime from '../runtime.js';
 import {
+    type AutocompleteFoodCategory,
+    AutocompleteFoodCategoryFromJSON,
+    AutocompleteFoodCategoryToJSON,
+} from '../models/AutocompleteFoodCategory.js';
+import {
+    type AutocompleteFoodsResponse,
+    AutocompleteFoodsResponseFromJSON,
+    AutocompleteFoodsResponseToJSON,
+} from '../models/AutocompleteFoodsResponse.js';
+import {
     type ErrorResponse,
     ErrorResponseFromJSON,
     ErrorResponseToJSON,
@@ -23,6 +33,11 @@ import {
     FoodCategoryFromJSON,
     FoodCategoryToJSON,
 } from '../models/FoodCategory.js';
+import {
+    type FoodSearchItem,
+    FoodSearchItemFromJSON,
+    FoodSearchItemToJSON,
+} from '../models/FoodSearchItem.js';
 import {
     type FoodSearchResults,
     FoodSearchResultsFromJSON,
@@ -38,6 +53,18 @@ import {
     SuggestFoodAlternativesResponseFromJSON,
     SuggestFoodAlternativesResponseToJSON,
 } from '../models/SuggestFoodAlternativesResponse.js';
+
+export interface AutocompleteFoodsRequest {
+    query: string;
+    xEndUserId?: string;
+    category?: AutocompleteFoodCategory;
+    limit?: number;
+}
+
+export interface GetFoodRequest {
+    foodId: number;
+    xEndUserId?: string;
+}
 
 export interface LookupFoodByBarcodeRequest {
     upc: string;
@@ -61,6 +88,135 @@ export interface SuggestFoodAlternativesRequest {
  *
  */
 export class FoodsApi extends runtime.BaseAPI {
+
+    /**
+     * Creates request options for autocompleteFoods without sending the request
+     */
+    async autocompleteFoodsRequestOpts(requestParameters: AutocompleteFoodsRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['query'] == null) {
+            throw new runtime.RequiredError(
+                'query',
+                'Required parameter "query" was null or undefined when calling autocompleteFoods().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        if (requestParameters['query'] != null) {
+            queryParameters['query'] = requestParameters['query'];
+        }
+
+        if (requestParameters['category'] != null) {
+            queryParameters['category'] = requestParameters['category'];
+        }
+
+        if (requestParameters['limit'] != null) {
+            queryParameters['limit'] = requestParameters['limit'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (requestParameters['xEndUserId'] != null) {
+            headerParameters['x-end-user-id'] = String(requestParameters['xEndUserId']);
+        }
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearerAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/v1.2/foods/autocomplete`;
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Lightweight food suggestions for a partial name, built for type-ahead (\"ban\" → banana, banana bread, …): generic foods first, then branded, each with its id, name, brand, a thumbnail and calories. Once the user picks one, fetch `GET /v1.2/foods/{food_id}` for servings and full nutrition. `items` is empty for fewer than 2 letters or digits, no match, or a search-index error (the suggestion service fails open so a typing user is not interrupted); an unreachable service still answers with the standard 502/504.
+     * Autocomplete food names
+     */
+    async autocompleteFoodsRaw(requestParameters: AutocompleteFoodsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AutocompleteFoodsResponse>> {
+        const requestOptions = await this.autocompleteFoodsRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => AutocompleteFoodsResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Lightweight food suggestions for a partial name, built for type-ahead (\"ban\" → banana, banana bread, …): generic foods first, then branded, each with its id, name, brand, a thumbnail and calories. Once the user picks one, fetch `GET /v1.2/foods/{food_id}` for servings and full nutrition. `items` is empty for fewer than 2 letters or digits, no match, or a search-index error (the suggestion service fails open so a typing user is not interrupted); an unreachable service still answers with the standard 502/504.
+     * Autocomplete food names
+     */
+    async autocompleteFoods(requestParameters: AutocompleteFoodsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AutocompleteFoodsResponse> {
+        const response = await this.autocompleteFoodsRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for getFood without sending the request
+     */
+    async getFoodRequestOpts(requestParameters: GetFoodRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['foodId'] == null) {
+            throw new runtime.RequiredError(
+                'foodId',
+                'Required parameter "foodId" was null or undefined when calling getFood().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (requestParameters['xEndUserId'] != null) {
+            headerParameters['x-end-user-id'] = String(requestParameters['xEndUserId']);
+        }
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearerAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/v1.2/foods/{food_id}`;
+        urlPath = urlPath.replace('{food_id}', encodeURIComponent(String(requestParameters['foodId'])));
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * One food\'s full record — most importantly the **complete list of serving sizes**. Search, barcode, and scan results carry a single default serving; fetch the food here to let an end user pick \"1 cup\" vs \"100 g\" vs \"1 medium\" when logging or predicting. Nutrition is per the default serving, in the shared nutrient vocabulary.
+     * Get a food
+     */
+    async getFoodRaw(requestParameters: GetFoodRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FoodSearchItem>> {
+        const requestOptions = await this.getFoodRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => FoodSearchItemFromJSON(jsonValue));
+    }
+
+    /**
+     * One food\'s full record — most importantly the **complete list of serving sizes**. Search, barcode, and scan results carry a single default serving; fetch the food here to let an end user pick \"1 cup\" vs \"100 g\" vs \"1 medium\" when logging or predicting. Nutrition is per the default serving, in the shared nutrient vocabulary.
+     * Get a food
+     */
+    async getFood(requestParameters: GetFoodRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<FoodSearchItem> {
+        const response = await this.getFoodRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
 
     /**
      * Creates request options for lookupFoodByBarcode without sending the request
@@ -241,7 +397,7 @@ export class FoodsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Returns healthier alternatives for a food, honoring the given dietary restrictions and preferences. Send `[\"None\"]` (not an empty array) to opt out of either. An empty `alternatives` result is valid — no suitable alternatives were found.
+     * Returns healthier alternatives for a food, honoring the given dietary restrictions and preferences. Omit either array (or send `[]`) if it does not apply. An empty `alternatives` result is valid — no suitable alternatives were found.
      * Suggest healthier alternatives for a food
      */
     async suggestFoodAlternativesRaw(requestParameters: SuggestFoodAlternativesRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SuggestFoodAlternativesResponse>> {
@@ -252,7 +408,7 @@ export class FoodsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Returns healthier alternatives for a food, honoring the given dietary restrictions and preferences. Send `[\"None\"]` (not an empty array) to opt out of either. An empty `alternatives` result is valid — no suitable alternatives were found.
+     * Returns healthier alternatives for a food, honoring the given dietary restrictions and preferences. Omit either array (or send `[]`) if it does not apply. An empty `alternatives` result is valid — no suitable alternatives were found.
      * Suggest healthier alternatives for a food
      */
     async suggestFoodAlternatives(requestParameters: SuggestFoodAlternativesRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SuggestFoodAlternativesResponse> {
