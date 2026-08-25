@@ -1,5 +1,6 @@
 import {
   ActivityLevel,
+  AutocompleteFoodCategory,
   FoodCategory,
   HeightUnit,
   MedicalCondition,
@@ -27,29 +28,21 @@ export const searchFoods = createServerFn({ method: 'GET' })
   .validator(foodSearchSchema)
   .handler(({ data }) => getJanuaryClient().foods.search({ ...data, limit: 20 }))
 
+export const autocompleteFoods = createServerFn({ method: 'GET' })
+  .validator(z.object({
+    query: z.string().trim().min(2).max(64),
+    category: z.enum([AutocompleteFoodCategory.general, AutocompleteFoodCategory.branded]).optional(),
+    limit: z.number().int().min(1).max(20).default(8),
+    endUserId: optionalUserId,
+  }))
+  .handler(({ data }) => getJanuaryClient().foods.autocomplete(data))
+
 export const getFoodDetails = createServerFn({ method: 'GET' })
   .validator(z.object({
     foodId: z.number().int().positive(),
-    query: z.string().trim().min(1).max(256),
-    upc: z.string().trim().min(1).max(64).optional(),
     endUserId: optionalUserId,
   }))
-  .handler(async ({ data }) => {
-    // Partner API v1.2 returns complete food records from search and barcode
-    // lookup; it does not expose a separate GET /foods/:id operation. Repeat
-    // the originating lookup and select by ID so detail URLs remain reloadable.
-    const client = getJanuaryClient()
-    const response = data.upc
-      ? await client.foods.lookupBarcode({ upc: data.upc, endUserId: data.endUserId })
-      : await client.foods.search({
-          query: data.query,
-          limit: 40,
-          ...(data.endUserId ? { endUserId: data.endUserId } : {}),
-        })
-    const food = response.items.find((item) => item.id === data.foodId)
-    if (!food) throw new Error('This food is no longer available in the search results.')
-    return food
-  })
+  .handler(({ data }) => getJanuaryClient().foods.getFood(data))
 
 export const searchFoodCatalog = createServerFn({ method: 'GET' })
   .validator(z.object({

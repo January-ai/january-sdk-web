@@ -55,11 +55,30 @@ await request;
 
 ## API resources
 
-- `foods` — food search, barcode lookup, natural-language search, and alternatives
+- `foods` — autocomplete, food details, search, barcode lookup, natural-language search, and alternatives
 - `restaurants` — restaurant and menu search
 - `photoScanning` — meal-photo scanning and corrections
 - `foodLogs` — create, retrieve, update, and delete food logs
 - `glucose` — glucose prediction
+
+## Serving and nutrition calculations
+
+Use `FoodPortion` with a complete food returned by `foods.getFood`. It validates
+the serving and quantity, scales nutrition consistently, and provides the exact
+food selection accepted by food-log and glucose requests.
+
+```ts
+import { FoodPortion } from '@januaryai/partner-sdk';
+
+const food = await january.foods.getFood({ foodId: result.id });
+const portion = FoodPortion.from(food, {
+  servingId: food.servings[0].id,
+  quantity: 1.5,
+});
+
+console.log(portion.nutrition.calories?.value);
+console.log(portion.selection);
+```
 
 ## Error handling
 

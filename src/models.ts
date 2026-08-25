@@ -6,6 +6,37 @@ export const FoodCategory = {
 
 export type FoodCategory = typeof FoodCategory[keyof typeof FoodCategory];
 
+export const AutocompleteFoodCategory = {
+  general: 'general',
+  branded: 'branded',
+} as const;
+
+export type AutocompleteFoodCategory = typeof AutocompleteFoodCategory[keyof typeof AutocompleteFoodCategory];
+
+export interface AutocompleteFoodsRequest {
+  query: string;
+  category?: AutocompleteFoodCategory;
+  limit?: number;
+  endUserId?: string;
+  signal?: AbortSignal;
+}
+
+export interface FoodSuggestion {
+  id: number;
+  name: string;
+  brandName: string | null;
+  photoUrl: string | null;
+  nutrients: NutritionFacts | null;
+}
+
+export interface AutocompleteFoodsResponse { items: FoodSuggestion[] }
+
+export interface GetFoodRequest {
+  foodId: number;
+  endUserId?: string;
+  signal?: AbortSignal;
+}
+
 export interface SearchFoodsRequest {
   query: string;
   category?: FoodCategory;
@@ -38,7 +69,9 @@ export interface FoodSearchItem {
   glycemicIndex: number | null;
   glycemicLoad: number | null;
   photoUrl: string | null;
+  upc: string | null;
   servings: ServingOption[];
+  nutrients: NutritionFacts | null;
 }
 
 export interface ServingOption {

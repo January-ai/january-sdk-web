@@ -1,4 +1,4 @@
-import { ActivityLevel, Sex, type FoodSearchItem, type ServingOption } from '@januaryai/partner-sdk'
+import { ActivityLevel, FoodPortion, Sex, type FoodSearchItem, type ServingOption } from '@januaryai/partner-sdk'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { Activity, ArrowLeft, Minus, Plus, Utensils } from 'lucide-react'
@@ -28,14 +28,12 @@ function FoodDetailPage() {
   const configuration = Route.useLoaderData()
   const id = Number(foodId)
   const food = useQuery({
-    queryKey: ['food-detail', id, q, upc],
+    queryKey: ['food-detail', id],
     queryFn: () => getFoodDetails({ data: {
       foodId: id,
-      query: q,
-      ...(upc ? { upc } : {}),
       ...(configuration.defaultEndUserId ? { endUserId: configuration.defaultEndUserId } : {}),
     } }),
-    enabled: Number.isInteger(id) && id > 0 && q.trim().length > 0,
+    enabled: Number.isInteger(id) && id > 0,
   })
 
   return (
@@ -55,7 +53,7 @@ function FoodDetailContent({ food, configuration }: { food: FoodSearchItem; conf
   const [servingId, setServingId] = useState(initialServing?.id ?? 0)
   const [quantity, setQuantity] = useState(initialServing?.quantity ?? 1)
   const serving = food.servings.find((item) => item.id === servingId) ?? initialServing
-  const nutritionScale = serving ? quantity * serving.scalingFactor / (serving.quantity || 1) : 1
+  const portion = serving ? FoodPortion.from(food, { servingId: serving.id, quantity }) : null
   const prediction = useMutation({
     mutationFn: () => {
       if (!serving) throw new Error('Choose a serving before predicting glucose.')
@@ -124,8 +122,8 @@ function FoodDetailContent({ food, configuration }: { food: FoodSearchItem; conf
       </div>
 
       <div className="space-y-6">
-        <MacroGrid food={food} scale={nutritionScale} />
-        <NutritionFacts food={food} scale={nutritionScale} />
+        <MacroGrid portion={portion} />
+        <NutritionFacts portion={portion} />
         <Button busy={prediction.isPending} className="w-full" disabled={!serving || prediction.isPending} onClick={() => prediction.mutate()}>
           <Activity aria-hidden="true" className="size-5" /> {prediction.isPending ? 'Predicting response…' : 'Check glucose'}
         </Button>
@@ -136,18 +134,18 @@ function FoodDetailContent({ food, configuration }: { food: FoodSearchItem; conf
   )
 }
 
-function MacroGrid({ food, scale }: { food: FoodSearchItem; scale: number }) {
-  const macros: Array<[string, number | null, string]> = [
-    ['Calories', food.calories, 'cal'],
-    ['Protein', food.protein, 'g'],
-    ['Carbs', food.carbohydrates, 'g'],
-    ['Fat', food.totalFat, 'g'],
+function MacroGrid({ portion }: { portion: FoodPortion | null }) {
+  const macros: Array<[string, number | undefined, string]> = [
+    ['Calories', portion?.nutrition.calories?.value, 'cal'],
+    ['Protein', portion?.nutrition.protein?.value, 'g'],
+    ['Carbs', portion?.nutrition.carbohydrates?.value, 'g'],
+    ['Fat', portion?.nutrition.totalFat?.value, 'g'],
   ]
   return (
     <Card className="grid grid-cols-2 gap-px overflow-hidden bg-stone-200 sm:grid-cols-4">
       {macros.map(([label, value, unit]) => (
         <div className="bg-white p-5 text-center" key={label}>
-          <div className="data-number text-2xl font-bold">{value == null ? '—' : formatNumber(value * scale)}</div>
+          <div className="data-number text-2xl font-bold">{value == null ? '—' : formatNumber(value)}</div>
           <div className="mt-1 text-xs font-bold uppercase text-stone-500">{unit} · {label}</div>
         </div>
       ))}
@@ -155,27 +153,27 @@ function MacroGrid({ food, scale }: { food: FoodSearchItem; scale: number }) {
   )
 }
 
-function NutritionFacts({ food, scale }: { food: FoodSearchItem; scale: number }) {
-  const rows: Array<[string, number | null, string, boolean?]> = [
-    ['Net carbohydrates', food.netCarbohydrates, 'g'],
-    ['Saturated fat', food.saturatedFat, 'g'],
-    ['Fiber', food.fiber, 'g'],
-    ['Total sugars', food.totalSugars, 'g'],
-    ['Added sugars', food.addedSugars, 'g'],
-    ['Sodium', food.sodium, 'mg'],
-    ['Potassium', food.potassium, 'mg'],
-    ['Cholesterol', food.cholesterol, 'mg'],
-    ['Glycemic index', food.glycemicIndex, '', true],
-    ['Glycemic load', food.glycemicLoad, '', true],
+function NutritionFacts({ portion }: { portion: FoodPortion | null }) {
+  const rows: Array<[string, number | null | undefined, string]> = [
+    ['Net carbohydrates', portion?.nutrition.netCarbohydrates?.value, 'g'],
+    ['Saturated fat', portion?.nutrition.saturatedFat?.value, 'g'],
+    ['Fiber', portion?.nutrition.fiber?.value, 'g'],
+    ['Total sugars', portion?.nutrition.totalSugars?.value, 'g'],
+    ['Added sugars', portion?.nutrition.addedSugars?.value, 'g'],
+    ['Sodium', portion?.nutrition.sodium?.value, 'mg'],
+    ['Potassium', portion?.nutrition.potassium?.value, 'mg'],
+    ['Cholesterol', portion?.nutrition.cholesterol?.value, 'mg'],
+    ['Glycemic index', portion?.glycemicIndex, ''],
+    ['Glycemic load', portion?.glycemicLoad, ''],
   ]
   const available = rows.filter(([, value]) => value != null)
   return (
     <Card className="overflow-hidden">
       <div className="p-5 sm:p-6"><h2 className="font-serif text-3xl">Nutrition facts</h2></div>
-      {available.length ? available.map(([label, value, unit, fixed]) => (
+      {available.length ? available.map(([label, value, unit]) => (
         <div className="flex items-center justify-between gap-4 border-t border-stone-200 px-5 py-4 sm:px-6" key={label}>
           <span className="font-semibold">{label}</span>
-          <span className="data-number text-stone-500">{formatNumber((value ?? 0) * (fixed ? 1 : scale))}{unit ? ` ${unit}` : ''}</span>
+          <span className="data-number text-stone-500">{formatNumber(value ?? 0)}{unit ? ` ${unit}` : ''}</span>
         </div>
       )) : <p className="border-t border-stone-200 p-6 text-stone-500">No additional nutrients were returned.</p>}
     </Card>
