@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { HeightUnit, JanuaryPartnerClient, Sex, WeightUnit } from '../dist/index.js';
 
-test('all 13 operations are exposed through the public client', async () => {
+test('all 15 operations are exposed through the public client', async () => {
   const requests = [];
   const fetch = async (input, init) => {
     const url = new URL(String(input));
@@ -16,6 +16,8 @@ test('all 13 operations are exposed through the public client', async () => {
   const endUserId = 'fixture-user';
   const food = { id: 1, serving: { id: 2, quantity: 1 } };
 
+  await client.foods.autocomplete({ query: 'ban', endUserId });
+  await client.foods.getFood({ foodId: 1, endUserId });
   await client.foods.search({ query: 'banana', endUserId });
   await client.foods.lookupBarcode({ upc: '049000006346', endUserId });
   await client.foods.searchNaturalLanguage({ query: 'one banana', endUserId });
@@ -42,7 +44,8 @@ test('all 13 operations are exposed through the public client', async () => {
   });
 
   assert.deepEqual(requests.map(({ url }) => url.pathname), [
-    '/v1.2/foods', '/v1.2/foods/barcode/049000006346', '/v1.2/food-scans/text',
+    '/v1.2/foods/autocomplete', '/v1.2/foods/1', '/v1.2/foods',
+    '/v1.2/foods/barcode/049000006346', '/v1.2/food-scans/text',
     '/v1.2/foods/1/alternatives', '/v1.2/restaurants', '/v1.2/restaurants/menu-items',
     '/v1.2/food-scans/photo', '/v1.2/food-scans/corrections', '/v1.2/food-logs', '/v1.2/food-logs',
     '/v1.2/food-logs/00000000-0000-0000-0000-000000000001',
@@ -52,6 +55,15 @@ test('all 13 operations are exposed through the public client', async () => {
 });
 
 function responseFor(path, method) {
+  if (path === '/v1.2/foods/autocomplete') return { items: [{ id: 1, name: 'banana' }] };
+  if (path === '/v1.2/foods/1') {
+    return {
+      id: 1,
+      name: 'banana',
+      nutrients: { calories: { value: 100, unit: 'cal' } },
+      servings: [{ id: 2, quantity: 1, unit: 'item', scaling_factor: 1, is_primary: true }],
+    };
+  }
   if (path.includes('/food-scans/text')) return { detections: [] };
   if (path.includes('/alternatives')) return { alternatives: [] };
   if (path === '/v1.2/foods' || path.includes('/foods/barcode/')) return { total_count: 0, items: [] };

@@ -3,6 +3,8 @@ export type { JanuaryPartnerClientOptions } from './client.js';
 export { JanuaryError } from './errors.js';
 export type { JanuaryErrorCategory } from './errors.js';
 export * from './models.js';
+export { FoodPortion, FoodPortionError } from './food-portion.js';
+export type { FoodPortionErrorCode, FoodPortionOptions } from './food-portion.js';
 export { FoodsResource } from './resources/foods.js';
 export { RestaurantsResource } from './resources/restaurants.js';
 export { PhotoScanningResource } from './resources/photo-scanning.js';

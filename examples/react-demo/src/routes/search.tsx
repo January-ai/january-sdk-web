@@ -8,8 +8,9 @@ import {
   Search as SearchIcon,
   Utensils,
 } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
+  autocompleteFoods,
   searchFoodCatalog,
   searchRestaurantMenuItems,
   searchRestaurants,
@@ -68,7 +69,29 @@ function SearchPage() {
   const [isLocating, setIsLocating] = useState(false)
   const [locationError, setLocationError] = useState<string | null>(null)
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null)
+  const [debouncedDraft, setDebouncedDraft] = useState(draft.trim())
+  const [acceptedSuggestion, setAcceptedSuggestion] = useState<string | null>(null)
   const submittedQuery = search.q?.trim() ?? ''
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedDraft(draft.trim()), 300)
+    return () => window.clearTimeout(timer)
+  }, [draft])
+
+  const suggestions = useQuery({
+    queryKey: ['food-suggestions', { query: debouncedDraft, category }],
+    queryFn: () => autocompleteFoods({ data: {
+      query: debouncedDraft,
+      limit: 8,
+      ...(category === 'general' || category === 'branded' ? { category } : {}),
+    } }),
+    enabled: kind === 'foods'
+      && mode === 'name'
+      && category !== 'recipe'
+      && debouncedDraft.length >= 2
+      && debouncedDraft.length <= 64
+      && debouncedDraft !== acceptedSuggestion,
+  })
 
   const foods = useQuery({
     queryKey: ['foods', { query: submittedQuery, mode, category }],
@@ -101,6 +124,14 @@ function SearchPage() {
     if (!q) return
     setSelectedRestaurant(null)
     void navigate({ search: { q } })
+  }
+
+  function chooseSuggestion(name: string) {
+    setDraft(name)
+    setDebouncedDraft(name)
+    setAcceptedSuggestion(name)
+    setSelectedRestaurant(null)
+    void navigate({ search: { q: name } })
   }
 
   function requestLocation() {
@@ -162,12 +193,27 @@ function SearchPage() {
                 <SearchIcon aria-hidden="true" className="size-5 text-stone-500" />
                 <input
                   className="min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-stone-400"
-                  onChange={(event) => setDraft(event.target.value)}
+                  onChange={(event) => { setDraft(event.target.value); setAcceptedSuggestion(null) }}
                   placeholder={kind === 'foods' ? 'Try “Greek yogurt”' : 'Try “pizza”'}
                   value={draft}
                 />
               </span>
             </label>
+
+            {draft.trim() !== acceptedSuggestion && suggestions.data?.items.length ? (
+              <div aria-label="Food suggestions" className="mt-2 overflow-hidden rounded-2xl border border-stone-200 bg-white">
+                {suggestions.data.items.map((suggestion) => (
+                  <button
+                    className="block min-h-11 w-full border-b border-stone-100 px-4 py-3 text-left text-sm font-semibold last:border-b-0 hover:bg-stone-50"
+                    key={suggestion.id}
+                    onClick={() => chooseSuggestion(suggestion.name)}
+                    type="button"
+                  >
+                    {suggestion.name}
+                  </button>
+                ))}
+              </div>
+            ) : null}
 
             {kind === 'foods' ? (
               <>
