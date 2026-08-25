@@ -3,6 +3,8 @@
 export * from './ActivityLevel.js';
 export * from './AlternativeFood.js';
 export * from './AlternativeServing.js';
+export * from './AutocompleteFoodCategory.js';
+export * from './AutocompleteFoodsResponse.js';
 export * from './CgmReading.js';
 export * from './CompleteScanNutritionFacts.js';
 export * from './ConsumedHistoricalFood.js';
@@ -23,6 +25,7 @@ export * from './FoodLogInputServing.js';
 export * from './FoodScan.js';
 export * from './FoodSearchItem.js';
 export * from './FoodSearchResults.js';
+export * from './FoodSuggestion.js';
 export * from './GlucoseChart.js';
 export * from './GlucosePrediction.js';
 export * from './GlucosePredictionPoint.js';
