@@ -10,11 +10,13 @@ import { cn, formatNumber } from '~/lib/utils'
 
 interface FoodDetailSearch {
   q: string
+  upc?: string
 }
 
 export const Route = createFileRoute('/food/$foodId')({
   validateSearch: (search: Record<string, unknown>): FoodDetailSearch => ({
     q: typeof search.q === 'string' ? search.q : '',
+    ...(typeof search.upc === 'string' && search.upc ? { upc: search.upc } : {}),
   }),
   loader: () => getDemoConfiguration(),
   component: FoodDetailPage,
@@ -22,14 +24,15 @@ export const Route = createFileRoute('/food/$foodId')({
 
 function FoodDetailPage() {
   const { foodId } = Route.useParams()
-  const { q } = Route.useSearch()
+  const { q, upc } = Route.useSearch()
   const configuration = Route.useLoaderData()
   const id = Number(foodId)
   const food = useQuery({
-    queryKey: ['food-detail', id, q],
+    queryKey: ['food-detail', id, q, upc],
     queryFn: () => getFoodDetails({ data: {
       foodId: id,
       query: q,
+      ...(upc ? { upc } : {}),
       ...(configuration.defaultEndUserId ? { endUserId: configuration.defaultEndUserId } : {}),
     } }),
     enabled: Number.isInteger(id) && id > 0 && q.trim().length > 0,
@@ -37,7 +40,7 @@ function FoodDetailPage() {
 
   return (
     <Page>
-      <Link className="inline-flex min-h-11 items-center gap-2 rounded-full border border-stone-300 bg-white px-4 text-sm font-bold text-stone-700 hover:bg-stone-50" search={{ q }} to="/search">
+      <Link className="inline-flex min-h-11 items-center gap-2 rounded-full border border-stone-300 bg-white px-4 text-sm font-bold text-stone-700 hover:bg-stone-50" search={upc ? {} : { q }} to={upc ? '/scan' : '/search'}>
         <ArrowLeft aria-hidden="true" className="size-4" /> Back to results
       </Link>
       {food.isPending ? <div className="mt-6"><SkeletonList /></div> : food.isError ? <div className="mt-6"><ErrorMessage error={food.error} /></div> : (
