@@ -15,8 +15,9 @@ archive="${JANUARY_CONTRACT_ARCHIVE:-$root/../partner-api-contract/artifacts/rel
 
 if [[ ! -f "$archive" ]]; then
   archive="$work/$artifact"
-  gh api -H "Accept: application/vnd.github.raw+json" \
-    "repos/January-ai/partner-api-contract/contents/artifacts/releases/$version/$artifact" > "$archive"
+  gh api "repos/January-ai/partner-api-contract/contents/artifacts/releases/$version/$artifact" \
+    | node -e 'let input = ""; process.stdin.setEncoding("utf8"); process.stdin.on("data", chunk => input += chunk); process.stdin.on("end", () => process.stdout.write(Buffer.from(JSON.parse(input).content, "base64")));' \
+    > "$archive"
 fi
 [[ "$(shasum -a 256 "$archive" | awk '{print $1}')" == "$expected_archive_sha" ]] || {
   echo "Contract archive SHA-256 does not match sdk-contract.lock.json." >&2; exit 1;
