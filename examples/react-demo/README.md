@@ -33,8 +33,8 @@ JANUARY_END_USER_ID=local-web-user
 ```
 
 The authentication boundary in `src/api/january.server.ts` requires both URLs,
-calls the explicit token endpoint,
-endpoint, returns its `{ token, expiresIn }` response directly, and lets the SDK
+calls the explicit token endpoint, returns its `{ token, expiresIn }` response
+directly, and lets the SDK
 cache and refresh it. The URL has no SDK default: replacing the stand-in backend
 later only changes this demo configuration/provider. The partner route must
 return a token accepted by the configured January development API. The API URL

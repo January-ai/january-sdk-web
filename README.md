@@ -185,4 +185,6 @@ are surfaced without retrying. Client-token requests do not send
 
 ## Documentation
 
-See the [January Partner API documentation](https://docs.january.ai/nutrition/apis/v1.2/).
+Start with the [Web and Node.js SDK GitBook](Documentation/GitBook/README.md), or
+see the [January Partner API documentation](https://docs.january.ai/nutrition/apis/v1.2/)
+for the underlying HTTP contract.
