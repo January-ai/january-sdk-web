@@ -1,4 +1,4 @@
-# January Partner SDK React demo
+# January SDK React demo
 
 A full-stack React and TypeScript demo built with TanStack Start, TanStack
 Router, and TanStack Query. January API requests run in server functions so the

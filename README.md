@@ -1,4 +1,4 @@
-# January Partner SDK for Web and Node.js
+# January SDK for Web and Node.js
 
 Controlled-preview TypeScript SDK for January food discovery, restaurants,
 meal-photo scanning, food logs, and glucose prediction.
@@ -17,8 +17,8 @@ request, all resources, retries, cancellation, packaging, testing, and support.
 ## Evaluate and package the repository
 
 ```bash
-git clone https://github.com/January-ai/partner-sdk-node.git
-cd partner-sdk-node
+git clone https://github.com/January-ai/january-sdk-web.git
+cd january-sdk-web
 git checkout f4039db3ecc3a94a82cd125ac8e22aebf964d11f
 npm ci
 npm test

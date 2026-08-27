@@ -1,4 +1,4 @@
-# January Partner SDK for Web and Node.js
+# January SDK for Web and Node.js
 
 Typed Promise-based APIs for food discovery, restaurants, meal-photo scanning,
 food logs, and glucose prediction in Node.js services and modern browsers.

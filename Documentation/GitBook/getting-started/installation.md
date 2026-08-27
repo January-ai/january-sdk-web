@@ -18,8 +18,8 @@ Authenticate Git for the GitHub account January authorized. A browser-visible
 `404` or `Repository not found` usually means that account lacks access. Then:
 
 ```bash
-git clone https://github.com/January-ai/partner-sdk-node.git
-cd partner-sdk-node
+git clone https://github.com/January-ai/january-sdk-web.git
+cd january-sdk-web
 git checkout f4039db3ecc3a94a82cd125ac8e22aebf964d11f
 npm ci
 npm test
@@ -43,7 +43,7 @@ TypeScript declarations, source maps, generated transport, and package metadata.
 
 ```bash
 cd ../your-application
-npm install ../partner-sdk-node/januaryai-partner-sdk-0.1.0.tgz
+npm install ../january-sdk-web/januaryai-partner-sdk-0.1.0.tgz
 ```
 
 ```ts

@@ -8,11 +8,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/January-ai/partner-sdk-node.git"
+    "url": "git+https://github.com/January-ai/january-sdk-web.git"
   },
-  "homepage": "https://github.com/January-ai/partner-sdk-node#readme",
+  "homepage": "https://github.com/January-ai/january-sdk-web#readme",
   "bugs": {
-    "url": "https://github.com/January-ai/partner-sdk-node/issues"
+    "url": "https://github.com/January-ai/january-sdk-web/issues"
   },
   "keywords": [
     "january",
