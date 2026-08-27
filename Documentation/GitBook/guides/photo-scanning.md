@@ -1,10 +1,15 @@
 # Photo scanning
 
-In browsers, `preparePhotoScanImage` applies browser-exposed orientation,
-preserves aspect ratio, limits the longest edge to 1,000 pixels, JPEG-compresses
-at quality 0.7, and returns an upload-ready data URI.
+In browsers, `preparePhotoScanImage` uses browser image and canvas APIs to
+preserve aspect ratio, limit the longest edge to 1,000 pixels, JPEG-compress at
+quality 0.7, and return an upload-ready data URI.
 
 ```ts
+import { preparePhotoScanImage } from '@januaryai/partner-sdk';
+
+const file = fileInput.files?.[0];
+if (!file) throw new Error('Choose a meal image');
+
 const prepared = await preparePhotoScanImage(file);
 const scan = await january.photoScanning.scan({ image: prepared.dataUri });
 ```
@@ -19,5 +24,6 @@ const corrected = await january.photoScanning.correct({
 });
 ```
 
-Meal images and inferred nutrition can be sensitive. Do not place them in
-analytics, crash reports, or general-purpose logs.
+`preparePhotoScanImage` is browser-only; Node.js callers must prepare a supported
+base64 data URI with server-side image tooling before calling `scan`. Do not put
+meal images or inferred nutrition in analytics, crash reports, or general logs.

@@ -1,13 +1,20 @@
 # Table of contents
 
-* [January Partner SDK for Web and Node.js](README.md)
+* [Web and Node.js SDK](README.md)
 
 ## Getting started
 
 * [Installation](getting-started/installation.md)
-* [Authentication and security](getting-started/authentication.md)
-* [Quick start](getting-started/quick-start.md)
-* [Example app](getting-started/example-app.md)
+* [Backend token endpoint](getting-started/backend-token-endpoint.md)
+* [Authentication](getting-started/authentication.md)
+* [First request](getting-started/quick-start.md)
+* [React example app](getting-started/example-app.md)
+
+## Core concepts
+
+* [Runtime and security boundaries](concepts/runtime-boundaries.md)
+* [User identity and timezone](concepts/user-context.md)
+* [Food discovery and servings](concepts/food-lifecycle.md)
 
 ## Guides
 
@@ -19,7 +26,14 @@
 
 ## Reference
 
-* [Client and resources](reference/client-and-resources.md)
-* [Error handling and cancellation](reference/error-handling.md)
+* [Client and authentication API](reference/client-and-resources.md)
+* [Foods API](reference/foods-api.md)
+* [Restaurants and scanning API](reference/discovery-and-scanning-api.md)
+* [Food Logs and Glucose API](reference/user-resources-api.md)
+* [Models and enums](reference/models-and-enums.md)
+* [Retries, refresh, and cancellation](reference/retries-and-lifecycle.md)
+* [Error handling](reference/error-handling.md)
+* [Compatibility and packaging](reference/compatibility.md)
+* [Testing and support](reference/testing-and-support.md)
 * [Troubleshooting](reference/troubleshooting.md)
 * [Changelog](reference/changelog.md)
