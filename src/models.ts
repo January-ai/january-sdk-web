@@ -141,7 +141,7 @@ export interface NaturalLanguageFoodDetection {
   food: NaturalLanguageFood;
 }
 
-export type SearchFoodsByNaturalLanguageResponse = PhotoScan;
+export type SearchFoodsByNaturalLanguageResponse = FoodScan;
 
 export const DietRestriction = {
   gluten: 'gluten', lactose: 'lactose', yeast: 'yeast', treeNuts: 'tree_nuts',
@@ -240,13 +240,18 @@ export interface ScanFoodPhotoRequest {
 
 export interface FoodDetection { confidenceScore?: string; food: DetectedFood }
 export interface GlucosePredictionPoint { minutes: number; value: number }
-export interface PhotoScanGlucoseImpact { impactScore: string; prediction: GlucosePredictionPoint[] }
-export interface PhotoScan {
+export interface FoodScanGlucoseImpact { impactScore: string; prediction: GlucosePredictionPoint[] }
+export interface FoodScan {
   mealName?: string;
   totalNutrients?: CompleteScanNutritionFacts;
   detections?: FoodDetection[];
-  glucoseImpact?: PhotoScanGlucoseImpact;
+  glucoseImpact?: FoodScanGlucoseImpact;
 }
+
+/** @deprecated Use FoodScan. */
+export type PhotoScan = FoodScan;
+/** @deprecated Use FoodScanGlucoseImpact. */
+export type PhotoScanGlucoseImpact = FoodScanGlucoseImpact;
 
 export interface CorrectPhotoScanRequest {
   mealName: string;
@@ -259,25 +264,28 @@ export interface CorrectPhotoScanRequest {
 export interface ServingSelection { id: number; quantity: number }
 export interface FoodSelection { id: number; serving: ServingSelection }
 
-export interface FoodLogUserContext {
+export interface PartnerUserContext {
   endUserId: string;
   endUserTimezone?: string;
 }
 
-export interface CreateFoodLogRequest extends FoodLogUserContext {
+/** @deprecated Use PartnerUserContext. */
+export type FoodLogUserContext = PartnerUserContext;
+
+export interface CreateFoodLogRequest extends PartnerUserContext {
   foods: FoodSelection[];
   timestampUtc?: string;
   name?: string;
   signal?: AbortSignal;
 }
 
-export interface ListFoodLogsRequest extends FoodLogUserContext {
+export interface ListFoodLogsRequest extends PartnerUserContext {
   start: string;
   end: string;
   signal?: AbortSignal;
 }
 
-export interface UpdateFoodLogRequest extends FoodLogUserContext {
+export interface UpdateFoodLogRequest extends PartnerUserContext {
   logId: string;
   foods?: FoodSelection[];
   timestampUtc?: string;
@@ -285,7 +293,7 @@ export interface UpdateFoodLogRequest extends FoodLogUserContext {
   signal?: AbortSignal;
 }
 
-export interface DeleteFoodLogRequest extends FoodLogUserContext { logId: string; signal?: AbortSignal }
+export interface DeleteFoodLogRequest extends PartnerUserContext { logId: string; signal?: AbortSignal }
 export interface ConsumedServing { id: number; quantity: number }
 export interface ServingDetails { id: number; quantity: number; unit: string; weightGrams?: number | null }
 export interface LoggedFood {

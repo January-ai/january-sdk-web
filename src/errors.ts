@@ -14,17 +14,19 @@ export class JanuaryError extends Error {
   readonly category: JanuaryErrorCategory;
   readonly status?: number;
   readonly requestId?: string;
+  readonly code?: string;
 
   constructor(
     category: JanuaryErrorCategory,
     message: string,
-    options: { status?: number; requestId?: string; cause?: unknown } = {},
+    options: { status?: number; requestId?: string; code?: string; cause?: unknown } = {},
   ) {
     super(message, { cause: options.cause });
     this.name = 'JanuaryError';
     this.category = category;
     this.status = options.status;
     this.requestId = options.requestId;
+    this.code = options.code;
   }
 }
 
@@ -42,19 +44,27 @@ export async function executeRequest<T>(operation: () => Promise<T>): Promise<T>
   try {
     return await operation();
   } catch (error) {
+    if (error instanceof JanuaryError) throw error;
     if (error instanceof ResponseError) {
       const response = error.response;
       let message = `January API request failed with status ${response.status}.`;
+      let code: string | undefined;
       try {
-        const payload = await response.clone().json() as { message?: unknown; error?: unknown };
+        const payload = await response.clone().json() as {
+          message?: unknown;
+          error?: unknown;
+          code?: unknown;
+        };
         if (typeof payload.message === 'string') message = payload.message;
         else if (typeof payload.error === 'string') message = payload.error;
+        if (typeof payload.code === 'string') code = payload.code;
       } catch {
         // The status and category remain useful when the body is empty or non-JSON.
       }
       throw new JanuaryError(categoryForStatus(response.status), message, {
         status: response.status,
         requestId: response.headers.get('x-request-id') ?? undefined,
+        code,
         cause: error,
       });
     }
@@ -67,4 +77,3 @@ export async function executeRequest<T>(operation: () => Promise<T>): Promise<T>
     );
   }
 }
-

@@ -16,7 +16,7 @@ test('photo scan sends the public URL and PNG data URI through the public client
       headers: { 'content-type': 'application/json' },
     });
   };
-  const client = new JanuaryPartnerClient({ apiKey: 'fixture-key', baseUrl: 'https://example.test', fetch });
+  const client = new JanuaryPartnerClient({ apiKey: 'fixture-key', fetch });
 
   await client.photoScanning.scan({ image: burgerImageUrl });
   await client.photoScanning.scan({ image: dataUri });

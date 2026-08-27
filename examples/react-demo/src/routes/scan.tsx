@@ -2,7 +2,12 @@ import { useMutation } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { ArrowRight, Barcode, Camera, ImagePlus, Link as LinkIcon, ScanLine, Utensils } from 'lucide-react'
 import { useRef, useState } from 'react'
-import { getDemoConfiguration, scanMeal, searchFoodCatalog } from '~/api/january.functions'
+import { scanMeal, searchFoodCatalog } from '~/api/january.functions'
+import { BarcodeCamera } from '~/components/barcode-camera'
+import { Dialog } from '~/components/dialog'
+import { NetworkImage } from '~/components/network-image'
+import { ScanResult } from '~/components/scan-result'
+import { useUserSession } from '~/components/user-session'
 import {
   Button,
   Card,
@@ -15,47 +20,46 @@ import {
   TextField,
 } from '~/components/ui'
 import { formatNumber } from '~/lib/utils'
+import { preparePhotoScanImage } from '~/lib/photo-scan-image'
 
 const sampleImage = 'https://friendlysrestaurants.com/assets/live/img/production/detail/menu/lunch-dinner_999-combohs_all-american-burger-fries.jpg'
 
 export const Route = createFileRoute('/scan')({
-  loader: () => getDemoConfiguration(),
   component: ScanPage,
 })
 
 function ScanPage() {
-  const configuration = Route.useLoaderData()
+  const session = useUserSession()
   const navigate = Route.useNavigate()
   const fileInput = useRef<HTMLInputElement>(null)
+  const cameraInput = useRef<HTMLInputElement>(null)
   const [method, setMethod] = useState<'photo' | 'upc'>('photo')
   const [image, setImage] = useState('')
   const [imageUrl, setImageUrl] = useState('')
   const [upc, setUpc] = useState('')
+  const [resultOpen, setResultOpen] = useState(false)
   const scan = useMutation({
     mutationFn: () => scanMeal({ data: {
       image,
-      ...(configuration.defaultEndUserId ? { endUserId: configuration.defaultEndUserId } : {}),
+      ...(session.endUserId ? { endUserId: session.endUserId } : {}),
     } }),
+    onSuccess: () => setResultOpen(true),
   })
   const barcodeLookup = useMutation({
     mutationFn: () => searchFoodCatalog({ data: {
       query: upc.trim(),
       mode: 'barcode',
-      ...(configuration.defaultEndUserId ? { endUserId: configuration.defaultEndUserId } : {}),
+      ...(session.endUserId ? { endUserId: session.endUserId } : {}),
     } }),
   })
 
-  function chooseFile(file: File | undefined) {
+  async function chooseFile(file: File | undefined) {
     if (!file) return
-    const reader = new FileReader()
-    reader.addEventListener('load', () => {
-      if (typeof reader.result === 'string') {
-        setImage(reader.result)
-        setImageUrl('')
-        scan.reset()
-      }
-    })
-    reader.readAsDataURL(file)
+    const preparedImage = await preparePhotoScanImage(file)
+    setImage(preparedImage)
+    setImageUrl('')
+    scan.reset()
+    setResultOpen(false)
   }
 
   function useUrl() {
@@ -63,6 +67,7 @@ function ScanPage() {
     if (!value) return
     setImage(value)
     scan.reset()
+    setResultOpen(false)
   }
 
   return (
@@ -99,9 +104,9 @@ function ScanPage() {
       {method === 'photo' ? <div className="mt-8 grid gap-8 xl:grid-cols-[minmax(0,1.05fr)_minmax(360px,0.95fr)]">
         <div>
           <Card className="overflow-hidden">
-            <div className="scan-pattern relative grid min-h-[360px] place-items-center overflow-hidden p-8 sm:min-h-[460px]">
+            <div className="scan-pattern relative grid h-[clamp(280px,55vw,520px)] w-full place-items-center overflow-hidden p-8">
               {image ? (
-                <img alt="Meal selected for analysis" className="absolute inset-0 size-full object-cover" src={image} />
+                <img alt="Meal selected for analysis" className="absolute inset-0 size-full object-cover object-center" src={image} />
               ) : (
                 <div className="mx-auto flex max-w-md flex-col items-center text-center">
                   <div className="grid size-16 place-items-center rounded-2xl border border-stone-300 bg-white text-stone-700 shadow-sm">
@@ -115,16 +120,28 @@ function ScanPage() {
             <div className="grid gap-3 p-5 sm:grid-cols-2 sm:p-6">
               <input
                 accept="image/*"
+                capture="environment"
+                className="sr-only"
+                onChange={(event) => chooseFile(event.target.files?.[0])}
+                ref={cameraInput}
+                type="file"
+              />
+              <input
+                accept="image/*"
                 className="sr-only"
                 onChange={(event) => chooseFile(event.target.files?.[0])}
                 ref={fileInput}
                 type="file"
               />
-              <Button onClick={() => fileInput.current?.click()} type="button">
-                <ImagePlus aria-hidden="true" className="size-5" />
-                Choose photo
+              <Button onClick={() => cameraInput.current?.click()} type="button">
+                <Camera aria-hidden="true" className="size-5" />
+                Take photo
               </Button>
-              <SecondaryButton onClick={() => { setImage(sampleImage); setImageUrl(sampleImage); scan.reset() }} type="button">
+              <SecondaryButton onClick={() => fileInput.current?.click()} type="button">
+                <ImagePlus aria-hidden="true" className="size-5" />
+                Choose from library
+              </SecondaryButton>
+              <SecondaryButton className="sm:col-span-2" onClick={() => { setImage(sampleImage); setImageUrl(sampleImage); scan.reset(); setResultOpen(false) }} type="button">
                 <Utensils aria-hidden="true" className="size-5" />
                 Use sample meal
               </SecondaryButton>
@@ -150,7 +167,7 @@ function ScanPage() {
           ) : scan.isError ? (
             <ErrorMessage error={scan.error} />
           ) : scan.data ? (
-            <ScanResult result={scan.data} />
+            <Card className="p-6"><h3 className="font-serif text-3xl">Analysis ready</h3><p className="mt-3 leading-7 text-stone-600">Review the detected foods, nutrition, and confidence labels in the result dialog.</p><Button className="mt-6 w-full" onClick={() => setResultOpen(true)} type="button">View analysis</Button></Card>
           ) : (
             <Card className="p-6">
               <h3 className="text-balance font-serif text-3xl">Photo ready</h3>
@@ -169,6 +186,7 @@ function ScanPage() {
             </div>
             <h2 className="mt-6 font-serif text-4xl">Enter the UPC</h2>
             <p className="mt-3 leading-7 text-stone-600">Use the digits printed beneath the barcode. Dashes and spaces are not required.</p>
+            <div className="mt-6"><BarcodeCamera onDetected={(value) => { setUpc(value); barcodeLookup.reset() }} /></div>
             <div className="mt-7">
               <TextField
                 inputMode="numeric"
@@ -210,9 +228,7 @@ function ScanPage() {
                     })}
                     type="button"
                   >
-                    <div className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-2xl bg-[#eee8dc]">
-                      {food.photoUrl ? <img alt="" className="size-full object-cover" src={food.photoUrl} /> : <Utensils aria-hidden="true" className="size-5 text-[#557653]" />}
-                    </div>
+                    <NetworkImage alt="" className="size-14 shrink-0 rounded-2xl" fallback={<Utensils aria-hidden="true" className="size-5 text-[var(--app-positive)]" />} src={food.photoUrl} />
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-lg font-bold">{food.name}</div>
                       <div className="mt-1 text-sm text-stone-500">{[food.brandName, food.calories == null ? null : `${formatNumber(food.calories)} cal`, food.servings[0]?.unit].filter(Boolean).join(' · ')}</div>
@@ -229,45 +245,9 @@ function ScanPage() {
           </section>
         </div>
       )}
+      <Dialog onClose={() => setResultOpen(false)} open={resultOpen && Boolean(scan.data)} title="Meal analysis">
+        {scan.data && <ScanResult onAnalyzeAnother={() => { setResultOpen(false); setImage(''); setImageUrl(''); scan.reset() }} result={scan.data} />}
+      </Dialog>
     </Page>
-  )
-}
-
-function ScanResult({ result }: { result: Awaited<ReturnType<typeof scanMeal>> }) {
-  const nutrients = result.totalNutrients
-  return (
-    <div className="space-y-5">
-      <Card className="p-6">
-        <SectionLabel>Meal</SectionLabel>
-        <h3 className="mt-3 text-balance font-serif text-4xl">{result.mealName ?? 'Detected meal'}</h3>
-        {nutrients && (
-          <div className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-stone-200 bg-stone-200">
-            {[
-              ['Calories', nutrients.calories?.value, 'cal'],
-              ['Protein', nutrients.protein?.value, 'g'],
-              ['Carbs', nutrients.carbohydrates?.value, 'g'],
-              ['Fat', nutrients.totalFat?.value, 'g'],
-            ].map(([label, value, unit]) => (
-              <div className="bg-white p-4" key={String(label)}>
-                <div className="text-xs font-bold uppercase text-stone-500">{label}</div>
-                <div className="data-number mt-2 text-2xl font-bold">{formatNumber(value as number | undefined)} <span className="text-sm font-medium text-stone-500">{unit}</span></div>
-              </div>
-            ))}
-          </div>
-        )}
-      </Card>
-      <Card className="overflow-hidden">
-        {(result.detections ?? []).map((detection, index) => (
-          <div className="flex items-center gap-4 border-b border-stone-200 p-5 last:border-0" key={`${detection.food.id ?? 'detected'}-${index}`}>
-            <div className="grid size-12 place-items-center rounded-xl bg-[#eee8dc]"><Utensils aria-hidden="true" className="size-5 text-stone-600" /></div>
-            <div className="min-w-0 flex-1">
-              <div className="font-bold">{detection.food.name}</div>
-              <div className="mt-1 text-sm text-stone-500">{detection.food.servings?.[0]?.unit ?? 'Serving estimated'}{detection.confidenceScore ? ` · ${detection.confidenceScore} confidence` : ''}</div>
-            </div>
-          </div>
-        ))}
-      </Card>
-      <Button className="w-full" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} type="button">Analyze another photo</Button>
-    </div>
   )
 }

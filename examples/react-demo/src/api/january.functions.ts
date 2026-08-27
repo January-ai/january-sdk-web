@@ -77,6 +77,8 @@ export const searchFoodCatalog = createServerFn({ method: 'GET' })
         glycemicIndex: null,
         glycemicLoad: null,
         photoUrl: null,
+        upc: null,
+        nutrients: null,
         servings: (detection.food.servings ?? []).map((serving) => ({
           id: serving.id,
           quantity: serving.quantity ?? 1,
@@ -122,7 +124,41 @@ export const listFoodLogs = createServerFn({ method: 'GET' })
     endUserId: z.string().trim().min(1).max(256),
     endUserTimezone: z.string().trim().min(1).max(100),
   }))
-  .handler(({ data }) => getJanuaryClient().foodLogs.list(data))
+  .handler(({ data }) => {
+    const { endUserId, endUserTimezone, ...request } = data
+    return getJanuaryClient().forUser({ endUserId, endUserTimezone }).foodLogs.list(request)
+  })
+
+const foodSelectionSchema = z.object({
+  id: z.number().int().positive(),
+  serving: z.object({ id: z.number().int().positive(), quantity: z.number().positive().max(100) }),
+})
+
+export const saveFoodLog = createServerFn({ method: 'POST' })
+  .validator(z.object({
+    logId: z.string().uuid().optional(),
+    foods: z.array(foodSelectionSchema).min(1),
+    timestampUtc: z.iso.datetime(),
+    name: z.string().trim().max(120).optional(),
+    endUserId: z.string().trim().min(1).max(256),
+    endUserTimezone: z.string().trim().min(1).max(100),
+  }))
+  .handler(({ data }) => {
+    const { endUserId, endUserTimezone, logId, ...request } = data
+    const foodLogs = getJanuaryClient().forUser({ endUserId, endUserTimezone }).foodLogs
+    return logId ? foodLogs.update({ ...request, logId }) : foodLogs.create(request)
+  })
+
+export const deleteFoodLog = createServerFn({ method: 'POST' })
+  .validator(z.object({
+    logId: z.string().uuid(),
+    endUserId: z.string().trim().min(1).max(256),
+    endUserTimezone: z.string().trim().min(1).max(100),
+  }))
+  .handler(({ data }) => {
+    const { endUserId, endUserTimezone, logId } = data
+    return getJanuaryClient().forUser({ endUserId, endUserTimezone }).foodLogs.delete({ logId })
+  })
 
 export const predictGlucose = createServerFn({ method: 'POST' })
   .validator(z.object({
@@ -144,17 +180,21 @@ export const predictGlucose = createServerFn({ method: 'POST' })
     endUserId: optionalUserId,
     endUserTimezone: z.string().trim().min(1).max(100),
   }))
-  .handler(({ data }) => getJanuaryClient().glucose.predict({
-    userProfile: {
-      age: data.age,
-      sex: data.sex,
-      height: { value: data.height, unit: HeightUnit.inches },
-      weight: { value: data.weight, unit: WeightUnit.pounds },
-      activityLevel: data.activityLevel,
-      healthConditions: data.healthConditions,
-    },
-    foods: [{ id: data.foodId, serving: { id: data.servingId, quantity: data.quantity } }],
-    startTime: new Date(data.startTime),
-    endUserTimezone: data.endUserTimezone,
-    ...(data.endUserId ? { endUserId: data.endUserId } : {}),
-  }))
+  .handler(({ data }) => {
+    const request = {
+      userProfile: {
+        age: data.age,
+        sex: data.sex,
+        height: { value: data.height, unit: HeightUnit.inches },
+        weight: { value: data.weight, unit: WeightUnit.pounds },
+        activityLevel: data.activityLevel,
+        healthConditions: data.healthConditions,
+      },
+      foods: [{ id: data.foodId, serving: { id: data.servingId, quantity: data.quantity } }],
+      startTime: new Date(data.startTime),
+    }
+    const client = getJanuaryClient()
+    return data.endUserId
+      ? client.forUser({ endUserId: data.endUserId, endUserTimezone: data.endUserTimezone }).glucose.predict(request)
+      : client.glucose.predict({ ...request, endUserTimezone: data.endUserTimezone })
+  })

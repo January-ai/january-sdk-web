@@ -1,10 +1,8 @@
-import type { FoodSearchItem, Restaurant, SearchRestaurantMenuItemsResponse } from '@januaryai/partner-sdk'
-import { useQuery, type UseQueryResult } from '@tanstack/react-query'
+import type { Restaurant } from '@januaryai/partner-sdk'
+import { useQuery } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import {
   Building2,
-  Crosshair,
-  MapPin,
   Search as SearchIcon,
   Utensils,
 } from 'lucide-react'
@@ -15,37 +13,30 @@ import {
   searchRestaurantMenuItems,
   searchRestaurants,
 } from '~/api/january.functions'
+import { ChipSelector } from '~/components/chip-selector'
+import { FoodSuggestionList } from '~/components/food-autocomplete'
+import { NetworkImage } from '~/components/network-image'
+import { LocationChooser, cityLocations, defaultCity, type CityID, type Coordinates } from '~/components/search/location-chooser'
+import { RestaurantInspector } from '~/components/search/restaurant-inspector'
+import { SegmentedControl } from '~/components/segmented-control'
 import {
   Button,
   Card,
   EmptyState,
   ErrorMessage,
+  InputFrame,
   Page,
   PageHeader,
   ResultRow,
   SectionLabel,
   SkeletonList,
 } from '~/components/ui'
-import { cn, formatNumber } from '~/lib/utils'
+import { formatNumber } from '~/lib/utils'
+import { primaryServingLabel } from '~/lib/food-display'
 
 type CatalogKind = 'foods' | 'restaurants'
 type FoodMode = 'name' | 'description' | 'barcode'
 type FoodCategoryFilter = 'all' | 'general' | 'branded' | 'recipe'
-type Coordinates = { latitude: number; longitude: number }
-
-const cityLocations = [
-  { id: 'san-francisco', name: 'San Francisco, CA', latitude: 37.7749, longitude: -122.4194 },
-  { id: 'new-york', name: 'New York, NY', latitude: 40.7128, longitude: -74.006 },
-  { id: 'los-angeles', name: 'Los Angeles, CA', latitude: 34.0522, longitude: -118.2437 },
-  { id: 'chicago', name: 'Chicago, IL', latitude: 41.8781, longitude: -87.6298 },
-  { id: 'austin', name: 'Austin, TX', latitude: 30.2672, longitude: -97.7431 },
-  { id: 'miami', name: 'Miami, FL', latitude: 25.7617, longitude: -80.1918 },
-  { id: 'seattle', name: 'Seattle, WA', latitude: 47.6062, longitude: -122.3321 },
-] as const
-
-type CityID = (typeof cityLocations)[number]['id']
-const defaultCity = cityLocations[0]
-
 interface SearchParams {
   q?: string
 }
@@ -177,70 +168,54 @@ function SearchPage() {
         <Card className="p-5 sm:p-6 xl:sticky xl:top-8">
           <form onSubmit={submit}>
             <SectionLabel>Search source</SectionLabel>
-            <fieldset className="mt-3 grid grid-cols-2 gap-2 rounded-2xl bg-[#eee8dc] p-1.5">
-              <legend className="sr-only">Search source</legend>
-              {(['foods', 'restaurants'] as const).map((value) => (
-                <label className={cn('flex min-h-12 cursor-pointer items-center justify-center rounded-xl text-sm font-bold', kind === value ? 'bg-white text-stone-950 shadow-sm' : 'text-stone-600')} key={value}>
-                  <input className="sr-only" checked={kind === value} name="catalog-kind" onChange={() => { setKind(value); setSelectedRestaurant(null) }} type="radio" value={value} />
-                  {value === 'foods' ? 'Foods' : 'Restaurants'}
-                </label>
-              ))}
-            </fieldset>
+            <SegmentedControl
+              className="mt-3"
+              label="Search source"
+              name="catalog-kind"
+              onChange={(value) => { setKind(value); setSelectedRestaurant(null) }}
+              options={[{ value: 'foods', label: 'Foods' }, { value: 'restaurants', label: 'Restaurants' }]}
+              value={kind}
+            />
 
-            <label className="mt-6 block">
-              <span className="mb-2 block text-sm font-semibold text-stone-700">{kind === 'foods' ? 'What are you looking for?' : 'Restaurant or cuisine'}</span>
-              <span className="flex min-h-14 items-center gap-3 rounded-2xl border border-stone-300 bg-white px-4 focus-within:border-stone-900 focus-within:ring-2 focus-within:ring-stone-900/10">
+            <div className="mt-6">
+              <label className="mb-2 block text-sm font-semibold text-stone-700" htmlFor="catalog-search">{kind === 'foods' ? 'What are you looking for?' : 'Restaurant or cuisine'}</label>
+              <InputFrame className="min-h-14" htmlFor="catalog-search">
                 <SearchIcon aria-hidden="true" className="size-5 text-stone-500" />
                 <input
                   className="min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-stone-400"
+                  id="catalog-search"
                   onChange={(event) => { setDraft(event.target.value); setAcceptedSuggestion(null) }}
                   placeholder={kind === 'foods' ? 'Try “Greek yogurt”' : 'Try “pizza”'}
                   value={draft}
                 />
-              </span>
-            </label>
+              </InputFrame>
+            </div>
 
             {draft.trim() !== acceptedSuggestion && suggestions.data?.items.length ? (
-              <div aria-label="Food suggestions" className="mt-2 overflow-hidden rounded-2xl border border-stone-200 bg-white">
-                {suggestions.data.items.map((suggestion) => (
-                  <button
-                    className="block min-h-11 w-full border-b border-stone-100 px-4 py-3 text-left text-sm font-semibold last:border-b-0 hover:bg-stone-50"
-                    key={suggestion.id}
-                    onClick={() => chooseSuggestion(suggestion.name)}
-                    type="button"
-                  >
-                    {suggestion.name}
-                  </button>
-                ))}
-              </div>
+              <div className="mt-2"><FoodSuggestionList items={suggestions.data.items} onSelect={(suggestion) => chooseSuggestion(suggestion.name)} /></div>
             ) : null}
 
             {kind === 'foods' ? (
               <>
-                <fieldset className="mt-5">
-                  <legend className="text-sm font-semibold text-stone-700">Search by</legend>
-                  <div className="mt-2 grid grid-cols-3 gap-2">
-                    {(['name', 'description', 'barcode'] as const).map((value) => (
-                      <label className={cn('flex min-h-11 cursor-pointer items-center justify-center rounded-xl border px-2 text-center text-xs font-bold', mode === value ? 'border-stone-950 bg-stone-950 text-white' : 'border-stone-300 bg-white text-stone-600')} key={value}>
-                        <input className="sr-only" checked={mode === value} name="food-mode" onChange={() => setMode(value)} type="radio" value={value} />
-                        {value === 'name' ? 'Name' : value === 'description' ? 'Meal description' : 'Barcode'}
-                      </label>
-                    ))}
-                  </div>
-                </fieldset>
+                <SegmentedControl<FoodMode>
+                  className="mt-5"
+                  label="Search by"
+                  name="food-mode"
+                  onChange={setMode}
+                  options={[{ value: 'name', label: 'Name' }, { value: 'description', label: 'Meal description' }, { value: 'barcode', label: 'Barcode' }]}
+                  value={mode}
+                  variant="outlined"
+                />
 
                 {mode === 'name' && (
-                  <fieldset className="mt-5">
-                    <legend className="text-sm font-semibold text-stone-700">Category</legend>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {(['all', 'general', 'branded', 'recipe'] as const).map((value) => (
-                        <label className={cn('cursor-pointer rounded-full border px-4 py-2 text-sm font-bold', category === value ? 'border-[#d5a817] bg-[#f7e7a4] text-stone-950' : 'border-stone-300 bg-white text-stone-600')} key={value}>
-                          <input className="sr-only" checked={category === value} name="food-category" onChange={() => setCategory(value)} type="radio" value={value} />
-                          {value[0].toUpperCase() + value.slice(1)}
-                        </label>
-                      ))}
-                    </div>
-                  </fieldset>
+                  <ChipSelector<FoodCategoryFilter>
+                    className="mt-5"
+                    label="Category"
+                    name="food-category"
+                    onChange={setCategory}
+                    options={[{ value: 'all', label: 'All' }, { value: 'general', label: 'General' }, { value: 'branded', label: 'Branded' }, { value: 'recipe', label: 'Recipe' }]}
+                    value={category}
+                  />
                 )}
               </>
             ) : (
@@ -286,8 +261,8 @@ function SearchPage() {
                   {foods.data.items.map((food) => (
                     <ResultRow
                       key={food.id}
-                      media={food.photoUrl ? <img alt="" className="size-full object-cover" src={food.photoUrl} /> : <Utensils aria-hidden="true" className="size-6 text-stone-600" />}
-                      meta={`${formatNumber(food.calories, 0)} cal · ${primaryServing(food)}`}
+                      media={<NetworkImage alt="" className="size-full" fallback={<Utensils aria-hidden="true" className="size-6 text-stone-600" />} src={food.photoUrl} />}
+                      meta={`${formatNumber(food.calories, 0)} cal · ${primaryServingLabel(food)}`}
                       onClick={() => void navigate({
                         to: '/food/$foodId',
                         params: { foodId: String(food.id) },
@@ -321,75 +296,4 @@ function SearchPage() {
       </div>
     </Page>
   )
-}
-
-function LocationChooser({
-  coordinates,
-  isLocating,
-  locationSource,
-  onCityChange,
-  onCurrentLocation,
-}: {
-  coordinates: Coordinates
-  isLocating: boolean
-  locationSource: CityID | 'current'
-  onCityChange: (id: CityID) => void
-  onCurrentLocation: () => void
-}) {
-  return (
-    <fieldset>
-      <legend className="text-sm font-semibold text-stone-700">Search location</legend>
-      <select
-        aria-label="Search city"
-        className="mt-2 min-h-14 w-full rounded-2xl border border-stone-300 bg-white px-4 text-sm font-bold text-stone-950 focus:border-stone-900"
-        onChange={(event) => onCityChange(event.target.value as CityID)}
-        value={locationSource}
-      >
-        {locationSource === 'current' && <option value="current">Current location</option>}
-        {cityLocations.map((city) => <option key={city.id} value={city.id}>{city.name}</option>)}
-      </select>
-      <p className="data-number mt-2 text-xs text-stone-500">
-        {coordinates.latitude.toFixed(4)}, {coordinates.longitude.toFixed(4)}
-      </p>
-      <button
-        className="mt-3 flex min-h-14 w-full items-center gap-3 rounded-2xl border border-stone-300 bg-white px-4 text-left hover:bg-stone-50 disabled:cursor-wait disabled:text-stone-400"
-        disabled={isLocating}
-        onClick={onCurrentLocation}
-        type="button"
-      >
-        <Crosshair aria-hidden="true" className="size-5 text-stone-600" />
-        <span className="flex-1">
-          <span className="block text-sm font-bold">{isLocating ? 'Finding your location…' : 'Use my current location'}</span>
-          <span className="block text-xs text-stone-500">Uses the browser location permission</span>
-        </span>
-      </button>
-    </fieldset>
-  )
-}
-
-function RestaurantInspector({ restaurant, menuItems }: { restaurant: Restaurant | null; menuItems: UseQueryResult<SearchRestaurantMenuItemsResponse, Error> }) {
-  if (!restaurant) {
-    return <EmptyState description="Select a restaurant to load matching menu items." icon={<MapPin aria-hidden="true" className="size-6" />} title="Choose a restaurant" />
-  }
-  return (
-    <div className="space-y-4">
-      <Card className="p-6">
-        <SectionLabel>Restaurant</SectionLabel>
-        <h3 className="mt-3 text-balance font-serif text-3xl">{restaurant.name}</h3>
-        <p className="mt-3 text-pretty text-sm leading-6 text-stone-600">{[restaurant.address1, restaurant.city].filter(Boolean).join(', ') || 'Location details unavailable'}</p>
-      </Card>
-      {menuItems.isPending ? <SkeletonList /> : menuItems.isError ? <ErrorMessage error={menuItems.error} /> : menuItems.data ? (
-        <Card className="overflow-hidden">
-          {menuItems.data.items.length ? menuItems.data.items.map((item: { id: string; name: string; photoUrl?: string | null; energy?: number | null; servings: Array<{ quantity: number; unit: string }> }) => (
-            <ResultRow key={item.id} media={item.photoUrl ? <img alt="" className="size-full object-cover" src={item.photoUrl} /> : <Utensils aria-hidden="true" className="size-6 text-stone-600" />} meta={`${formatNumber(item.energy, 0)} cal · ${item.servings[0] ? `${item.servings[0].quantity} ${item.servings[0].unit}` : 'Serving unavailable'}`} title={item.name} />
-          )) : <div className="p-6 text-pretty text-sm text-stone-600">No matching menu items were returned for this restaurant.</div>}
-        </Card>
-      ) : null}
-    </div>
-  )
-}
-
-function primaryServing(food: FoodSearchItem) {
-  const serving = food.servings.find((item) => item.isPrimary) ?? food.servings[0]
-  return serving ? `${formatNumber(serving.quantity)} ${serving.unit}` : 'Serving unavailable'
 }

@@ -40,7 +40,7 @@ export class FoodLogsResource {
       ...(request.endUserTimezone !== undefined ? { xEndUserTimezone: request.endUserTimezone } : {}),
       updateFoodLogBody: {
         ...(request.foods !== undefined ? { foods: request.foods } : {}),
-        ...(request.timestampUtc !== undefined ? { timestampUtc: request.timestampUtc } : {}),
+        ...(request.timestampUtc !== undefined ? { timestampUtc: normalizeDateTime(request.timestampUtc, 'timestampUtc') } : {}),
         ...(request.name !== undefined ? { name: request.name } : {}),
       },
     }, init(request.signal)));
@@ -67,4 +67,8 @@ function parseDateTime(value: string, name: string): Date {
   const result = new Date(value);
   if (Number.isNaN(result.getTime())) throw new TypeError(`${name} must be an ISO-8601 date-time.`);
   return result;
+}
+
+function normalizeDateTime(value: string, name: string): string {
+  return parseDateTime(value, name).toISOString();
 }

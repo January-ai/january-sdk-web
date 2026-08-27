@@ -14,7 +14,6 @@ test('food search sends authentication, user context, and SDK identity', async (
 
   const client = new JanuaryPartnerClient({
     apiKey: 'test-key',
-    baseUrl: 'https://example.test',
     fetch,
   });
   const result = await client.foods.search({
@@ -24,7 +23,7 @@ test('food search sends authentication, user context, and SDK identity', async (
   });
 
   assert.deepEqual(result, { totalCount: 0, items: [] });
-  assert.match(captured.url, /^https:\/\/example\.test\/v1\.2\/foods\?/);
+  assert.match(captured.url, /^https:\/\/partners\.january\.ai\/v1\.2\/foods\?/);
   assert.match(captured.url, /query=greek%20yogurt/);
   assert.match(captured.url, /limit=5/);
   const headers = new Headers(captured.init.headers);

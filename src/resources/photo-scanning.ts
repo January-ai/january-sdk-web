@@ -1,11 +1,11 @@
-import type { CorrectPhotoScanRequest, PhotoScan, ScanFoodPhotoRequest } from '../models.js';
+import type { CorrectPhotoScanRequest, FoodScan, ScanFoodPhotoRequest } from '../models.js';
 import { executeRequest } from '../errors.js';
 import { PhotoScanningApi } from '../internal/transport/apis/PhotoScanningApi.js';
 
 export class PhotoScanningResource {
   constructor(private readonly api: PhotoScanningApi) {}
 
-  async scan(request: ScanFoodPhotoRequest): Promise<PhotoScan> {
+  async scan(request: ScanFoodPhotoRequest): Promise<FoodScan> {
     if (!request.image.trim()) throw new TypeError('A base64-encoded image is required.');
     return executeRequest(() => this.api.scanFoodPhoto({
       scanFoodPhotoBody: { image: request.image },
@@ -13,7 +13,7 @@ export class PhotoScanningResource {
     }, request.signal ? { signal: request.signal } : undefined));
   }
 
-  async correct(request: CorrectPhotoScanRequest): Promise<PhotoScan> {
+  async correct(request: CorrectPhotoScanRequest): Promise<FoodScan> {
     return executeRequest(() => this.api.correctPhotoScan({
       correctPhotoScanBody: {
         mealName: request.mealName,

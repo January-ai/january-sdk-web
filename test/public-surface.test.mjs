@@ -12,7 +12,7 @@ test('all 15 operations are exposed through the public client', async () => {
       headers: { 'content-type': 'application/json' },
     });
   };
-  const client = new JanuaryPartnerClient({ apiKey: 'fixture-key', baseUrl: 'https://example.test', fetch });
+  const client = new JanuaryPartnerClient({ apiKey: 'fixture-key', fetch });
   const endUserId = 'fixture-user';
   const food = { id: 1, serving: { id: 2, quantity: 1 } };
 

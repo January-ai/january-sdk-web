@@ -1,10 +1,19 @@
 @import "tailwindcss";
 
 :root {
+  --app-canvas: #efece3;
+  --app-paper: #f8f5ed;
+  --app-paper-muted: #fbf9f4;
+  --app-surface: #fffdf8;
+  --app-control: #eee8dc;
+  --app-ink: #1c1917;
+  --app-accent: #f5c842;
+  --app-positive: #54724f;
+  --app-warning: #a85f3d;
   color-scheme: light;
   font-family: "DM Sans", ui-sans-serif, system-ui, sans-serif;
-  background: #f5f1e7;
-  color: #1c1917;
+  background: var(--app-canvas);
+  color: var(--app-ink);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
@@ -19,7 +28,7 @@
 }
 
 html {
-  background: #f5f1e7;
+  background: var(--app-canvas);
 }
 
 body {
@@ -43,14 +52,17 @@ select {
 }
 
 button:focus-visible,
-a:focus-visible,
-select:focus-visible {
-  outline: 3px solid #d5a817;
-  outline-offset: 3px;
+a:focus-visible {
+  outline: 2px solid rgb(87 83 78 / 72%);
+  outline-offset: 2px;
+}
+
+dialog:focus-visible {
+  outline: none;
 }
 
 ::selection {
-  background: #f5c842;
+  background: #d6d3d1;
   color: #1c1917;
 }
 
@@ -61,4 +73,20 @@ select:focus-visible {
 .scan-pattern {
   background-color: #eee8dc;
   background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgb(255 255 255 / 42%) 10px, rgb(255 255 255 / 42%) 20px);
+}
+
+dialog::backdrop {
+  background: rgb(28 25 23 / 68%);
+  backdrop-filter: blur(3px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
