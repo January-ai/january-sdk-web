@@ -4,13 +4,11 @@
 
 | Runtime | Option |
 | --- | --- |
-| Browser/app-managed refresh | `clientTokenProvider` plus optional `tokenRetryPolicy` |
+| Provider-managed refresh | `clientTokenProvider` plus optional `tokenRetryPolicy` |
 | Host-managed short-lived token | `accessToken` |
-| Trusted server only | `apiKey` |
 
 ```ts
 new JanuaryPartnerClient(
-  | { apiKey: string; fetch?: typeof globalThis.fetch }
   | { accessToken: string; fetch?: typeof globalThis.fetch }
   | {
       clientTokenProvider: JanuaryTokenProvider | JanuaryTokenProviderCallback;

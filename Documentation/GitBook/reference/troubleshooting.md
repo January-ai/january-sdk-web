@@ -10,18 +10,18 @@ Direct Git installation is not supported in the current preview because `dist`
 is generated and no `prepare` script builds it. Use `npm run build`, `npm pack`,
 and install the resulting tarball.
 
-## Browser bundle contains a partner key
+## Browser bundle contains server-side credentials
 
-Remove it immediately, rotate the exposed key, and move partner-key client
-construction to a guaranteed server-only module. Browsers use
-`clientTokenProvider` against an authenticated application endpoint.
+Remove them immediately, rotate the exposed credentials, and keep token issuance
+inside the authenticated application backend. Browsers use `clientTokenProvider`
+against that endpoint.
 
 ## Browser request fails during CORS preflight
 
 The production Partner API does not accept arbitrary browser origins. Confirm
 with January that the exact scheme, host, and port for the application are
 enabled. Do not work around this with `mode: 'no-cors'`, and never proxy a
-partner key into browser code. Until the origin is enabled, run the SDK in a
+server-side credential into browser code. Until the origin is enabled, run the SDK in a
 trusted Node.js application route and call that route from the browser.
 
 ## Token provider fails

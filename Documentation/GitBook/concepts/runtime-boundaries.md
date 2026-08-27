@@ -1,11 +1,11 @@
 # Runtime and security boundaries
 
-The same package supports two trust models:
+The same client-token surface supports two runtimes:
 
 | Runtime | Credential | Rule |
 | --- | --- | --- |
-| Browser | `clientTokenProvider` or current `accessToken` | Never contains a partner key; requires January to enable the exact web origin |
-| Trusted Node.js service | `apiKey` or client token | Keep secrets in server-only configuration |
+| Browser | `clientTokenProvider` or current `accessToken` | Requires January to enable the exact web origin |
+| Trusted Node.js service | `clientTokenProvider` or current `accessToken` | May call January without browser CORS constraints |
 
 The SDK uses the runtime's Fetch implementation and ships ESM only. Browser use
 requires modern Fetch APIs. `preparePhotoScanImage` additionally requires DOM
@@ -20,9 +20,9 @@ origins are enabled. Until then, call the SDK from a trusted Node.js route and
 have the browser call that application route.
 {% endhint %}
 
-Keep server-only client construction in files that the web framework guarantees
-will never enter the browser bundle. A framework's environment-variable prefix
-is not a secret boundary if it exposes values to client JavaScript.
+Keep application-session and token-endpoint configuration appropriate to each
+runtime. A framework's environment-variable prefix is not a secret boundary if
+it exposes values to client JavaScript.
 
 Client-token mode strips `x-end-user-id` because the token itself identifies the
 user. The host application still owns stable identity for token issuance and

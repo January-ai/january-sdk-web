@@ -21,13 +21,12 @@ January announces a registry release.
 
 ## Security model
 
-Long-lived `sk-` partner keys belong only in trusted server processes. Browser
-code obtains a short-lived `ct-` token from its authenticated application
-backend. The SDK has no token-endpoint URL and no public January base-URL
-override.
+Public SDK authentication uses client tokens only. Browser and Node.js code
+obtain a short-lived token from an authenticated application backend. The SDK
+has no token-endpoint URL and no public January base-URL override.
 
 ```text
-Browser ── authenticated request ──▶ Partner backend ── partner key ──▶ January
+Browser ── authenticated request ──▶ Partner backend ── private exchange ──▶ January
 Browser ◀────── { token, expiresIn } ────────────────────────────────────┘
 Browser ───── Authorization: Bearer ct-… ─────────────────────────────▶ January
 ```

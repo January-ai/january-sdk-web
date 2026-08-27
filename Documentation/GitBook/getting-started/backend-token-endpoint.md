@@ -1,8 +1,8 @@
 # Backend token endpoint
 
-A browser must never receive a long-lived January partner key. Expose an
-authenticated endpoint in your own backend that exchanges the server-held key
-for a short-lived token bound to the signed-in user.
+Expose an authenticated endpoint in your own backend that completes January's
+private server-side token exchange and returns a short-lived token bound to the
+signed-in user. The public SDK begins with that client token.
 
 ## Stable browser-facing response
 
@@ -24,14 +24,13 @@ the client SDK.
 
 1. Authenticate the application session.
 2. Resolve the stable end-user ID server-side.
-3. Exchange the protected January partner key using the server-side onboarding
-   integration supplied by January.
+3. Complete the private server-side onboarding integration supplied by January.
 4. Return only the short-lived token response.
 5. Enforce TLS, authorization, rate limits, audit events, and secret rotation.
 
 Never accept an unauthenticated arbitrary user ID and mint a token for it. Never
-log keys or client tokens, and never expose the partner key through a `PUBLIC_`,
-`VITE_`, or browser-bundled environment variable.
+log server-side credentials or client tokens, and never expose token-issuance
+credentials through a `PUBLIC_`, `VITE_`, or browser-bundled environment variable.
 
 January may provide a local stand-in backend during onboarding. It is scaffolding
 only; switching to a real endpoint must require changing app configuration, not

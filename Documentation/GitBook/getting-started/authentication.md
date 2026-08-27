@@ -1,6 +1,6 @@
 # Authentication
 
-Use exactly one credential option when creating `JanuaryPartnerClient`.
+Use a client-token provider or one fixed short-lived client token when creating `JanuaryPartnerClient`.
 
 ## Browser: provider-backed client
 
@@ -48,17 +48,5 @@ client after token changes:
 const january = new JanuaryPartnerClient({ accessToken: clientToken });
 ```
 
-## Trusted Node.js service
-
-A server process may use a long-lived partner key loaded from a secret manager
-or private environment variable:
-
-```ts
-const apiKey = process.env.JANUARY_API_KEY;
-if (!apiKey) throw new Error('JANUARY_API_KEY is required');
-
-const january = new JanuaryPartnerClient({ apiKey });
-```
-
-Never instantiate that client in code reachable by a browser bundle. See
+The same provider and fixed-token options work in trusted Node.js services. See
 [Retries, refresh, and cancellation](../reference/retries-and-lifecycle.md).

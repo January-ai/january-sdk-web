@@ -31,6 +31,6 @@ npm registry command until January publishes and announces a release.
 
 ## Authentication rule
 
-Never expose a long-lived January partner key in browser JavaScript. A browser
+Public SDK authentication uses client tokens only. A browser or Node.js client
 uses a short-lived token returned by its own authenticated backend. Start with
 the [backend token endpoint](Documentation/GitBook/getting-started/backend-token-endpoint.md).
