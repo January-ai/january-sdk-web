@@ -19,7 +19,7 @@ request, all resources, retries, cancellation, packaging, testing, and support.
 ```bash
 git clone https://github.com/January-ai/january-sdk-web.git
 cd january-sdk-web
-git checkout f4039db3ecc3a94a82cd125ac8e22aebf964d11f
+git checkout 46850f5372c437807c08b52d72e2bc34a2be552b
 npm ci
 npm test
 npm run build
