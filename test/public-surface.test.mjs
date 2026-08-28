@@ -17,15 +17,15 @@ test('all 15 operations are exposed through the public client', async () => {
   const food = { id: 1, serving: { id: 2, quantity: 1 } };
 
   await client.foods.autocomplete({ query: 'ban', endUserId });
-  await client.foods.getFood({ foodId: 1, endUserId });
+  await client.foods.get({ foodId: 1, endUserId });
   await client.foods.search({ query: 'banana', endUserId });
   await client.foods.lookupBarcode({ upc: '049000006346', endUserId });
-  await client.foods.searchNaturalLanguage({ query: 'one banana', endUserId });
+  await client.foodAnalysis.analyzeDescription({ query: 'one banana', endUserId });
   await client.foods.suggestAlternatives({ foodId: 1, dietRestrictions: [], dietPreferences: [], endUserId });
   await client.restaurants.search({ query: 'cafe', latitude: 40, longitude: -74, endUserId });
   await client.restaurants.searchMenuItems({ query: 'salad', latitude: 40, longitude: -74, endUserId });
-  await client.photoScanning.scan({ image: 'fixture-image', endUserId });
-  await client.photoScanning.correct({
+  await client.foodAnalysis.analyzePhoto({ image: 'fixture-image', endUserId });
+  await client.foodAnalysis.correct({
     mealName: 'Meal', detections: [{ food: { id: 1, name: 'Banana', nutrients: {} } }],
     userInput: 'Add banana', endUserId,
   });

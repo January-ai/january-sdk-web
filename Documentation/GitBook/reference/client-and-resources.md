@@ -1,6 +1,6 @@
 # Client and resources
 
-`JanuaryPartnerClient` accepts exactly one authentication option:
+`JanuaryClient` accepts exactly one authentication option:
 
 | Runtime | Option |
 | --- | --- |
@@ -8,7 +8,7 @@
 | Host-managed short-lived token | `accessToken` |
 
 ```ts
-new JanuaryPartnerClient(
+new JanuaryClient(
   | { accessToken: string; fetch?: typeof globalThis.fetch }
   | {
       clientTokenProvider: JanuaryTokenProvider | JanuaryTokenProviderCallback;
@@ -37,15 +37,17 @@ always targets January production; no public base URL or token endpoint exists.
 
 | Resource | Public operations |
 | --- | --- |
-| `foods` | `autocomplete`, `search`, `getFood`, `lookupBarcode`, `searchNaturalLanguage`, `suggestAlternatives` |
+| `foods` | `autocomplete`, `search`, `get`, `lookupBarcode`, `suggestAlternatives` |
 | `restaurants` | `search`, `searchMenuItems` |
-| `photoScanning` | `scan`, `correct` |
+| `foodAnalysis` | `analyzePhoto`, `analyzeDescription`, `correct` |
 | `foodLogs` | `create`, `list`, `update`, `delete` |
 | `glucose` | `predict` |
 
 `forUser(context)` and `forUser(endUserId, timezone?)` return a lightweight
-`JanuaryPartnerUserClient` for scoped Food Logs and Glucose. Every public
-request type accepts an optional `AbortSignal`.
+`JanuaryPartnerUserClient` whose `foods`, `restaurants`, `foodAnalysis`,
+`foodLogs`, and `glucose` resources reuse one context. Set the user once, then
+use the scoped client for every operation. Every public request type accepts an
+optional `AbortSignal`.
 
 Local helpers include `FoodPortion.from(...)` and browser-only
 `preparePhotoScanImage(...)`. Generated OpenAPI transport modules are package

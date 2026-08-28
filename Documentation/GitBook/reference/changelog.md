@@ -6,7 +6,7 @@
 * Provider-managed short-lived tokens with single-flight refresh
 * Nine-attempt bounded exponential backoff with jitter
 * AbortSignal support across public requests
-* User-scoped Food Logs and Glucose clients
+* User-scoped Foods, Restaurants, Photo Scanning, Food Logs, and Glucose clients
 * Food autocomplete, hydration, and local portion calculations
 * Browser photo preparation helper
 * Typed imperial and metric glucose-profile measurements

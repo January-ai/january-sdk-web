@@ -16,12 +16,15 @@ configuration:
 
 ```text
 PARTNER_TOKEN_URL=http://localhost:8787/january-token
+PARTNER_APP_SESSION_TOKEN=your-local-app-session-or-relay-secret
 JANUARY_END_USER_ID=your-test-user
 ```
 
-`PARTNER_TOKEN_URL` has no default, and the public SDK exposes no January
-base-URL override. Keep application-session configuration in the appropriate
-server environment; never use a browser-exposed variable for server credentials.
+`PARTNER_TOKEN_URL` has no default. The demo sends a server-side `POST` with the
+app session in `Authorization` and the selected stable user ID in
+`x-end-user-id`; adapt those details to your backend contract. The public SDK
+exposes no January base-URL override. Never use a browser-exposed variable for
+server credentials.
 
 ## Run and verify
 

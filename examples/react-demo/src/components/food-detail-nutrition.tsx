@@ -1,4 +1,4 @@
-import type { FoodPortion } from '@januaryai/partner-sdk'
+import type { FoodPortion } from '@januaryai/sdk'
 import { MacroGrid } from './macro-grid'
 import { NutritionList } from './nutrition-list'
 import { Card } from './ui'

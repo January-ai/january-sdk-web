@@ -28,15 +28,12 @@ endpoint and remove the API-key setting:
 
 ```sh
 PARTNER_TOKEN_URL=http://127.0.0.1:8787/january-token
-JANUARY_INTERNAL_API_BASE_URL=https://partners.dev.january.ai
+PARTNER_APP_SESSION_TOKEN=your-local-app-session-or-relay-secret
 JANUARY_END_USER_ID=local-web-user
 ```
 
-The authentication boundary in `src/api/january.server.ts` requires both URLs,
-calls the explicit token endpoint, returns its `{ token, expiresIn }` response
-directly, and lets the SDK
-cache and refresh it. The URL has no SDK default: replacing the stand-in backend
-later only changes this demo configuration/provider. The partner route must
-return a token accepted by the configured January development API. The API URL
-override lives only in this January-owned demo; the public SDK remains pinned to
-January production.
+The authentication boundary in `src/api/january.server.ts` calls the explicit
+token endpoint, returns its `{ token, expiresIn }` response directly, and lets
+the SDK cache and refresh it. The URL has no SDK default: replacing the stand-in
+backend later only changes this demo configuration/provider. January API calls
+remain pinned to production.

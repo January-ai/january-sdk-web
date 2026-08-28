@@ -1,23 +1,23 @@
-# Photo scanning
+# Food analysis
 
 In browsers, `preparePhotoScanImage` uses browser image and canvas APIs to
 preserve aspect ratio, limit the longest edge to 1,000 pixels, JPEG-compress at
 quality 0.7, and return an upload-ready data URI.
 
 ```ts
-import { preparePhotoScanImage } from '@januaryai/partner-sdk';
+import { preparePhotoScanImage } from '@januaryai/sdk';
 
 const file = fileInput.files?.[0];
 if (!file) throw new Error('Choose a meal image');
 
 const prepared = await preparePhotoScanImage(file);
-const scan = await january.photoScanning.scan({ image: prepared.dataUri });
+const scan = await january.foodAnalysis.analyzePhoto({ image: prepared.dataUri });
 ```
 
 Correct a result using its current name and detections:
 
 ```ts
-const corrected = await january.photoScanning.correct({
+const corrected = await january.foodAnalysis.correct({
   mealName: scan.mealName ?? 'Meal',
   detections: scan.detections ?? [],
   userInput: 'Remove the fries',

@@ -1,12 +1,13 @@
 # Retries, refresh, and cancellation
 
 Provider-backed clients cache credentials in memory, refresh 60 seconds early,
-and coalesce concurrent refreshes into one provider call. Provider exceptions
-use nine total attempts with ±20% jitter and nominal delays of 1, 2, 4, 8, 8,
-8, 8, and 8 seconds.
+and coalesce concurrent refreshes into one provider call. Provider failures
+explicitly marked retryable use nine total attempts with ±20% jitter and
+nominal delays of 1, 2, 4, 8, 8, 8, 8, and 8 seconds. Ordinary errors stop
+immediately.
 
 ```ts
-const january = new JanuaryPartnerClient({
+const january = new JanuaryClient({
   clientTokenProvider: fetchJanuaryToken,
   tokenRetryPolicy: {
     maximumAttempts: 9,

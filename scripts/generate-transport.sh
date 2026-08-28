@@ -2,7 +2,11 @@
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-lock="$root/Contract/sdk-contract.lock.json"
+lock="${JANUARY_CONTRACT_LOCK:-$root/.january-internal/sdk-contract.lock.json}"
+[[ -f "$lock" ]] || {
+  echo "Missing internal contract lock. Set JANUARY_CONTRACT_LOCK or place it at .january-internal/sdk-contract.lock.json." >&2
+  exit 1
+}
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 

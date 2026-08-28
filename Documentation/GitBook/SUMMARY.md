@@ -20,7 +20,7 @@
 
 * [Foods](guides/foods.md)
 * [Restaurants](guides/restaurants.md)
-* [Photo scanning](guides/photo-scanning.md)
+* [Food analysis](guides/photo-scanning.md)
 * [Food logs](guides/food-logs.md)
 * [Glucose prediction](guides/glucose-prediction.md)
 

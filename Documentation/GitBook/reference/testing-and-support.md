@@ -10,8 +10,8 @@ npm pack --dry-run
 npm run demo:web:build
 ```
 
-For release-candidate packaging, run `npm pack`, install the resulting `.tgz`
-into a clean temporary ESM project, and import `JanuaryPartnerClient`.
+For a release candidate, inspect `npm pack --dry-run`, install the resulting
+tarball into a clean temporary ESM project, and import `JanuaryClient`.
 
 ## Verify an integration
 
@@ -23,9 +23,8 @@ key is present.
 
 ## Versioning and updates
 
-There is no npm release yet. Pin an approved Git commit, build a new tarball,
-review the changelog and exported declaration diff, rerun the checks above, and
-upgrade deliberately. Do not infer stability from the source version `0.1.0`.
+Use your package-manager lockfile, review the changelog and exported declaration
+diff, rerun the checks above, and upgrade deliberately.
 
 ## Support report
 

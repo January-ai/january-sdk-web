@@ -4,16 +4,17 @@ Every request accepts optional `endUserId?: string` and `signal?: AbortSignal`.
 Client-token mode removes the end-user header because the token identifies the
 user.
 
+Prefer `january.forUser(...).foods`; it exposes the same operations without an
+`endUserId` field in each request. Direct request identity remains available for
+source compatibility.
+
 ## Operations
 
 ```ts
 autocomplete(request: AutocompleteFoodsRequest): Promise<AutocompleteFoodsResponse>
 search(request: SearchFoodsRequest): Promise<FoodSearchResults>
-getFood(request: GetFoodRequest): Promise<FoodSearchItem>
+get(request: GetFoodRequest): Promise<FoodSearchItem>
 lookupBarcode(request: LookupFoodByBarcodeRequest): Promise<FoodSearchResults>
-searchNaturalLanguage(
-  request: SearchFoodsByNaturalLanguageRequest,
-): Promise<SearchFoodsByNaturalLanguageResponse>
 suggestAlternatives(
   request: SuggestFoodAlternativesRequest,
 ): Promise<SuggestFoodAlternativesResponse>
@@ -27,7 +28,6 @@ suggestAlternatives(
 | `SearchFoodsRequest` | `query: string` (trimmed, 1–256 characters); `category?: FoodCategory`; `limit?: number` (default 10, range 1–40) |
 | `GetFoodRequest` | `foodId: number` (positive safe integer) |
 | `LookupFoodByBarcodeRequest` | `upc: string` (trimmed, nonempty) |
-| `SearchFoodsByNaturalLanguageRequest` | `query: string` (trimmed, nonempty) |
 | `SuggestFoodAlternativesRequest` | `foodId: number`; `dietRestrictions: DietRestriction[]`; `dietPreferences: DietPreference[]` |
 
 Autocomplete trims the query and permits an empty prefix, but rejects more than
@@ -47,8 +47,8 @@ nullable glycemic values/photo/UPC, complete nullable `nutrients`, and
 `ServingOption` fields are `id`, `quantity`, `unit`, `scalingFactor`, nullable
 `weightGrams`, and `isPrimary`.
 
-Natural-language search returns a `FoodScan`; alternatives returns
-`{ alternatives: FoodAlternative[] }`.
+Alternatives returns `{ alternatives: FoodAlternative[] }`. Natural-language
+meal descriptions are handled by `foodAnalysis.analyzeDescription`.
 
 ## Portion helper
 

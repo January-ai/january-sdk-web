@@ -18,8 +18,8 @@ test('photo scan sends the public URL and PNG data URI through the public client
   };
   const client = new JanuaryPartnerClient({ apiKey: 'fixture-key', fetch });
 
-  await client.photoScanning.scan({ image: burgerImageUrl });
-  await client.photoScanning.scan({ image: dataUri });
+  await client.foodAnalysis.analyzePhoto({ image: burgerImageUrl });
+  await client.foodAnalysis.analyzePhoto({ image: dataUri });
 
   assert.equal(requests.length, 2);
   assert.ok(requests.every(({ url }) => new URL(url).pathname === '/v1.2/food-scans/photo'));

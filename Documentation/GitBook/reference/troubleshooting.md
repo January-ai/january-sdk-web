@@ -2,7 +2,7 @@
 
 ## npm returns 404
 
-The package is not published. Follow the [build and local tarball installation](../getting-started/installation.md).
+Confirm the package is installed from npm and follow the [installation guide](../getting-started/installation.md).
 
 ## A GitHub dependency installs but cannot import `dist/index.js`
 
@@ -32,13 +32,13 @@ TLS, HTTP status, and response. It needs a non-empty token plus `expiresIn` or
 
 ## Provider is called repeatedly
 
-Reuse one `JanuaryPartnerClient`. Check whether the returned token is within the
+Reuse one `JanuaryClient`. Check whether the returned token is within the
 60-second refresh window or January responds with `401 token_expired`. Concurrent
 refresh normally shares one provider call.
 
 ## Food picker has incomplete servings
 
-After selecting a search result, call `foods.getFood`. Autocomplete and search
+After selecting a search result, call `foods.get`. Autocomplete and search
 objects are discovery data and are not guaranteed complete.
 
 ## `preparePhotoScanImage` fails in Node.js or SSR

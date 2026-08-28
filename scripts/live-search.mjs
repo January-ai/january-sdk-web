@@ -18,7 +18,7 @@ const result = await client.foods.search({
 });
 if (!result.items.length) throw new Error('Food search returned no results.');
 
-const fullFood = await client.foods.getFood({
+const fullFood = await client.foods.get({
   foodId: result.items[0].id,
   endUserId: process.env.JANUARY_END_USER_ID,
 });

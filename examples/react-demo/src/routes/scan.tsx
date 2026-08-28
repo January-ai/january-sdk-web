@@ -2,7 +2,7 @@ import { useMutation } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { ArrowRight, Barcode, Camera, ImagePlus, Link as LinkIcon, ScanLine, Utensils } from 'lucide-react'
 import { useRef, useState } from 'react'
-import { scanMeal, searchFoodCatalog } from '~/api/january.functions'
+import { analyzeFoodPhoto, searchFoodCatalog } from '~/api/january.functions'
 import { BarcodeCamera } from '~/components/barcode-camera'
 import { Dialog } from '~/components/dialog'
 import { NetworkImage } from '~/components/network-image'
@@ -39,7 +39,7 @@ function ScanPage() {
   const [upc, setUpc] = useState('')
   const [resultOpen, setResultOpen] = useState(false)
   const scan = useMutation({
-    mutationFn: () => scanMeal({ data: {
+    mutationFn: () => analyzeFoodPhoto({ data: {
       image,
       ...(session.endUserId ? { endUserId: session.endUserId } : {}),
     } }),

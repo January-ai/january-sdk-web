@@ -1,19 +1,11 @@
 # January SDK for Web and Node.js
 
-Typed Promise-based APIs for food discovery, restaurants, meal-photo scanning,
+Typed Promise-based APIs for food discovery, restaurants, food analysis,
 food logs, and glucose prediction in Node.js services and modern browsers.
-
-{% hint style="warning" %}
-**Controlled preview:** `@januaryai/partner-sdk` is not published on npm, and
-the source repository is private. January must grant your GitHub account access. The
-normal `npm install @januaryai/partner-sdk` command returns `404`. Follow the
-verified [local tarball installation](getting-started/installation.md) until
-January announces a registry release.
-{% endhint %}
 
 ## Start here
 
-1. [Build and install the controlled-preview tarball](getting-started/installation.md).
+1. [Install the npm package](getting-started/installation.md).
 2. Choose the correct [runtime and security boundary](concepts/runtime-boundaries.md).
 3. Build a partner-owned [backend token endpoint](getting-started/backend-token-endpoint.md).
 4. Configure authentication and run the [first request](getting-started/quick-start.md).
@@ -21,7 +13,7 @@ January announces a registry release.
 
 ## Security model
 
-Public SDK authentication uses client tokens only. Browser and Node.js code
+Production SDK authentication uses client tokens. Browser and Node.js code
 obtain a short-lived token from an authenticated application backend. The SDK
 has no token-endpoint URL and no public January base-URL override.
 

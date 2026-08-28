@@ -53,3 +53,73 @@ test('scoped client rejects an empty partner user ID', () => {
   const client = new JanuaryPartnerClient({ apiKey: 'fixture' });
   assert.throws(() => client.forUser('  '), /end-user ID/);
 });
+
+test('scoped client applies one identity and cancellation signal across every discovery operation', async () => {
+  const requests = [];
+  const fetch = async (input, init) => {
+    const url = new URL(String(input));
+    requests.push({ url, init });
+    const response = /^\/v1\.2\/foods\/\d+$/.test(url.pathname)
+      ? {
+          id: 1,
+          name: 'banana',
+          nutrients: {},
+          servings: [],
+        }
+      : url.pathname === '/v1.2/foods/autocomplete'
+        ? { items: [] }
+        : url.pathname.endsWith('/alternatives')
+          ? { alternatives: [] }
+          : url.pathname === '/v1.2/food-scans/text'
+            ? { detections: [] }
+            : url.pathname.startsWith('/v1.2/restaurants')
+              ? { total_count: 0, items: [] }
+              : url.pathname.startsWith('/v1.2/food-scans/')
+                ? { detections: [] }
+                : { total_count: 0, items: [] };
+    return new Response(JSON.stringify(response), {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    });
+  };
+  const client = new JanuaryPartnerClient({ apiKey: 'fixture', fetch });
+  const scoped = client.forUser('user-42', 'America/New_York');
+  const controller = new AbortController();
+
+  await scoped.foods.autocomplete({ query: 'ban', signal: controller.signal });
+  await scoped.foods.get({ foodId: 1, signal: controller.signal });
+  await scoped.foods.search({ query: 'banana', signal: controller.signal });
+  await scoped.foods.lookupBarcode({ upc: '012345678905', signal: controller.signal });
+  await scoped.foodAnalysis.analyzeDescription({ query: 'banana and oats', signal: controller.signal });
+  await scoped.foods.suggestAlternatives({ foodId: 1, signal: controller.signal });
+  await scoped.restaurants.search({ query: 'cafe', latitude: 40, longitude: -74, signal: controller.signal });
+  await scoped.restaurants.searchMenuItems({ query: 'salad', latitude: 40, longitude: -74, signal: controller.signal });
+  await scoped.foodAnalysis.analyzePhoto({ image: 'https://example.com/meal.jpg', signal: controller.signal });
+  await scoped.foodAnalysis.correct({
+    mealName: 'Lunch',
+    detections: [],
+    userInput: 'add avocado',
+    signal: controller.signal,
+  });
+
+  assert.equal(requests.length, 10);
+  assert.ok(requests.every(({ init }) => new Headers(init.headers).get('x-end-user-id') === 'user-42'));
+  assert.ok(requests.every(({ init }) => init.signal === controller.signal));
+});
+
+test('scoped client never sends redundant identity with client-token authentication', async () => {
+  let endUserId;
+  const client = new JanuaryPartnerClient({
+    accessToken: 'ct-scoped',
+    fetch: async (_input, init) => {
+      endUserId = new Headers(init.headers).get('x-end-user-id');
+      return new Response(JSON.stringify({ total_count: 0, items: [] }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      });
+    },
+  });
+
+  await client.forUser('token-bound-user').foods.search({ query: 'banana' });
+  assert.equal(endUserId, null);
+});

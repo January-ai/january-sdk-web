@@ -1,4 +1,4 @@
-import { preparePhotoScanImage as prepareSdkPhotoScanImage } from '@januaryai/partner-sdk'
+import { preparePhotoScanImage as prepareSdkPhotoScanImage } from '@januaryai/sdk'
 
 /** Prepares a browser-selected meal photo before it is sent through the SDK. */
 export async function preparePhotoScanImage(file: File): Promise<string> {

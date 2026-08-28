@@ -7,14 +7,18 @@ import { RestaurantsApi } from './internal/transport/apis/RestaurantsApi.js';
 import { FoodsResource } from './resources/foods.js';
 import { FoodLogsResource } from './resources/food-logs.js';
 import { GlucoseResource } from './resources/glucose.js';
-import { PhotoScanningResource } from './resources/photo-scanning.js';
+import { FoodAnalysisResource } from './resources/photo-scanning.js';
 import { RestaurantsResource } from './resources/restaurants.js';
 import type { PartnerUserContext } from './models.js';
-import { JanuaryPartnerUserClient } from './user-client.js';
+import {
+  createJanuaryPartnerUserClient,
+  type JanuaryPartnerUserClient,
+} from './user-client.js';
 import { JanuaryError } from './errors.js';
 
 const SDK_VERSION = '0.1.0';
 const PRODUCTION_BASE_URL = 'https://partners.january.ai';
+let didWarnAboutDevelopmentAPIKey = false;
 const isNodeRuntime = Boolean(
   (globalThis as typeof globalThis & { process?: { versions?: { node?: string } } })
     .process?.versions?.node,
@@ -42,6 +46,17 @@ export interface JanuaryTokenProvider {
 
 export type JanuaryTokenProviderCallback = () => Promise<JanuaryClientTokenResponse>;
 
+/** A token-provider failure with an explicit retry decision. */
+export class JanuaryTokenProviderError extends Error {
+  readonly retryable: boolean;
+
+  constructor(message: string, options: { retryable?: boolean; cause?: unknown } = {}) {
+    super(message, options.cause !== undefined ? { cause: options.cause } : undefined);
+    this.name = 'JanuaryTokenProviderError';
+    this.retryable = options.retryable ?? false;
+  }
+}
+
 /** Controls bounded retries when the app's token provider fails to fetch a credential. */
 export interface JanuaryTokenRetryPolicy {
   /** Total attempts including the initial provider call. Defaults to 9. */
@@ -62,10 +77,26 @@ export type JanuaryClientTokenProvider = JanuaryTokenProvider;
 export type JanuaryClientTokenProviderCallback = JanuaryTokenProviderCallback;
 
 export type JanuaryPartnerClientOptions = JanuaryPartnerClientBaseOptions & (
-  | { apiKey: string; accessToken?: never; clientTokenProvider?: never; tokenRetryPolicy?: never }
-  | { apiKey?: never; accessToken: string; clientTokenProvider?: never; tokenRetryPolicy?: never }
+  | {
+      /** @deprecated Local testing only. Use clientTokenProvider in production. */
+      apiKey: string;
+      developmentApiKey?: never;
+      accessToken?: never;
+      clientTokenProvider?: never;
+      tokenRetryPolicy?: never;
+    }
+  | {
+      /** @deprecated Local testing only. Use clientTokenProvider in production. */
+      developmentApiKey: string;
+      apiKey?: never;
+      accessToken?: never;
+      clientTokenProvider?: never;
+      tokenRetryPolicy?: never;
+    }
+  | { apiKey?: never; developmentApiKey?: never; accessToken: string; clientTokenProvider?: never; tokenRetryPolicy?: never }
   | {
       apiKey?: never;
+      developmentApiKey?: never;
       accessToken?: never;
       clientTokenProvider: JanuaryTokenProvider | JanuaryTokenProviderCallback;
       tokenRetryPolicy?: JanuaryTokenRetryPolicy;
@@ -124,6 +155,7 @@ class ClientTokenManager {
           : await this.provider.fetchClientToken();
       } catch (error) {
         if (isCancellationError(error)) throw error;
+        if (!(error instanceof JanuaryTokenProviderError) || !error.retryable) throw error;
         if (attempt >= this.retryPolicy.maximumAttempts) {
           throw new JanuaryError(
             'authentication',
@@ -159,21 +191,34 @@ class ClientTokenManager {
 export class JanuaryPartnerClient {
   readonly foods: FoodsResource;
   readonly restaurants: RestaurantsResource;
-  readonly photoScanning: PhotoScanningResource;
+  readonly foodAnalysis: FoodAnalysisResource;
   readonly foodLogs: FoodLogsResource;
   readonly glucose: GlucoseResource;
 
   constructor(options: JanuaryPartnerClientOptions) {
-    const credentials = ['apiKey', 'accessToken', 'clientTokenProvider']
+    const credentials = ['apiKey', 'developmentApiKey', 'accessToken', 'clientTokenProvider']
       .filter((name) => options[name as keyof JanuaryPartnerClientOptions] !== undefined);
     if (credentials.length !== 1) {
-      throw new TypeError('Provide exactly one of apiKey, accessToken, or clientTokenProvider.');
+      throw new TypeError('Provide exactly one authentication method.');
     }
 
-    const apiKey = 'apiKey' in options ? options.apiKey?.trim() : undefined;
+    const apiKey = 'apiKey' in options
+      ? options.apiKey?.trim()
+      : 'developmentApiKey' in options
+        ? options.developmentApiKey?.trim()
+        : undefined;
     const accessToken = 'accessToken' in options ? options.accessToken?.trim() : undefined;
     if (apiKey !== undefined && !apiKey) throw new TypeError('A development API key is required.');
     if (accessToken !== undefined && !accessToken) throw new TypeError('A client token is required.');
+    if (apiKey !== undefined) {
+      if (!didWarnAboutDevelopmentAPIKey) {
+        didWarnAboutDevelopmentAPIKey = true;
+        console.warn(
+          'January development API-key authentication is for local testing only. ' +
+          'Do not ship this key; use clientTokenProvider in production.',
+        );
+      }
+    }
     const configuredProvider = 'clientTokenProvider' in options
       ? options.clientTokenProvider
       : undefined;
@@ -203,10 +248,10 @@ export class JanuaryPartnerClient {
       ...(fetchApi !== undefined ? { fetchApi } : {}),
     });
 
-    const photoScanningApi = new PhotoScanningApi(configuration);
-    this.foods = new FoodsResource(new FoodsApi(configuration), photoScanningApi);
+    const foodAnalysisApi = new PhotoScanningApi(configuration);
+    this.foods = new FoodsResource(new FoodsApi(configuration));
     this.restaurants = new RestaurantsResource(new RestaurantsApi(configuration));
-    this.photoScanning = new PhotoScanningResource(photoScanningApi);
+    this.foodAnalysis = new FoodAnalysisResource(foodAnalysisApi);
     this.foodLogs = new FoodLogsResource(new FoodLogsApi(configuration));
     this.glucose = new GlucoseResource(new GlucoseApi(configuration));
   }
@@ -217,7 +262,7 @@ export class JanuaryPartnerClient {
     const context = typeof contextOrId === 'string'
       ? { endUserId: contextOrId, ...(endUserTimezone !== undefined ? { endUserTimezone } : {}) }
       : contextOrId;
-    return new JanuaryPartnerUserClient(this, context);
+    return createJanuaryPartnerUserClient(this, context);
   }
 }
 

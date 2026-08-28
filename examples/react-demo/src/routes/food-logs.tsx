@@ -1,4 +1,4 @@
-import type { FoodLog } from '@januaryai/partner-sdk'
+import type { FoodLog } from '@januaryai/sdk'
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { CalendarDays, ClipboardList, Pencil, Plus, Trash2, Utensils } from 'lucide-react'

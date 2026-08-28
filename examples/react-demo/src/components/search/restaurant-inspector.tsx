@@ -1,4 +1,4 @@
-import type { Restaurant, SearchRestaurantMenuItemsResponse } from '@januaryai/partner-sdk'
+import type { Restaurant, SearchRestaurantMenuItemsResponse } from '@januaryai/sdk'
 import type { UseQueryResult } from '@tanstack/react-query'
 import { MapPin, Utensils } from 'lucide-react'
 import { formatNumber } from '~/lib/utils'

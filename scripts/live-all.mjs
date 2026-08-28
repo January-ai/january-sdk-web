@@ -23,10 +23,10 @@ const serving = food?.servings[0];
 if (!food || !serving) throw new Error('foods.search returned no usable food.');
 pass('foods.search', `${search.items.length} items`);
 
-const natural = await client.foods.searchNaturalLanguage({
+const natural = await client.foodAnalysis.analyzeDescription({
   query: 'one banana and a bowl of oatmeal', endUserId,
 });
-pass('foods.searchNaturalLanguage', `${natural.detections.length} detections`);
+pass('foodAnalysis.analyzeDescription', `${natural.detections.length} detections`);
 
 const alternatives = await client.foods.suggestAlternatives({
   foodId: food.id,
@@ -49,34 +49,34 @@ const menuItems = await client.restaurants.searchMenuItems({
 });
 pass('restaurants.searchMenuItems', `${menuItems.items.length} items`);
 
-const scan = await client.photoScanning.scan({
+const scan = await client.foodAnalysis.analyzePhoto({
   image: 'https://friendlysrestaurants.com/assets/live/img/production/detail/menu/lunch-dinner_999-combohs_all-american-burger-fries.jpg',
   endUserId,
 });
 if (!scan.mealName || !scan.detections?.length) {
-  throw new Error('photoScanning.scan returned no correctable detections.');
+  throw new Error('foodAnalysis.analyzePhoto returned no correctable detections.');
 }
-pass('photoScanning.scan', `${scan.detections.length} detections`);
+pass('foodAnalysis.analyzePhoto', `${scan.detections.length} detections`);
 
 const photoFixture = await readFile(
   new URL('../test/fixtures/photo-scanning/burger-and-fries.png', import.meta.url),
 );
-const base64Scan = await client.photoScanning.scan({
+const base64Scan = await client.foodAnalysis.analyzePhoto({
   image: `data:image/png;base64,${photoFixture.toString('base64')}`,
   endUserId,
 });
 if (!base64Scan.mealName || !base64Scan.detections?.length) {
-  throw new Error('photoScanning.scan returned no detections for the base64 fixture.');
+  throw new Error('foodAnalysis.analyzePhoto returned no detections for the base64 fixture.');
 }
-pass('photoScanning.scan base64', `${base64Scan.detections.length} detections`);
+pass('foodAnalysis.analyzePhoto base64', `${base64Scan.detections.length} detections`);
 
-await client.photoScanning.correct({
+await client.foodAnalysis.correct({
   mealName: scan.mealName,
   detections: scan.detections,
   userInput: 'Rename the meal to January Node SDK smoke test meal.',
   endUserId,
 });
-pass('photoScanning.correct');
+pass('foodAnalysis.correct');
 
 const selectedFood = { id: food.id, serving: { id: serving.id, quantity: 1 } };
 const timezone = 'America/New_York';

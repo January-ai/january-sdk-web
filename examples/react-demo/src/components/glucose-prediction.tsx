@@ -1,4 +1,4 @@
-import type { GlucosePrediction } from '@januaryai/partner-sdk'
+import type { GlucosePrediction } from '@januaryai/sdk'
 import { SectionLabel } from './ui'
 
 export function GlucoseChart({ result }: { result: GlucosePrediction }) {

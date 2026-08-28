@@ -1,6 +1,10 @@
-# Restaurants and scanning API
+# Restaurants and food analysis API
 
 All request types accept optional `endUserId` and `signal`.
+
+Prefer `january.forUser(...).restaurants` and
+`january.forUser(...).foodAnalysis`; their request types omit `endUserId` and
+reuse the configured identity automatically.
 
 ## Restaurants
 
@@ -26,10 +30,13 @@ fields are type/ID/name and optional chain, distance, city, and address metadata
 Menu search returns `RestaurantMenuItem[]` with restaurant name, optional
 nutrition/distance/photo values, and servings.
 
-## Photo scanning
+## Food analysis
 
 ```ts
-scan(request: ScanFoodPhotoRequest): Promise<FoodScan>
+analyzePhoto(request: ScanFoodPhotoRequest): Promise<FoodScan>
+analyzeDescription(
+  request: SearchFoodsByNaturalLanguageRequest,
+): Promise<FoodScan>
 correct(request: CorrectPhotoScanRequest): Promise<FoodScan>
 ```
 

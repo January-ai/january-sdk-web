@@ -6,7 +6,7 @@ import {
   MedicalCondition,
   Sex,
   WeightUnit,
-} from '@januaryai/partner-sdk'
+} from '@januaryai/sdk'
 import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
 import { getDefaultEndUserId, getJanuaryClient, hasJanuaryConfiguration } from './january.server'
@@ -42,7 +42,7 @@ export const getFoodDetails = createServerFn({ method: 'GET' })
     foodId: z.number().int().positive(),
     endUserId: optionalUserId,
   }))
-  .handler(({ data }) => getJanuaryClient().foods.getFood(data))
+  .handler(({ data }) => getJanuaryClient().foods.get(data))
 
 export const searchFoodCatalog = createServerFn({ method: 'GET' })
   .validator(z.object({
@@ -57,7 +57,7 @@ export const searchFoodCatalog = createServerFn({ method: 'GET' })
       return client.foods.lookupBarcode({ upc: data.query, endUserId: data.endUserId })
     }
     if (data.mode === 'description') {
-      const response = await client.foods.searchNaturalLanguage({ query: data.query, endUserId: data.endUserId })
+      const response = await client.foodAnalysis.analyzeDescription({ query: data.query, endUserId: data.endUserId })
       const items = (response.detections ?? []).map((detection, index) => ({
         id: detection.food.id ?? -(index + 1),
         name: detection.food.name,
@@ -113,9 +113,9 @@ export const searchRestaurantMenuItems = createServerFn({ method: 'GET' })
   .validator(restaurantSearchSchema)
   .handler(({ data }) => getJanuaryClient().restaurants.searchMenuItems({ ...data, radius: 8_000, limit: 20 }))
 
-export const scanMeal = createServerFn({ method: 'POST' })
+export const analyzeFoodPhoto = createServerFn({ method: 'POST' })
   .validator(z.object({ image: z.string().min(1), endUserId: optionalUserId }))
-  .handler(({ data }) => getJanuaryClient().photoScanning.scan(data))
+  .handler(({ data }) => getJanuaryClient().foodAnalysis.analyzePhoto(data))
 
 export const listFoodLogs = createServerFn({ method: 'GET' })
   .validator(z.object({

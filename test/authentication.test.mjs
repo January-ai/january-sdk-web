@@ -1,11 +1,33 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { JanuaryError, JanuaryPartnerClient } from '../dist/index.js';
+import {
+  JanuaryError,
+  JanuaryPartnerClient,
+  JanuaryTokenProviderError,
+} from '../dist/index.js';
 import { resolveTokenRetryPolicy, retryDelay } from '../dist/client.js';
 
 const ok = () => new Response(JSON.stringify({ total_count: 0, items: [] }), {
   status: 200,
   headers: { 'content-type': 'application/json' },
+});
+
+test('development API-key authentication warns and rejects blank keys', () => {
+  const originalWarn = console.warn;
+  const warnings = [];
+  console.warn = (message) => warnings.push(String(message));
+  try {
+    new JanuaryPartnerClient({ developmentApiKey: 'sk-local-only' });
+  } finally {
+    console.warn = originalWarn;
+  }
+
+  assert.match(warnings.join('\n'), /local testing only/i);
+  assert.match(warnings.join('\n'), /Do not ship/i);
+  assert.throws(
+    () => new JanuaryPartnerClient({ developmentApiKey: '  ' }),
+    /development API key is required/i,
+  );
 });
 
 test('fixed client token is injected', async () => {
@@ -78,7 +100,9 @@ test('provider fetch retries with bounded exponential backoff', async () => {
   const client = new JanuaryPartnerClient({
     clientTokenProvider: async () => {
       providerCalls += 1;
-      if (providerCalls <= 2) throw new Error('temporary partner backend failure');
+      if (providerCalls <= 2) {
+        throw new JanuaryTokenProviderError('temporary partner backend failure', { retryable: true });
+      }
       return { token: 'ct-recovered', expiresIn: 3_600 };
     },
     tokenRetryPolicy: {
@@ -103,7 +127,7 @@ test('provider fetch stops after the configured maximum attempts', async () => {
   const client = new JanuaryPartnerClient({
     clientTokenProvider: async () => {
       providerCalls += 1;
-      throw new Error('partner backend unavailable');
+      throw new JanuaryTokenProviderError('partner backend unavailable', { retryable: true });
     },
     tokenRetryPolicy: {
       maximumAttempts: 9,
@@ -133,7 +157,9 @@ test('token_expired refresh uses provider backoff before one API replay', async 
     clientTokenProvider: async () => {
       providerCalls += 1;
       if (providerCalls === 1) return { token: 'ct-expired', expiresIn: 3_600 };
-      if (providerCalls <= 3) throw new Error('temporary partner backend failure');
+      if (providerCalls <= 3) {
+        throw new JanuaryTokenProviderError('temporary partner backend failure', { retryable: true });
+      }
       return { token: 'ct-refreshed', expiresIn: 3_600 };
     },
     tokenRetryPolicy: {
@@ -167,7 +193,9 @@ test('concurrent callers share one provider retry sequence', async () => {
     clientTokenProvider: async () => {
       providerCalls += 1;
       await new Promise((resolve) => setTimeout(resolve, 5));
-      if (providerCalls === 1) throw new Error('temporary partner backend failure');
+      if (providerCalls === 1) {
+        throw new JanuaryTokenProviderError('temporary partner backend failure', { retryable: true });
+      }
       return { token: 'ct-shared', expiresIn: 3_600 };
     },
     tokenRetryPolicy: {
@@ -201,6 +229,26 @@ test('malformed provider tokens fail without retrying', async () => {
     client.foods.search({ query: 'banana' }),
     (error) => error instanceof JanuaryError && error.category === 'authentication',
   );
+  assert.equal(providerCalls, 1);
+});
+
+test('ordinary provider failures are not retried', async () => {
+  let providerCalls = 0;
+  const client = new JanuaryPartnerClient({
+    clientTokenProvider: async () => {
+      providerCalls += 1;
+      throw new Error('invalid partner session');
+    },
+    tokenRetryPolicy: {
+      maximumAttempts: 9,
+      initialDelayMs: 0,
+      maximumDelayMs: 0,
+      jitterRatio: 0,
+    },
+    fetch: async () => assert.fail('January API fetch must not run without a token'),
+  });
+
+  await assert.rejects(client.foods.search({ query: 'banana' }), /invalid partner session/);
   assert.equal(providerCalls, 1);
 });
 

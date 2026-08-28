@@ -1,4 +1,4 @@
-export { JanuaryPartnerClient } from './client.js';
+export { JanuaryPartnerClient, JanuaryPartnerClient as JanuaryClient } from './client.js';
 export type {
   JanuaryClientToken,
   JanuaryClientTokenResponse,
@@ -9,12 +9,27 @@ export type {
   JanuaryClientTokenProviderCallback,
   JanuaryPartnerClientOptions,
 } from './client.js';
-export { JanuaryPartnerUserClient, UserFoodLogsResource, UserGlucoseResource } from './user-client.js';
+export { JanuaryTokenProviderError } from './client.js';
 export type {
+  JanuaryPartnerUserClient,
+  UserFoodsResource,
+  UserRestaurantsResource,
+  UserFoodAnalysisResource,
+  UserFoodLogsResource,
+  UserGlucoseResource,
+  UserAutocompleteFoodsRequest,
+  UserCorrectPhotoScanRequest,
   UserCreateFoodLogRequest,
   UserDeleteFoodLogRequest,
+  UserGetFoodRequest,
   UserListFoodLogsRequest,
+  UserLookupFoodByBarcodeRequest,
   UserPredictGlucoseRequest,
+  UserScanFoodPhotoRequest,
+  UserSearchFoodsByNaturalLanguageRequest,
+  UserSearchFoodsRequest,
+  UserSearchRestaurantsRequest,
+  UserSuggestFoodAlternativesRequest,
   UserUpdateFoodLogRequest,
 } from './user-client.js';
 export { JanuaryError } from './errors.js';
@@ -31,6 +46,6 @@ export type {
 } from './photo-scan-image.js';
 export { FoodsResource } from './resources/foods.js';
 export { RestaurantsResource } from './resources/restaurants.js';
-export { PhotoScanningResource } from './resources/photo-scanning.js';
+export { FoodAnalysisResource } from './resources/photo-scanning.js';
 export { FoodLogsResource } from './resources/food-logs.js';
 export { GlucoseResource } from './resources/glucose.js';

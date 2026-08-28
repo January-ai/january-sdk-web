@@ -1,6 +1,7 @@
 # Food Logs and Glucose API
 
-Prefer `january.forUser(...)` so identity and timezone are applied consistently.
+Prefer `january.forUser(...)` so identity and timezone are applied consistently
+across all SDK resources, including the Food Logs and Glucose operations here.
 All scoped request objects accept optional `signal`.
 
 ## Scoped Food Logs

@@ -5,18 +5,15 @@ import type {
   FoodSearchResults,
   GetFoodRequest,
   LookupFoodByBarcodeRequest,
-  SearchFoodsByNaturalLanguageRequest,
-  SearchFoodsByNaturalLanguageResponse,
   SearchFoodsRequest,
   SuggestFoodAlternativesRequest,
   SuggestFoodAlternativesResponse,
 } from '../models.js';
 import { executeRequest } from '../errors.js';
 import { FoodsApi } from '../internal/transport/apis/FoodsApi.js';
-import { PhotoScanningApi } from '../internal/transport/apis/PhotoScanningApi.js';
 
 export class FoodsResource {
-  constructor(private readonly api: FoodsApi, private readonly photoScanningApi: PhotoScanningApi) {}
+  constructor(private readonly api: FoodsApi) {}
 
   async autocomplete(request: AutocompleteFoodsRequest): Promise<AutocompleteFoodsResponse> {
     const query = request.query.trim();
@@ -46,7 +43,7 @@ export class FoodsResource {
     };
   }
 
-  async getFood(request: GetFoodRequest): Promise<FoodSearchItem> {
+  async get(request: GetFoodRequest): Promise<FoodSearchItem> {
     if (!Number.isSafeInteger(request.foodId) || request.foodId <= 0) {
       throw new TypeError('Food ID must be a positive safe integer.');
     }
@@ -85,17 +82,6 @@ export class FoodsResource {
       ...(request.endUserId !== undefined ? { xEndUserId: request.endUserId } : {}),
     }, request.signal ? { signal: request.signal } : undefined));
     return mapFoodSearchResults(response);
-  }
-
-  async searchNaturalLanguage(
-    request: SearchFoodsByNaturalLanguageRequest,
-  ): Promise<SearchFoodsByNaturalLanguageResponse> {
-    const query = request.query.trim();
-    if (query.length === 0) throw new TypeError('A meal description is required.');
-    return executeRequest(() => this.photoScanningApi.searchFoodsByNaturalLanguage({
-      searchFoodsByNaturalLanguageBody: { text: query },
-      ...(request.endUserId !== undefined ? { xEndUserId: request.endUserId } : {}),
-    }, request.signal ? { signal: request.signal } : undefined));
   }
 
   async suggestAlternatives(

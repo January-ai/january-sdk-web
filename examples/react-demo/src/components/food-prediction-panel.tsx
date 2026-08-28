@@ -1,4 +1,4 @@
-import type { FoodSearchItem, ServingOption } from '@januaryai/partner-sdk'
+import type { FoodSearchItem, ServingOption } from '@januaryai/sdk'
 import type { predictGlucose } from '~/api/january.functions'
 import { cn, formatNumber } from '~/lib/utils'
 import { GlucoseChart, friendlyImpact, impactClass } from './glucose-prediction'

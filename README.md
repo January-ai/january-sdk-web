@@ -1,12 +1,13 @@
 # January SDK for Web and Node.js
 
-Controlled-preview TypeScript SDK for January food discovery, restaurants,
-meal-photo scanning, food logs, and glucose prediction.
+Official TypeScript SDK for January food discovery, restaurants,
+food analysis, food logs, and glucose prediction.
 
-> **Distribution status:** `@januaryai/partner-sdk` is not published on npm,
-> and the source repository is private. January must grant your GitHub account
-> access before you build and install a pinned local tarball using the
-> [installation guide](Documentation/GitBook/getting-started/installation.md).
+## Install
+
+```bash
+npm install @januaryai/sdk
+```
 
 ## Documentation
 
@@ -14,23 +15,44 @@ The [Web and Node.js SDK GitBook](Documentation/GitBook/README.md) covers the
 runtime security boundary, backend token exchange, complete provider code, first
 request, all resources, retries, cancellation, packaging, testing, and support.
 
-## Evaluate and package the repository
+## Quick start
 
-```bash
-git clone https://github.com/January-ai/january-sdk-web.git
-cd january-sdk-web
-git checkout 46850f5372c437807c08b52d72e2bc34a2be552b
-npm ci
-npm test
-npm run build
-npm pack
+```ts
+import { JanuaryClient } from '@januaryai/sdk';
+
+const january = new JanuaryClient({
+  clientTokenProvider: async () => {
+    const response = await fetch('/api/january-token', { credentials: 'include' });
+    if (!response.ok) throw new Error(`Token endpoint returned ${response.status}`);
+    return response.json(); // { token: 'ct-…', expiresIn: 1800 }
+  },
+});
 ```
-
-Install the resulting `.tgz` in a consuming ESM project. Do not use the normal
-npm registry command until January publishes and announces a release.
 
 ## Authentication rule
 
-Public SDK authentication uses client tokens only. A browser or Node.js client
+Production authentication uses client tokens. A browser or Node.js client
 uses a short-lived token returned by its own authenticated backend. Start with
 the [backend token endpoint](Documentation/GitBook/getting-started/backend-token-endpoint.md).
+
+Development API-key authentication is available for local testing only and
+prints a runtime warning. Never ship a partner API key in a browser bundle or
+production application.
+
+## Set the active user once
+
+Create one lightweight scoped client after authentication and use it across
+every resource:
+
+```ts
+const user = january.forUser({
+  endUserId: authenticatedAccount.stableId,
+  endUserTimezone: 'America/New_York',
+});
+
+const foods = await user.foods.search({ query: 'banana' });
+const logs = await user.foodLogs.list({ start: '2026-08-01', end: '2026-08-31' });
+```
+
+The scoped client exposes Foods, Restaurants, Photo Scanning, Food Logs, and
+Glucose. Recreate it when the signed-in account changes.

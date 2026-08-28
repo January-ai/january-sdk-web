@@ -1,10 +1,10 @@
 import { Utensils } from 'lucide-react'
-import type { scanMeal } from '~/api/january.functions'
+import type { analyzeFoodPhoto } from '~/api/january.functions'
 import { formatNumber } from '~/lib/utils'
 import { MacroGrid } from './macro-grid'
 import { Button, Card, SectionLabel } from './ui'
 
-export function ScanResult({ result, onAnalyzeAnother }: { result: Awaited<ReturnType<typeof scanMeal>>; onAnalyzeAnother(): void }) {
+export function ScanResult({ result, onAnalyzeAnother }: { result: Awaited<ReturnType<typeof analyzeFoodPhoto>>; onAnalyzeAnother(): void }) {
   const nutrients = result.totalNutrients
   return <div className="space-y-5"><Card className="p-6"><SectionLabel>Meal</SectionLabel><h3 className="mt-3 text-balance font-serif text-4xl">{result.mealName ?? 'Detected meal'}</h3>{nutrients && <div className="mt-6"><MacroGrid values={[
     { label: 'Calories', value: formatNumber(nutrients.calories?.value), unit: 'cal' },

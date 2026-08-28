@@ -1,5 +1,5 @@
 {
-  "name": "@januaryai/partner-sdk-react-demo",
+  "name": "@januaryai/sdk-react-demo",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -12,7 +12,7 @@
     "test": "node --experimental-strip-types --test src/lib/*.test.ts"
   },
   "dependencies": {
-    "@januaryai/partner-sdk": "file:../..",
+    "@januaryai/sdk": "file:../..",
     "@tanstack/react-query": "5.102.2",
     "@tanstack/react-router": "1.170.32",
     "@tanstack/react-start": "1.168.49",
