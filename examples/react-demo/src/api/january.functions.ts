@@ -3,6 +3,7 @@ import {
   AutocompleteFoodCategory,
   FoodCategory,
   HeightUnit,
+  JanuaryError,
   MedicalCondition,
   Sex,
   WeightUnit,
@@ -197,4 +198,49 @@ export const predictGlucose = createServerFn({ method: 'POST' })
     return data.endUserId
       ? client.forUser({ endUserId: data.endUserId, endUserTimezone: data.endUserTimezone }).glucose.predict(request)
       : client.glucose.predict({ ...request, endUserTimezone: data.endUserTimezone })
+  })
+
+export const getRestaurantMenuItems = createServerFn({ method: 'GET' })
+  .validator(z.object({
+    restaurantId: z.string().regex(/^[A-Za-z0-9_-]{1,256}$/),
+    restaurantName: z.string().trim().min(1).max(256),
+    latitude: z.number().min(-90).max(90),
+    longitude: z.number().min(-180).max(180),
+    endUserId: optionalUserId,
+  }))
+  .handler(async ({ data }) => {
+    const client = getJanuaryClient()
+    try {
+      const items: import('@januaryai/sdk').RestaurantMenuItem[] = []
+      while (true) {
+        const page = await client.restaurants.getMenuItems({
+          restaurantId: data.restaurantId,
+          endUserId: data.endUserId,
+          offset: items.length,
+        })
+        items.push(...page.items)
+        if (!page.items.length || items.length >= page.totalCount) return { totalCount: page.totalCount, items }
+      }
+    } catch (error) {
+      const routeIsNotDeployed = error instanceof JanuaryError
+        && error.status === 404
+        && error.message.includes('No v1.2 endpoint matches GET /v1.2/restaurants/')
+        && error.message.includes('/menu-items')
+      if (!routeIsNotDeployed) throw error
+      const page = await client.restaurants.searchMenuItems({
+        query: data.restaurantName,
+        latitude: data.latitude,
+        longitude: data.longitude,
+        radius: 8_000,
+        limit: 20,
+        endUserId: data.endUserId,
+      })
+      const normalize = (value: string) => value
+        .split('(', 1)[0]!
+        .toLocaleLowerCase()
+        .replace(/[^a-z0-9]+/g, ' ')
+        .trim()
+      const items = page.items.filter((item) => normalize(item.restaurantName) === normalize(data.restaurantName))
+      return { totalCount: items.length, items }
+    }
   })

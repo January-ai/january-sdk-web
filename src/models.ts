@@ -183,6 +183,14 @@ export interface DetectedFood {
 export interface FoodAlternative { food: DetectedFood }
 export interface SuggestFoodAlternativesResponse { alternatives: FoodAlternative[] }
 
+export interface GetRestaurantMenuItemsRequest {
+  restaurantId: string;
+  limit?: number;
+  offset?: number;
+  endUserId?: string;
+  signal?: AbortSignal;
+}
+
 export interface SearchRestaurantsRequest {
   query: string;
   latitude: number;

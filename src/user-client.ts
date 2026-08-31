@@ -10,6 +10,7 @@ import type {
   FoodSearchItem,
   FoodSearchResults,
   GetFoodRequest,
+  GetRestaurantMenuItemsRequest,
   GlucosePrediction,
   ListFoodLogsRequest,
   ListFoodLogsResponse,
@@ -41,6 +42,7 @@ export type UserSearchFoodsRequest = WithoutUserId<SearchFoodsRequest>;
 export type UserLookupFoodByBarcodeRequest = WithoutUserId<LookupFoodByBarcodeRequest>;
 export type UserSearchFoodsByNaturalLanguageRequest = WithoutUserId<SearchFoodsByNaturalLanguageRequest>;
 export type UserSuggestFoodAlternativesRequest = WithoutUserId<SuggestFoodAlternativesRequest>;
+export type UserGetRestaurantMenuItemsRequest = WithoutUserId<GetRestaurantMenuItemsRequest>;
 export type UserSearchRestaurantsRequest = WithoutUserId<SearchRestaurantsRequest>;
 export type UserScanFoodPhotoRequest = WithoutUserId<ScanFoodPhotoRequest>;
 export type UserCorrectPhotoScanRequest = WithoutUserId<CorrectPhotoScanRequest>;
@@ -95,6 +97,7 @@ class DefaultUserFoodsResource implements UserFoodsResource {
 
 /** Restaurant operations bound to one partner-owned end-user identity. */
 export interface UserRestaurantsResource {
+  getMenuItems(request: UserGetRestaurantMenuItemsRequest): Promise<SearchRestaurantMenuItemsResponse>;
   /** Searches restaurants near a location. */
   search(request: UserSearchRestaurantsRequest): Promise<SearchRestaurantsResponse>;
   /** Searches restaurant menu items near a location. */
@@ -106,6 +109,10 @@ class DefaultUserRestaurantsResource implements UserRestaurantsResource {
     private readonly resource: RestaurantsResource,
     private readonly context: Readonly<PartnerUserContext>,
   ) {}
+
+  getMenuItems(request: UserGetRestaurantMenuItemsRequest) {
+    return this.resource.getMenuItems({ ...request, endUserId: this.context.endUserId });
+  }
 
   search(request: UserSearchRestaurantsRequest) {
     return this.resource.search({ ...request, endUserId: this.context.endUserId });

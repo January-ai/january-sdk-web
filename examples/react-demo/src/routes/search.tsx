@@ -10,7 +10,7 @@ import { useEffect, useState } from 'react'
 import {
   autocompleteFoods,
   searchFoodCatalog,
-  searchRestaurantMenuItems,
+  getRestaurantMenuItems,
   searchRestaurants,
 } from '~/api/january.functions'
 import { ChipSelector } from '~/components/chip-selector'
@@ -102,8 +102,9 @@ function SearchPage() {
 
   const menuItems = useQuery({
     queryKey: ['restaurant-menu-items', { restaurant: selectedRestaurant?.id, coordinates }],
-    queryFn: () => searchRestaurantMenuItems({ data: {
-      query: selectedRestaurant!.name,
+    queryFn: () => getRestaurantMenuItems({ data: {
+      restaurantId: selectedRestaurant!.id,
+      restaurantName: selectedRestaurant!.name,
       ...coordinates!,
     } }),
     enabled: selectedRestaurant !== null && coordinates !== null,

@@ -22,6 +22,7 @@ export type {
   UserCreateFoodLogRequest,
   UserDeleteFoodLogRequest,
   UserGetFoodRequest,
+  UserGetRestaurantMenuItemsRequest,
   UserListFoodLogsRequest,
   UserLookupFoodByBarcodeRequest,
   UserPredictGlucoseRequest,

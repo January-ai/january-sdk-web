@@ -56,3 +56,15 @@ const logs = await user.foodLogs.list({ start: '2026-08-01', end: '2026-08-31' }
 
 The scoped client exposes Foods, Restaurants, Photo Scanning, Food Logs, and
 Glucose. Recreate it when the signed-in account changes.
+
+## Menu items by restaurant ID
+
+Use the ID of a `restaurant` search result to load its menu, independently of search text and location.
+
+```ts
+const page = await client.restaurants.getMenuItems({ restaurantId: restaurant.id, limit: 100, offset: 0 });
+```
+
+The response contains `items` and `totalCount` (`total_count` on the wire). Request subsequent pages by advancing `offset` by the number of items received, until it reaches the total or a page is empty. An unknown restaurant returns 404; an existing restaurant with no menu returns an empty list.
+
+This operation requires the backend restaurant-ID menu endpoint; deployment is pending for this unreleased change.

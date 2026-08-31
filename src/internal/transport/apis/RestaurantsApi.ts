@@ -29,6 +29,13 @@ import {
     SearchRestaurantsResponseToJSON,
 } from '../models/SearchRestaurantsResponse.js';
 
+export interface GetRestaurantMenuItemsRequest {
+    restaurantId: string;
+    xEndUserId?: string;
+    limit?: number;
+    offset?: number;
+}
+
 export interface SearchRestaurantMenuItemsRequest {
     query: string;
     latitude: number;
@@ -51,6 +58,73 @@ export interface SearchRestaurantsRequest {
  *
  */
 export class RestaurantsApi extends runtime.BaseAPI {
+
+    /**
+     * Creates request options for getRestaurantMenuItems without sending the request
+     */
+    async getRestaurantMenuItemsRequestOpts(requestParameters: GetRestaurantMenuItemsRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['restaurantId'] == null) {
+            throw new runtime.RequiredError(
+                'restaurantId',
+                'Required parameter "restaurantId" was null or undefined when calling getRestaurantMenuItems().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        if (requestParameters['limit'] != null) {
+            queryParameters['limit'] = requestParameters['limit'];
+        }
+
+        if (requestParameters['offset'] != null) {
+            queryParameters['offset'] = requestParameters['offset'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (requestParameters['xEndUserId'] != null) {
+            headerParameters['x-end-user-id'] = String(requestParameters['xEndUserId']);
+        }
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearerAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/v1.2/restaurants/{restaurant_id}/menu-items`;
+        urlPath = urlPath.replace('{restaurant_id}', encodeURIComponent(String(requestParameters['restaurantId'])));
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Load the selected restaurant menu directly by id, without a text query or location. Ordered by food name and id. Use limit and offset to load additional pages; total_count is the full menu count.
+     * Get menu items by restaurant id
+     */
+    async getRestaurantMenuItemsRaw(requestParameters: GetRestaurantMenuItemsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SearchRestaurantMenuItemsResponse>> {
+        const requestOptions = await this.getRestaurantMenuItemsRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => SearchRestaurantMenuItemsResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Load the selected restaurant menu directly by id, without a text query or location. Ordered by food name and id. Use limit and offset to load additional pages; total_count is the full menu count.
+     * Get menu items by restaurant id
+     */
+    async getRestaurantMenuItems(requestParameters: GetRestaurantMenuItemsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SearchRestaurantMenuItemsResponse> {
+        const response = await this.getRestaurantMenuItemsRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
 
     /**
      * Creates request options for searchRestaurantMenuItems without sending the request
