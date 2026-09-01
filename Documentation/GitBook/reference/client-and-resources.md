@@ -38,7 +38,7 @@ always targets January production; no public base URL or token endpoint exists.
 | Resource | Public operations |
 | --- | --- |
 | `foods` | `autocomplete`, `search`, `get`, `lookupBarcode`, `suggestAlternatives` |
-| `restaurants` | `search`, `searchMenuItems` |
+| `restaurants` | `search`, `searchMenuItems`, `getMenuItems` |
 | `foodAnalysis` | `analyzePhoto`, `analyzeDescription`, `correct` |
 | `foodLogs` | `create`, `list`, `update`, `delete` |
 | `glucose` | `predict` |

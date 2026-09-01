@@ -1,17 +1,37 @@
 # Installation
 
-Install the latest release from npm:
+`@januaryai/sdk` is not currently published to npm. January must first grant
+your GitHub account access to the private repository and provide the exact
+revision approved for your integration.
+
+Clone, verify, and package that revision:
 
 ```bash
-npm install @januaryai/sdk
+git clone https://github.com/January-ai/january-sdk-web.git
+cd january-sdk-web
+git checkout <revision-supplied-by-january>
+npm ci
+npm test
+npm pack
 ```
+
+The final command writes `januaryai-sdk-0.1.0.tgz`. Install that immutable
+tarball into the application and commit the resulting lockfile:
+
+```bash
+npm install /path/to/januaryai-sdk-0.1.0.tgz
+```
+
+Do not run `npm install @januaryai/sdk` until January announces a registry
+release.
 
 ```ts
 import { JanuaryClient } from '@januaryai/sdk';
 ```
 
-The package is ESM-first and includes its TypeScript declarations. Use the
-package manager lockfile in your application to keep installs reproducible.
+The packed artifact is ESM-first and includes its TypeScript declarations.
+Keep the tarball in an access-controlled artifact store and use the application
+lockfile to make installs reproducible.
 
 ## Requirements
 

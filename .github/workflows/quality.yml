@@ -1,0 +1,83 @@
+name: quality
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  package:
+    name: Test package on Node ${{ matrix.node }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [22, 24]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.0.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.0.0
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+
+      - name: Install pinned dependencies
+        run: npm ci
+
+      - name: Validate README and GitBook
+        run: node scripts/check-documentation.mjs
+
+      - name: Build and test
+        run: npm test
+
+      - name: Verify package contents
+        run: npm pack --dry-run
+
+  example:
+    name: Build React example and install packed SDK
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.0.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.0.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            examples/react-demo/package-lock.json
+
+      - name: Install pinned dependencies
+        run: |
+          npm ci
+          npm --prefix examples/react-demo ci
+
+      - name: Build the React example
+        run: npm run demo:web:build
+
+      - name: Install the packed SDK in a clean ESM project
+        run: |
+          archive="$(npm pack --silent)"
+          mkdir -p "$RUNNER_TEMP/january-sdk-smoke"
+          cd "$RUNNER_TEMP/january-sdk-smoke"
+          npm init -y >/dev/null
+          npm pkg set type=module >/dev/null
+          npm install "$GITHUB_WORKSPACE/$archive"
+          node --input-type=module -e "import { JanuaryClient } from '@januaryai/sdk'; if (typeof JanuaryClient !== 'function') process.exit(1)"

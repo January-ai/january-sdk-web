@@ -11,5 +11,6 @@
 * Browser photo preparation helper
 * Typed imperial and metric glucose-profile measurements
 * Shared, white-label-ready React demo components
+* Paginated restaurant-menu lookup by restaurant ID, ready after backend deployment
 
 Pin pre-release integrations to the version supplied by January.
