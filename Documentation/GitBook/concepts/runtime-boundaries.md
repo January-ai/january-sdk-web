@@ -1,11 +1,12 @@
-# Runtime and security boundaries
+# Browser and security boundaries
 
-The same client-token surface supports two runtimes:
+The Web SDK runs in the browser. The authenticated application backend owns
+private token exchange and may proxy January API operations when required.
 
-| Runtime | Credential | Rule |
+| Component | Credential | Rule |
 | --- | --- | --- |
 | Browser | `clientTokenProvider` or current `accessToken` | Requires January to enable the exact web origin |
-| Trusted Node.js service | `clientTokenProvider` or current `accessToken` | May call January without browser CORS constraints |
+| Application backend | Partner API key | Never expose this credential or token-exchange logic to browser code |
 
 The SDK uses the runtime's Fetch implementation and ships ESM only. Browser use
 requires modern Fetch APIs. `preparePhotoScanImage` additionally requires DOM
@@ -16,8 +17,8 @@ Runtime compatibility is not the same as API-origin access. The production
 Partner API currently rejects a generic browser CORS preflight, so a browser
 cannot call January directly by default. Before using the SDK in browser code,
 obtain confirmation from January that your exact production and development
-origins are enabled. Until then, call the SDK from a trusted Node.js route and
-have the browser call that application route.
+origins are enabled. Until then, route January API operations through the
+authenticated application backend and have the browser call that route.
 {% endhint %}
 
 Keep application-session and token-endpoint configuration appropriate to each

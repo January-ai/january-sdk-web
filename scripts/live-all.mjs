@@ -73,7 +73,7 @@ pass('foodAnalysis.analyzePhoto base64', `${base64Scan.detections.length} detect
 await client.foodAnalysis.correct({
   mealName: scan.mealName,
   detections: scan.detections,
-  userInput: 'Rename the meal to January Node SDK smoke test meal.',
+  userInput: 'Rename the meal to January Web SDK smoke test meal.',
   endUserId,
 });
 pass('foodAnalysis.correct');
@@ -87,7 +87,7 @@ try {
     endUserTimezone: timezone,
     foods: [selectedFood],
     timestampUtc: new Date().toISOString(),
-    name: `January Node SDK smoke ${crypto.randomUUID()}`,
+    name: `January Web SDK smoke ${crypto.randomUUID()}`,
   });
   createdLogId = created.id;
   pass('foodLogs.create');
@@ -102,9 +102,9 @@ try {
   pass('foodLogs.list');
 
   const updated = await client.foodLogs.update({
-    endUserId, endUserTimezone: timezone, logId: created.id, name: 'January Node SDK smoke updated',
+    endUserId, endUserTimezone: timezone, logId: created.id, name: 'January Web SDK smoke updated',
   });
-  if (updated.name !== 'January Node SDK smoke updated') {
+  if (updated.name !== 'January Web SDK smoke updated') {
     throw new Error('foodLogs.update did not persist the name.');
   }
   pass('foodLogs.update');
@@ -138,7 +138,7 @@ const prediction = await client.glucose.predict({
 if (!prediction.prediction.length) throw new Error('glucose.predict returned no points.');
 pass('glucose.predict', `${prediction.prediction.length} points`);
 
-console.log('PASS all 13 Partner API v1.2 operations through the public Node SDK');
+console.log('PASS all 13 Partner API v1.2 operations through the public Web SDK');
 
 function pass(operation, detail) {
   console.log(`PASS ${operation}${detail ? ` (${detail})` : ''}`);

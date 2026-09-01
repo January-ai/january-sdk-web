@@ -24,4 +24,4 @@ const fullFood = await client.foods.get({
 });
 const portion = FoodPortion.from(fullFood);
 
-console.log(`PASS Node SDK live food discovery (${suggestions.items.length} suggestions, ${result.items.length} results, ${fullFood.servings.length} servings, ${portion.nutrition.calories?.value ?? 'unknown'} calories)`);
+console.log(`PASS Web SDK live food discovery (${suggestions.items.length} suggestions, ${result.items.length} results, ${fullFood.servings.length} servings, ${portion.nutrition.calories?.value ?? 'unknown'} calories)`);

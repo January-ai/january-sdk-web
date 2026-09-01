@@ -21,8 +21,8 @@ against that endpoint.
 The production Partner API does not accept arbitrary browser origins. Confirm
 with January that the exact scheme, host, and port for the application are
 enabled. Do not work around this with `mode: 'no-cors'`, and never proxy a
-server-side credential into browser code. Until the origin is enabled, run the SDK in a
-trusted Node.js application route and call that route from the browser.
+server-side credential into browser code. Until the origin is enabled, route
+January API operations through the authenticated application backend.
 
 ## Token provider fails
 
