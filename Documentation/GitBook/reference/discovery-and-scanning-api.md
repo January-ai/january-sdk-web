@@ -13,6 +13,9 @@ search(request: SearchRestaurantsRequest): Promise<SearchRestaurantsResponse>
 searchMenuItems(
   request: SearchRestaurantsRequest,
 ): Promise<SearchRestaurantMenuItemsResponse>
+getMenuItems(
+  request: GetRestaurantMenuItemsRequest,
+): Promise<SearchRestaurantMenuItemsResponse>
 ```
 
 `SearchRestaurantsRequest` fields:
@@ -29,6 +32,17 @@ searchMenuItems(
 fields are type/ID/name and optional chain, distance, city, and address metadata.
 Menu search returns `RestaurantMenuItem[]` with restaurant name, optional
 nutrition/distance/photo values, and servings.
+
+The production OpenAPI document currently lists `search` only. Keep
+`searchMenuItems` and `getMenuItems` behind an integration gate until January
+announces the matching backend routes.
+
+`GetRestaurantMenuItemsRequest` accepts `restaurantId`, optional `limit`
+(default `100`, integer 1–100), optional `offset` (default `0`), optional
+`endUserId`, and optional `signal`. Advance the offset by the returned item
+count until it reaches `totalCount` or a page is empty. Unknown restaurants
+return `404`; restaurants without menus return an empty response. The client
+operation is ready, but the backend route remains deployment-gated.
 
 ## Food analysis
 

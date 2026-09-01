@@ -3,9 +3,16 @@
 Typed Promise-based APIs for food discovery, restaurants, food analysis,
 food logs, and glucose prediction in Node.js services and modern browsers.
 
+{% hint style="warning" %}
+**Controlled preview:** `@januaryai/sdk` is not published to npm. The repository
+is private, and January must grant access and provide the exact revision for an
+integration. Follow the verified source-package installation; do not use the
+npm-registry command until a release is announced.
+{% endhint %}
+
 ## Start here
 
-1. [Install the npm package](getting-started/installation.md).
+1. [Install the controlled-preview source package](getting-started/installation.md).
 2. Choose the correct [runtime and security boundary](concepts/runtime-boundaries.md).
 3. Build a partner-owned [backend token endpoint](getting-started/backend-token-endpoint.md).
 4. Configure authentication and run the [first request](getting-started/quick-start.md).
