@@ -35,6 +35,6 @@ lockfile to make installs reproducible.
 
 ## Requirements
 
-* Node.js 22 or newer for server-side use
+* Node.js 22 or newer for package installation and builds
 * A modern browser with Fetch when calling January directly from an approved origin
 * An authenticated partner backend that returns short-lived January client tokens

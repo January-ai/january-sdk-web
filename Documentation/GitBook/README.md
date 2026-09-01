@@ -1,7 +1,8 @@
-# January SDK for Web and Node.js
+# January Web SDK
 
-Typed Promise-based APIs for food discovery, restaurants, food analysis,
-food logs, and glucose prediction in Node.js services and modern browsers.
+Typed Promise-based APIs for food discovery, restaurants, food analysis, food
+logs, and glucose prediction in modern browser applications. This is the Web
+SDK; January's future Node.js server SDK is a separate product.
 
 {% hint style="warning" %}
 **Controlled preview:** `@januaryai/sdk` is not published to npm. The repository
@@ -20,9 +21,9 @@ npm-registry command until a release is announced.
 
 ## Security model
 
-Production SDK authentication uses client tokens. Browser and Node.js code
-obtain a short-lived token from an authenticated application backend. The SDK
-has no token-endpoint URL and no public January base-URL override.
+Production SDK authentication uses client tokens. Browser code obtains a
+short-lived token from an authenticated application backend. The SDK has no
+token-endpoint URL and no public January base-URL override.
 
 ```text
 Browser ── authenticated request ──▶ Partner backend ── private exchange ──▶ January
@@ -32,7 +33,7 @@ Browser ───── Authorization: Bearer ct-… ─────────
 
 ## Requirements
 
-* Node.js 22+ for server-side use and repository tooling
+* Node.js 22+ for package installation, builds, and repository tooling
 * ESM (`import`) projects
 * A GitHub account authorized for the private SDK repository
 * Modern Fetch, `AbortController`, `Headers`, and browser image APIs where used
@@ -41,5 +42,5 @@ Browser ───── Authorization: Bearer ct-… ─────────
 Direct browser calls to January are deployment-gated. The production Partner API
 does not currently accept a generic browser CORS preflight. Do not ship the
 browser → January path until January confirms your exact web origin is enabled;
-use the SDK in your trusted Node.js backend in the meantime.
+route requests through your application backend in the meantime.
 {% endhint %}

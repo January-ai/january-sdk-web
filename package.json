@@ -1,7 +1,7 @@
 {
   "name": "@januaryai/sdk",
   "version": "0.1.0",
-  "description": "The official January SDK for TypeScript, Node.js, and modern web applications",
+  "description": "The official January Web SDK for TypeScript browser applications",
   "license": "Apache-2.0",
   "publishConfig": {
     "access": "public"

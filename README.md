@@ -1,7 +1,8 @@
-# January SDK for Web and Node.js
+# January Web SDK
 
-Official TypeScript SDK for January food discovery, restaurants,
-food analysis, food logs, and glucose prediction.
+Official browser SDK for January food discovery, restaurants, food analysis,
+food logs, and glucose prediction in TypeScript web applications. This is the
+Web SDK; January's future Node.js server SDK is a separate product.
 
 > **Controlled preview:** `@januaryai/sdk` is not published to npm, and the
 > source repository is private. January must grant repository access and supply
@@ -29,7 +30,7 @@ package. See the [installation guide](Documentation/GitBook/getting-started/inst
 
 ## Documentation
 
-The [Web and Node.js SDK GitBook](Documentation/GitBook/README.md) covers the
+The [Web SDK GitBook](Documentation/GitBook/README.md) covers the
 runtime security boundary, backend token exchange, complete provider code, first
 request, all resources, retries, cancellation, packaging, testing, and support.
 
@@ -49,8 +50,8 @@ const january = new JanuaryClient({
 
 ## Authentication rule
 
-Production authentication uses client tokens. A browser or Node.js client
-uses a short-lived token returned by its own authenticated backend. Start with
+Production authentication uses client tokens. A browser application uses a
+short-lived token returned by its own authenticated backend. Start with
 the [backend token endpoint](Documentation/GitBook/getting-started/backend-token-endpoint.md).
 
 Development API-key authentication is available for local testing only and

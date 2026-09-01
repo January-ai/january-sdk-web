@@ -6,8 +6,8 @@ Use a client-token provider or one fixed short-lived client token when creating 
 
 This mode is valid only after January confirms that the exact browser origin is
 enabled for the Partner API. A generic origin is not accepted today. If your
-origin is not enabled, keep `JanuaryClient` in a trusted Node.js route
-and call that route from the browser instead.
+origin is not enabled, route January API operations through your authenticated
+application backend instead.
 
 ```ts
 import {
@@ -57,8 +57,8 @@ client after token changes:
 const january = new JanuaryClient({ accessToken: clientToken });
 ```
 
-The same provider and fixed-token options work in trusted Node.js services. See
-[Retries, refresh, and cancellation](../reference/retries-and-lifecycle.md).
+See [Retries, refresh, and cancellation](../reference/retries-and-lifecycle.md)
+for provider refresh and client lifecycle behavior.
 
 ## Local development API key
 
@@ -68,7 +68,7 @@ is first used in a process.
 
 ```ts
 const january = new JanuaryClient({
-  developmentApiKey: process.env.JANUARY_API_KEY!,
+  developmentApiKey: '<local-development-key>',
 });
 ```
 

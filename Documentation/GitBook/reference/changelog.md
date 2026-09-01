@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-* Typed Promise-based SDK for Node.js and browser clients
+* Typed Promise-based Web SDK for browser applications
 * Provider-managed short-lived tokens with single-flight refresh
 * Nine-attempt bounded exponential backoff with jitter
 * AbortSignal support across public requests

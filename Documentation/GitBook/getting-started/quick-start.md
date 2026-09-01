@@ -1,36 +1,31 @@
 # First request
 
-This standalone Node.js smoke script constructs the provider and client, fetches
-a short-lived token from your backend, calls January, and prints food names. It
-uses the npm package installed in the [installation guide](installation.md).
+This browser example constructs the provider and client, fetches a short-lived
+token from your authenticated backend, calls January, and renders food names. It
+uses the package installed in the [installation guide](installation.md).
 
-## 1. Create the script
+## 1. Add the request to your web application
 
-Create `january-quickstart.mjs` in the consuming ESM project:
+Create `src/january-quickstart.ts` in the consuming web project. Replace the
+example user ID with the stable ID from your authenticated application session.
 
-```js
+```ts
 import {
   JanuaryError,
   JanuaryClient,
   JanuaryTokenProviderError,
 } from '@januaryai/sdk';
 
-const tokenUrl = process.env.JANUARY_TOKEN_URL;
-const sessionToken = process.env.PARTNER_SESSION_TOKEN;
-const endUserId = process.env.JANUARY_END_USER_ID;
-
-if (!tokenUrl) throw new Error('JANUARY_TOKEN_URL is required');
-if (!sessionToken) throw new Error('PARTNER_SESSION_TOKEN is required');
-if (!endUserId) throw new Error('JANUARY_END_USER_ID is required');
+const endUserId = authenticatedAccount.stableId;
 
 async function fetchJanuaryToken() {
   let response;
   try {
-    response = await fetch(tokenUrl, {
+    response = await fetch('/api/january-token', {
       method: 'GET',
+      credentials: 'include',
       headers: {
         Accept: 'application/json',
-        Authorization: `Bearer ${sessionToken}`,
       },
     });
   } catch (error) {
@@ -57,51 +52,46 @@ const user = january.forUser(
   Intl.DateTimeFormat().resolvedOptions().timeZone,
 );
 
-try {
-  const response = await user.foods.search({
-    query: 'greek yogurt',
-    limit: 5,
-  });
-
-  console.log(`Connected: ${response.totalCount} matches`);
-  for (const food of response.items) console.log(`- ${food.name}`);
-} catch (error) {
-  if (error instanceof JanuaryError) {
-    console.error('January request failed', {
-      category: error.category,
-      status: error.status,
-      code: error.code,
-      requestId: error.requestId,
-      message: error.message,
+export async function renderJanuaryQuickStart(output: HTMLElement) {
+  try {
+    const response = await user.foods.search({
+      query: 'greek yogurt',
+      limit: 5,
     });
-  } else {
-    console.error('Integration failed:', error);
+
+    output.textContent = response.items.map((food) => food.name).join('\n');
+  } catch (error) {
+    if (error instanceof JanuaryError) {
+      console.error('January request failed', {
+        category: error.category,
+        status: error.status,
+        code: error.code,
+        requestId: error.requestId,
+        message: error.message,
+      });
+    } else {
+      console.error('Integration failed:', error);
+    }
+    throw error;
   }
-  process.exitCode = 1;
 }
 ```
 
 ## 2. Run it
 
-Use an HTTPS partner endpoint that returns a production client token:
+Call the exported function from a page after the user session is available, then
+start the application's normal development server:
 
-```bash
-JANUARY_TOKEN_URL=https://your-backend.example/january-token \
-PARTNER_SESSION_TOKEN=YOUR_APP_SESSION_TOKEN \
-JANUARY_END_USER_ID=YOUR_STABLE_USER_ID \
-node january-quickstart.mjs
+```ts
+import { renderJanuaryQuickStart } from './january-quickstart';
+
+const output = document.querySelector<HTMLElement>('#january-results');
+if (output) await renderJanuaryQuickStart(output);
 ```
 
-Expected output:
+The page renders the returned food names inside `#january-results`. The exact
+count and foods vary. Failures throw after logging the typed January error fields
+or the token-endpoint error.
 
-```text
-Connected: <number> matches
-- <food name>
-- <food name>
-```
-
-The exact count and foods vary. A failure exits nonzero and prints either the
-typed January error fields or the token-endpoint error. Remove command-line
-session tokens from shell history after this smoke test. Browser applications
-should use the same provider shape with an authenticated same-origin endpoint;
-see [Authentication](authentication.md) for cookie/CORS guidance.
+Use an authenticated same-origin token endpoint; see
+[Authentication](authentication.md) for cookie and CORS guidance.

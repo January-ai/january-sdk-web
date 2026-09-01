@@ -1,6 +1,6 @@
 # Table of contents
 
-* [Web and Node.js SDK](README.md)
+* [Web SDK](README.md)
 
 ## Getting started
 
