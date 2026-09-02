@@ -35,12 +35,13 @@ export function VoiceSearchInput({ disabled = false, id, onChange, placeholder, 
   async function toggleCapture() {
     setError(null)
     try {
-      if (snapshot.state === 'recording') {
+      const currentState = session.snapshot.state
+      if (currentState === 'recording') {
         const result = await session.stop()
         const transcript = result.transcript?.trim()
         if (transcript) onChange([value.trim(), transcript].filter(Boolean).join(' '))
         else setError('We could not transcribe that recording. Please try again.')
-      } else if (snapshot.state === 'idle') {
+      } else if (currentState === 'idle') {
         await session.start({ language: document.documentElement.lang || navigator.language })
       }
     } catch (cause) {
