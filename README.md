@@ -4,16 +4,11 @@ Official browser SDK for January food discovery, restaurants, food analysis,
 food logs, and glucose prediction in TypeScript web applications. This is the
 Web SDK; January's future Node.js server SDK is a separate product.
 
-> **Controlled preview:** `@januaryai/sdk` is not published to npm, and the
-> source repository is private. January must grant repository access and supply
-> the exact revision approved for your integration.
-
-## Install the controlled-preview build
+## Install from source
 
 ```bash
 git clone https://github.com/January-ai/january-sdk-web.git
 cd january-sdk-web
-git checkout <revision-supplied-by-january>
 npm ci
 npm test
 npm pack
@@ -25,8 +20,8 @@ Install the resulting tarball in your application and commit the lockfile:
 npm install /path/to/januaryai-sdk-0.1.0.tgz
 ```
 
-Do not use `npm install @januaryai/sdk` until January announces a published
-package. See the [installation guide](Documentation/GitBook/getting-started/installation.md).
+See the [installation guide](Documentation/GitBook/getting-started/installation.md)
+for package and runtime requirements.
 
 ## Documentation
 
@@ -85,8 +80,6 @@ const page = await client.restaurants.getMenuItems({ restaurantId: restaurant.id
 ```
 
 The response contains `items` and `totalCount` (`total_count` on the wire). Request subsequent pages by advancing `offset` by the number of items received, until it reaches the total or a page is empty. An unknown restaurant returns 404; an existing restaurant with no menu returns an empty list.
-
-This operation requires the backend restaurant-ID menu endpoint; deployment is pending for this unreleased change.
 
 ## License
 
