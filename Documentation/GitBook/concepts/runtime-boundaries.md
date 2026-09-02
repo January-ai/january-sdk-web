@@ -1,7 +1,7 @@
-# Browser and security boundaries
+# Runtime and security boundaries
 
-The Web SDK runs in the browser. The authenticated application backend owns
-private token exchange and may proxy January API operations when required.
+The Web SDK targets browser runtimes. The authenticated application backend
+owns private token exchange and may proxy January API operations when required.
 
 | Component | Credential | Rule |
 | --- | --- | --- |
