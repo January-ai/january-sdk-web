@@ -2,7 +2,7 @@
 /* eslint-disable */
 /**
  * January AI - Nutrition Intelligence APIs
- * Build food and metabolic intelligence into your product — one API for understanding what people eat and how food may affect them.  **Clinical-grade precision, consumer-grade experiences.** January builds the infrastructure underneath the product: turning messy health and nutrition data into reliable intelligence, so your team spends its time on the experience instead of the foundation.  **Security & compliance** — **SOC 2 Type II** · **HIPAA-aligned practices** · **BAA** and **Zero Data Retention (ZDR)** available  **What you can build** - **Scan food** — photo and text food recognition: detect foods and nutrition, then correct results conversationally - **Search the food database** — by name or barcode — and get healthier alternatives for any food - **Log food** — a per-user diary with day-range queries - **Predict glucose response** to any meal — no sensor required  **Getting started** 1. Create an API key in the [Developer Dashboard](https://dashboard.january.ai) — the full key is shown once, at creation. 2. Send it as `Authorization: Bearer <your key>` — click **Authorize** here to make every example below a live request. 3. Identify your end user with the `x-end-user-id` header wherever a request acts on their data.  **Support** — [support@january.ai](mailto:support@january.ai) · [Discord community](https://discord.gg/cYQeh3UnC) · [docs.january.ai](https://docs.january.ai)
+ * Build food and metabolic intelligence into your product — one API for understanding what people eat and how food may affect them.  **Clinical-grade precision, consumer-grade experiences.** January builds the infrastructure underneath the product: turning messy health and nutrition data into reliable intelligence, so your team spends its time on the experience instead of the foundation.  **Security & compliance** — **SOC 2 Type II** · **HIPAA-aligned practices** · **BAA** and **Zero Data Retention (ZDR)** available  **What you can build** - **Scan food** — photo and text food recognition: detect foods and nutrition, then correct results conversationally - **Search the food database** — by name or barcode — and get healthier alternatives for any food - **Log food** — a per-user diary with day-range queries - **Predict glucose response** to any meal — no sensor required  **Getting started** 1. Create an API key in the [Developer Dashboard](https://dashboard.january.ai) — the full key is shown once, at creation. 2. Send it as `Authorization: Bearer sk-…` — click **Authorize** here to make every example below a live request. 3. On the **food-logs** endpoints, say whose diary you are reading or writing with the `January-End-User-ID` header. No other endpoint takes it: everything else either asks the shared food database a question or works on the body you send, and neither depends on who the food is for.  **Calling from a mobile app** — your `sk-` key must never ship inside an app. Instead, exchange it on your backend for a *client token*: a credential that lasts up to two hours, acts as exactly one of your end users, and carries only the scopes you grant it (see the **authentication** section). Your app then calls these endpoints directly, with no proxy of your own in the request path. Both credentials travel in the same `Authorization: Bearer` header, and every endpoint below opens by saying which it accepts — **API key or client token**, or **API key only**.  **Support** — [support@january.ai](mailto:support@january.ai) · [Discord community](https://discord.gg/cYQeh3UnC) · [docs.january.ai](https://docs.january.ai)
  *
  * The version of the OpenAPI document: 1.2
  * Contact: support@january.ai
@@ -35,67 +35,37 @@ import {
  */
 export interface RestaurantMenuItem {
     /**
-     *
+     * Food id of the dish — the same id `GET /v1.2/foods/{food_id}` and `POST /v1.2/food-logs` take. Null only when the menu source carries no id for the row.
      * @type {string}
      * @memberof RestaurantMenuItem
      */
-    type: string;
+    id: string | null;
     /**
-     * Opaque restaurant menu-item identifier.
+     * Null only when the menu source has no name for the dish.
      * @type {string}
      * @memberof RestaurantMenuItem
      */
-    id: string;
-    /**
-     *
-     * @type {string}
-     * @memberof RestaurantMenuItem
-     */
-    name: string;
-    /**
-     *
-     * @type {string}
-     * @memberof RestaurantMenuItem
-     */
-    restaurantName: string;
-    /**
-     *
-     * @type {boolean}
-     * @memberof RestaurantMenuItem
-     */
-    isChain?: boolean;
+    name: string | null;
     /**
      *
      * @type {NutritionFacts}
      * @memberof RestaurantMenuItem
      */
-    nutrients?: NutritionFacts;
+    nutrients: NutritionFacts;
     /**
-     * Glycemic index.
+     * Glycemic index; null when the source has none.
      * @type {number}
      * @memberof RestaurantMenuItem
      */
-    glycemicIndex?: number;
+    glycemicIndex: number | null;
     /**
-     * Glycemic load.
+     * Glycemic load; null when the source has none.
      * @type {number}
      * @memberof RestaurantMenuItem
      */
-    glycemicLoad?: number;
+    glycemicLoad: number | null;
     /**
-     * URL of a picture of the dish, when the source has one.
-     * @type {string}
-     * @memberof RestaurantMenuItem
-     */
-    imageUrl?: string;
-    /**
-     * Distance from (latitude, longitude) in meters.
-     * @type {number}
-     * @memberof RestaurantMenuItem
-     */
-    distance?: number;
-    /**
-     *
+     * The serving the nutrition is given for. `GET /v1.2/foods/{food_id}` returns the complete list of servings.
      * @type {Array<ServingOption>}
      * @memberof RestaurantMenuItem
      */
@@ -106,10 +76,11 @@ export interface RestaurantMenuItem {
  * Check if a given object implements the RestaurantMenuItem interface.
  */
 export function instanceOfRestaurantMenuItem(value: object): value is RestaurantMenuItem {
-    if (!('type' in value) || value['type'] === undefined) return false;
     if (!('id' in value) || value['id'] === undefined) return false;
     if (!('name' in value) || value['name'] === undefined) return false;
-    if ((!('restaurantName' in (value as Record<string, any>)) && !('restaurant_name' in (value as Record<string, any>))) || ((value as Record<string, any>)['restaurantName'] === undefined && (value as Record<string, any>)['restaurant_name'] === undefined)) return false;
+    if (!('nutrients' in value) || value['nutrients'] === undefined) return false;
+    if ((!('glycemicIndex' in (value as Record<string, any>)) && !('glycemic_index' in (value as Record<string, any>))) || ((value as Record<string, any>)['glycemicIndex'] === undefined && (value as Record<string, any>)['glycemic_index'] === undefined)) return false;
+    if ((!('glycemicLoad' in (value as Record<string, any>)) && !('glycemic_load' in (value as Record<string, any>))) || ((value as Record<string, any>)['glycemicLoad'] === undefined && (value as Record<string, any>)['glycemic_load'] === undefined)) return false;
     if (!('servings' in value) || value['servings'] === undefined) return false;
     return true;
 }
@@ -124,16 +95,11 @@ export function RestaurantMenuItemFromJSONTyped(json: any, ignoreDiscriminator: 
     }
     return {
 
-        'type': json['type'],
         'id': json['id'],
         'name': json['name'],
-        'restaurantName': json['restaurant_name'],
-        'isChain': json['is_chain'] == null ? undefined : json['is_chain'],
-        'nutrients': json['nutrients'] == null ? undefined : NutritionFactsFromJSON(json['nutrients']),
-        'glycemicIndex': json['glycemic_index'] == null ? undefined : json['glycemic_index'],
-        'glycemicLoad': json['glycemic_load'] == null ? undefined : json['glycemic_load'],
-        'imageUrl': json['image_url'] == null ? undefined : json['image_url'],
-        'distance': json['distance'] == null ? undefined : json['distance'],
+        'nutrients': NutritionFactsFromJSON(json['nutrients']),
+        'glycemicIndex': json['glycemic_index'],
+        'glycemicLoad': json['glycemic_load'],
         'servings': ((json['servings'] as Array<any>).map(ServingOptionFromJSON)),
     };
 }
@@ -149,16 +115,11 @@ export function RestaurantMenuItemToJSONTyped(value?: RestaurantMenuItem | null,
 
     return {
 
-        'type': value['type'],
         'id': value['id'],
         'name': value['name'],
-        'restaurant_name': value['restaurantName'],
-        'is_chain': value['isChain'],
         'nutrients': NutritionFactsToJSON(value['nutrients']),
         'glycemic_index': value['glycemicIndex'],
         'glycemic_load': value['glycemicLoad'],
-        'image_url': value['imageUrl'],
-        'distance': value['distance'],
         'servings': ((value['servings'] as Array<any>).map(ServingOptionToJSON)),
     };
 }

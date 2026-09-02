@@ -2,7 +2,7 @@
 /* eslint-disable */
 /**
  * January AI - Nutrition Intelligence APIs
- * Build food and metabolic intelligence into your product — one API for understanding what people eat and how food may affect them.  **Clinical-grade precision, consumer-grade experiences.** January builds the infrastructure underneath the product: turning messy health and nutrition data into reliable intelligence, so your team spends its time on the experience instead of the foundation.  **Security & compliance** — **SOC 2 Type II** · **HIPAA-aligned practices** · **BAA** and **Zero Data Retention (ZDR)** available  **What you can build** - **Scan food** — photo and text food recognition: detect foods and nutrition, then correct results conversationally - **Search the food database** — by name or barcode — and get healthier alternatives for any food - **Log food** — a per-user diary with day-range queries - **Predict glucose response** to any meal — no sensor required  **Getting started** 1. Create an API key in the [Developer Dashboard](https://dashboard.january.ai) — the full key is shown once, at creation. 2. Send it as `Authorization: Bearer <your key>` — click **Authorize** here to make every example below a live request. 3. Identify your end user with the `x-end-user-id` header wherever a request acts on their data.  **Support** — [support@january.ai](mailto:support@january.ai) · [Discord community](https://discord.gg/cYQeh3UnC) · [docs.january.ai](https://docs.january.ai)
+ * Build food and metabolic intelligence into your product — one API for understanding what people eat and how food may affect them.  **Clinical-grade precision, consumer-grade experiences.** January builds the infrastructure underneath the product: turning messy health and nutrition data into reliable intelligence, so your team spends its time on the experience instead of the foundation.  **Security & compliance** — **SOC 2 Type II** · **HIPAA-aligned practices** · **BAA** and **Zero Data Retention (ZDR)** available  **What you can build** - **Scan food** — photo and text food recognition: detect foods and nutrition, then correct results conversationally - **Search the food database** — by name or barcode — and get healthier alternatives for any food - **Log food** — a per-user diary with day-range queries - **Predict glucose response** to any meal — no sensor required  **Getting started** 1. Create an API key in the [Developer Dashboard](https://dashboard.january.ai) — the full key is shown once, at creation. 2. Send it as `Authorization: Bearer sk-…` — click **Authorize** here to make every example below a live request. 3. On the **food-logs** endpoints, say whose diary you are reading or writing with the `January-End-User-ID` header. No other endpoint takes it: everything else either asks the shared food database a question or works on the body you send, and neither depends on who the food is for.  **Calling from a mobile app** — your `sk-` key must never ship inside an app. Instead, exchange it on your backend for a *client token*: a credential that lasts up to two hours, acts as exactly one of your end users, and carries only the scopes you grant it (see the **authentication** section). Your app then calls these endpoints directly, with no proxy of your own in the request path. Both credentials travel in the same `Authorization: Bearer` header, and every endpoint below opens by saying which it accepts — **API key or client token**, or **API key only**.  **Support** — [support@january.ai](mailto:support@january.ai) · [Discord community](https://discord.gg/cYQeh3UnC) · [docs.january.ai](https://docs.january.ai)
  *
  * The version of the OpenAPI document: 1.2
  * Contact: support@january.ai
@@ -41,17 +41,14 @@ import {
 
 export interface CorrectPhotoScanRequest {
     correctPhotoScanBody: CorrectPhotoScanBody;
-    xEndUserId?: string;
 }
 
 export interface ScanFoodPhotoRequest {
     scanFoodPhotoBody: ScanFoodPhotoBody;
-    xEndUserId?: string;
 }
 
 export interface SearchFoodsByNaturalLanguageRequest {
     searchFoodsByNaturalLanguageBody: SearchFoodsByNaturalLanguageBody;
-    xEndUserId?: string;
 }
 
 /**
@@ -76,10 +73,6 @@ export class PhotoScanningApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
-        if (requestParameters['xEndUserId'] != null) {
-            headerParameters['x-end-user-id'] = String(requestParameters['xEndUserId']);
-        }
-
         if (this.configuration && this.configuration.accessToken) {
             const token = this.configuration.accessToken;
             const tokenString = await token("bearerAuth", []);
@@ -89,7 +82,7 @@ export class PhotoScanningApi extends runtime.BaseAPI {
             }
         }
 
-        let urlPath = `/v1.2/food-scans/corrections`;
+        let urlPath = `/v1.2/food-analysis/corrections`;
 
         return {
             path: urlPath,
@@ -101,8 +94,8 @@ export class PhotoScanningApi extends runtime.BaseAPI {
     }
 
     /**
-     * Revises a scan result. Send back `meal_name` and `detections` exactly as a photo or text scan returned them (any label works as `meal_name` for text scans), plus `user_input` describing the correction; the response is a corrected result with recalculated totals. Adjust portions through `user_input` (\"it was about half of that\") rather than editing serving quantities by hand. Nutrient keys a detection omits are filled in as zero automatically; each detection must carry at least one serving.
-     * Correct a scan in plain English
+     * **API key or client token.**  Revises an analysis result. Send back the `analysis` object exactly as `POST /v1.2/food-analysis/image` or `/text` returned it, plus `instruction` describing the correction; the response is a corrected result with recalculated totals. Adjust portions through `instruction` (\"it was about half of that\") rather than editing serving quantities by hand. Nutrient keys a detection omits are filled in as zero automatically, and each detection must carry at least one serving.  Callable with a client token carrying the `food_analysis:write` scope.
+     * Correct an analysis in plain English
      */
     async correctPhotoScanRaw(requestParameters: CorrectPhotoScanRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FoodScan>> {
         const requestOptions = await this.correctPhotoScanRequestOpts(requestParameters);
@@ -112,8 +105,8 @@ export class PhotoScanningApi extends runtime.BaseAPI {
     }
 
     /**
-     * Revises a scan result. Send back `meal_name` and `detections` exactly as a photo or text scan returned them (any label works as `meal_name` for text scans), plus `user_input` describing the correction; the response is a corrected result with recalculated totals. Adjust portions through `user_input` (\"it was about half of that\") rather than editing serving quantities by hand. Nutrient keys a detection omits are filled in as zero automatically; each detection must carry at least one serving.
-     * Correct a scan in plain English
+     * **API key or client token.**  Revises an analysis result. Send back the `analysis` object exactly as `POST /v1.2/food-analysis/image` or `/text` returned it, plus `instruction` describing the correction; the response is a corrected result with recalculated totals. Adjust portions through `instruction` (\"it was about half of that\") rather than editing serving quantities by hand. Nutrient keys a detection omits are filled in as zero automatically, and each detection must carry at least one serving.  Callable with a client token carrying the `food_analysis:write` scope.
+     * Correct an analysis in plain English
      */
     async correctPhotoScan(requestParameters: CorrectPhotoScanRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<FoodScan> {
         const response = await this.correctPhotoScanRaw(requestParameters, initOverrides);
@@ -137,10 +130,6 @@ export class PhotoScanningApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
-        if (requestParameters['xEndUserId'] != null) {
-            headerParameters['x-end-user-id'] = String(requestParameters['xEndUserId']);
-        }
-
         if (this.configuration && this.configuration.accessToken) {
             const token = this.configuration.accessToken;
             const tokenString = await token("bearerAuth", []);
@@ -150,7 +139,7 @@ export class PhotoScanningApi extends runtime.BaseAPI {
             }
         }
 
-        let urlPath = `/v1.2/food-scans/photo`;
+        let urlPath = `/v1.2/food-analysis/image`;
 
         return {
             path: urlPath,
@@ -162,8 +151,8 @@ export class PhotoScanningApi extends runtime.BaseAPI {
     }
 
     /**
-     * Analyzes a food photo and returns the detected foods with their nutrition and an aggregated total. Reading packaged-food labels (Nutrition Facts panels) is coming soon; until then, look packaged foods up by barcode (`GET /v1.2/foods/barcode/{upc}`). `image` accepts either an http(s) URL or a base64 data URI. Analysis can take tens of seconds for complex meals.
-     * Scan a food or label photo
+     * **API key or client token.**  Analyzes a food photo and returns the detected foods with their nutrition and an aggregated total. The photo can show the food itself or a packaged product — the front of the pack, the ingredient list, or the Nutrition Facts panel all work, and a packaged product comes back as a single detection in the usual result shape. `image` accepts either an http(s) URL or a base64 data URI. Analysis can take tens of seconds for complex meals.  **Beta:** label reading is in testing — returned nutrition can be incomplete or differ from the printed values, so validate results before relying on them. A photo of nothing but a barcode is rejected; use `GET /v1.2/foods/barcode/{barcode}` for those. Best results come from sharp, well-lit photos with the food or the complete panel large in the frame; ~1,024 px on the shorter side is plenty, and downsizing huge images lowers latency.  Callable with a client token carrying the `food_analysis:write` scope.
+     * Analyze a food or label photo
      */
     async scanFoodPhotoRaw(requestParameters: ScanFoodPhotoRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FoodScan>> {
         const requestOptions = await this.scanFoodPhotoRequestOpts(requestParameters);
@@ -173,8 +162,8 @@ export class PhotoScanningApi extends runtime.BaseAPI {
     }
 
     /**
-     * Analyzes a food photo and returns the detected foods with their nutrition and an aggregated total. Reading packaged-food labels (Nutrition Facts panels) is coming soon; until then, look packaged foods up by barcode (`GET /v1.2/foods/barcode/{upc}`). `image` accepts either an http(s) URL or a base64 data URI. Analysis can take tens of seconds for complex meals.
-     * Scan a food or label photo
+     * **API key or client token.**  Analyzes a food photo and returns the detected foods with their nutrition and an aggregated total. The photo can show the food itself or a packaged product — the front of the pack, the ingredient list, or the Nutrition Facts panel all work, and a packaged product comes back as a single detection in the usual result shape. `image` accepts either an http(s) URL or a base64 data URI. Analysis can take tens of seconds for complex meals.  **Beta:** label reading is in testing — returned nutrition can be incomplete or differ from the printed values, so validate results before relying on them. A photo of nothing but a barcode is rejected; use `GET /v1.2/foods/barcode/{barcode}` for those. Best results come from sharp, well-lit photos with the food or the complete panel large in the frame; ~1,024 px on the shorter side is plenty, and downsizing huge images lowers latency.  Callable with a client token carrying the `food_analysis:write` scope.
+     * Analyze a food or label photo
      */
     async scanFoodPhoto(requestParameters: ScanFoodPhotoRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<FoodScan> {
         const response = await this.scanFoodPhotoRaw(requestParameters, initOverrides);
@@ -198,10 +187,6 @@ export class PhotoScanningApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
-        if (requestParameters['xEndUserId'] != null) {
-            headerParameters['x-end-user-id'] = String(requestParameters['xEndUserId']);
-        }
-
         if (this.configuration && this.configuration.accessToken) {
             const token = this.configuration.accessToken;
             const tokenString = await token("bearerAuth", []);
@@ -211,7 +196,7 @@ export class PhotoScanningApi extends runtime.BaseAPI {
             }
         }
 
-        let urlPath = `/v1.2/food-scans/text`;
+        let urlPath = `/v1.2/food-analysis/text`;
 
         return {
             path: urlPath,
@@ -223,8 +208,8 @@ export class PhotoScanningApi extends runtime.BaseAPI {
     }
 
     /**
-     * Parses free text like \"a bowl of oatmeal with honey\" into detected foods with quantities and nutrition — the text counterpart of `POST /v1.2/food-scans/photo`. Text scans carry no `meal_name` (the caller already has the words). For keyword search over the food database, use `GET /v1.2/foods`.
-     * Scan a meal description
+     * **API key or client token.**  Parses free text like \"a bowl of oatmeal with honey\" into detected foods with quantities and nutrition — the text counterpart of `POST /v1.2/food-analysis/image`. Text analyses return `meal_name: null` (the caller already has the words) and grade nothing, so every detection carries `confidence: null`. For keyword search over the food database, use `GET /v1.2/foods`.  Callable with a client token carrying the `food_analysis:write` scope.
+     * Analyze a meal description
      */
     async searchFoodsByNaturalLanguageRaw(requestParameters: SearchFoodsByNaturalLanguageRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FoodScan>> {
         const requestOptions = await this.searchFoodsByNaturalLanguageRequestOpts(requestParameters);
@@ -234,8 +219,8 @@ export class PhotoScanningApi extends runtime.BaseAPI {
     }
 
     /**
-     * Parses free text like \"a bowl of oatmeal with honey\" into detected foods with quantities and nutrition — the text counterpart of `POST /v1.2/food-scans/photo`. Text scans carry no `meal_name` (the caller already has the words). For keyword search over the food database, use `GET /v1.2/foods`.
-     * Scan a meal description
+     * **API key or client token.**  Parses free text like \"a bowl of oatmeal with honey\" into detected foods with quantities and nutrition — the text counterpart of `POST /v1.2/food-analysis/image`. Text analyses return `meal_name: null` (the caller already has the words) and grade nothing, so every detection carries `confidence: null`. For keyword search over the food database, use `GET /v1.2/foods`.  Callable with a client token carrying the `food_analysis:write` scope.
+     * Analyze a meal description
      */
     async searchFoodsByNaturalLanguage(requestParameters: SearchFoodsByNaturalLanguageRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<FoodScan> {
         const response = await this.searchFoodsByNaturalLanguageRaw(requestParameters, initOverrides);

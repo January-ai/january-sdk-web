@@ -2,7 +2,7 @@
 /* eslint-disable */
 /**
  * January AI - Nutrition Intelligence APIs
- * Build food and metabolic intelligence into your product — one API for understanding what people eat and how food may affect them.  **Clinical-grade precision, consumer-grade experiences.** January builds the infrastructure underneath the product: turning messy health and nutrition data into reliable intelligence, so your team spends its time on the experience instead of the foundation.  **Security & compliance** — **SOC 2 Type II** · **HIPAA-aligned practices** · **BAA** and **Zero Data Retention (ZDR)** available  **What you can build** - **Scan food** — photo and text food recognition: detect foods and nutrition, then correct results conversationally - **Search the food database** — by name or barcode — and get healthier alternatives for any food - **Log food** — a per-user diary with day-range queries - **Predict glucose response** to any meal — no sensor required  **Getting started** 1. Create an API key in the [Developer Dashboard](https://dashboard.january.ai) — the full key is shown once, at creation. 2. Send it as `Authorization: Bearer <your key>` — click **Authorize** here to make every example below a live request. 3. Identify your end user with the `x-end-user-id` header wherever a request acts on their data.  **Support** — [support@january.ai](mailto:support@january.ai) · [Discord community](https://discord.gg/cYQeh3UnC) · [docs.january.ai](https://docs.january.ai)
+ * Build food and metabolic intelligence into your product — one API for understanding what people eat and how food may affect them.  **Clinical-grade precision, consumer-grade experiences.** January builds the infrastructure underneath the product: turning messy health and nutrition data into reliable intelligence, so your team spends its time on the experience instead of the foundation.  **Security & compliance** — **SOC 2 Type II** · **HIPAA-aligned practices** · **BAA** and **Zero Data Retention (ZDR)** available  **What you can build** - **Scan food** — photo and text food recognition: detect foods and nutrition, then correct results conversationally - **Search the food database** — by name or barcode — and get healthier alternatives for any food - **Log food** — a per-user diary with day-range queries - **Predict glucose response** to any meal — no sensor required  **Getting started** 1. Create an API key in the [Developer Dashboard](https://dashboard.january.ai) — the full key is shown once, at creation. 2. Send it as `Authorization: Bearer sk-…` — click **Authorize** here to make every example below a live request. 3. On the **food-logs** endpoints, say whose diary you are reading or writing with the `January-End-User-ID` header. No other endpoint takes it: everything else either asks the shared food database a question or works on the body you send, and neither depends on who the food is for.  **Calling from a mobile app** — your `sk-` key must never ship inside an app. Instead, exchange it on your backend for a *client token*: a credential that lasts up to two hours, acts as exactly one of your end users, and carries only the scopes you grant it (see the **authentication** section). Your app then calls these endpoints directly, with no proxy of your own in the request path. Both credentials travel in the same `Authorization: Bearer` header, and every endpoint below opens by saying which it accepts — **API key or client token**, or **API key only**.  **Support** — [support@january.ai](mailto:support@january.ai) · [Discord community](https://discord.gg/cYQeh3UnC) · [docs.january.ai](https://docs.january.ai)
  *
  * The version of the OpenAPI document: 1.2
  * Contact: support@january.ai
@@ -18,11 +18,6 @@ import {
     CreateFoodLogBodyFromJSON,
     CreateFoodLogBodyToJSON,
 } from '../models/CreateFoodLogBody.js';
-import {
-    type DeleteFoodLogResponse,
-    DeleteFoodLogResponseFromJSON,
-    DeleteFoodLogResponseToJSON,
-} from '../models/DeleteFoodLogResponse.js';
 import {
     type ErrorResponse,
     ErrorResponseFromJSON,
@@ -45,29 +40,31 @@ import {
 } from '../models/UpdateFoodLogBody.js';
 
 export interface CreateFoodLogRequest {
-    xEndUserId: string;
     createFoodLogBody: CreateFoodLogBody;
-    xEndUserTimezone?: string;
+    januaryEndUserID?: string;
 }
 
 export interface DeleteFoodLogRequest {
-    xEndUserId: string;
     logId: string;
-    xEndUserTimezone?: string;
+    januaryEndUserID?: string;
+}
+
+export interface GetFoodLogRequest {
+    logId: string;
+    januaryEndUserID?: string;
 }
 
 export interface ListFoodLogsRequest {
-    xEndUserId: string;
-    start: Date;
-    end: Date;
-    xEndUserTimezone?: string;
+    startDate: Date;
+    endDate: Date;
+    timezone: string;
+    januaryEndUserID?: string;
 }
 
 export interface UpdateFoodLogRequest {
-    xEndUserId: string;
     logId: string;
     updateFoodLogBody: UpdateFoodLogBody;
-    xEndUserTimezone?: string;
+    januaryEndUserID?: string;
 }
 
 /**
@@ -79,13 +76,6 @@ export class FoodLogsApi extends runtime.BaseAPI {
      * Creates request options for createFoodLog without sending the request
      */
     async createFoodLogRequestOpts(requestParameters: CreateFoodLogRequest): Promise<runtime.RequestOpts> {
-        if (requestParameters['xEndUserId'] == null) {
-            throw new runtime.RequiredError(
-                'xEndUserId',
-                'Required parameter "xEndUserId" was null or undefined when calling createFoodLog().'
-            );
-        }
-
         if (requestParameters['createFoodLogBody'] == null) {
             throw new runtime.RequiredError(
                 'createFoodLogBody',
@@ -99,12 +89,8 @@ export class FoodLogsApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
-        if (requestParameters['xEndUserId'] != null) {
-            headerParameters['x-end-user-id'] = String(requestParameters['xEndUserId']);
-        }
-
-        if (requestParameters['xEndUserTimezone'] != null) {
-            headerParameters['x-end-user-timezone'] = String(requestParameters['xEndUserTimezone']);
+        if (requestParameters['januaryEndUserID'] != null) {
+            headerParameters['January-End-User-ID'] = String(requestParameters['januaryEndUserID']);
         }
 
         if (this.configuration && this.configuration.accessToken) {
@@ -128,7 +114,7 @@ export class FoodLogsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Creates a food log from food + serving ids (from search, scan, or detection results). The response echoes the log hydrated with full nutrition — save its `id` to update or delete the log. Not idempotent: verify with the list endpoint before retrying a timed-out create.
+     * **API key or client token.**  Creates a food log from food + serving ids (from search or food-analysis results). The response echoes the log hydrated with full nutrition — save its `id` to update or delete the log, or fetch it again with GET /v1.2/food-logs/{log_id}. Not idempotent: verify with the list or get endpoint before retrying a timed-out create.  Callable with a client token carrying the `food_logs:write` scope.
      * Log foods for a user
      */
     async createFoodLogRaw(requestParameters: CreateFoodLogRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FoodLog>> {
@@ -139,7 +125,7 @@ export class FoodLogsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Creates a food log from food + serving ids (from search, scan, or detection results). The response echoes the log hydrated with full nutrition — save its `id` to update or delete the log. Not idempotent: verify with the list endpoint before retrying a timed-out create.
+     * **API key or client token.**  Creates a food log from food + serving ids (from search or food-analysis results). The response echoes the log hydrated with full nutrition — save its `id` to update or delete the log, or fetch it again with GET /v1.2/food-logs/{log_id}. Not idempotent: verify with the list or get endpoint before retrying a timed-out create.  Callable with a client token carrying the `food_logs:write` scope.
      * Log foods for a user
      */
     async createFoodLog(requestParameters: CreateFoodLogRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<FoodLog> {
@@ -151,13 +137,6 @@ export class FoodLogsApi extends runtime.BaseAPI {
      * Creates request options for deleteFoodLog without sending the request
      */
     async deleteFoodLogRequestOpts(requestParameters: DeleteFoodLogRequest): Promise<runtime.RequestOpts> {
-        if (requestParameters['xEndUserId'] == null) {
-            throw new runtime.RequiredError(
-                'xEndUserId',
-                'Required parameter "xEndUserId" was null or undefined when calling deleteFoodLog().'
-            );
-        }
-
         if (requestParameters['logId'] == null) {
             throw new runtime.RequiredError(
                 'logId',
@@ -169,12 +148,8 @@ export class FoodLogsApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (requestParameters['xEndUserId'] != null) {
-            headerParameters['x-end-user-id'] = String(requestParameters['xEndUserId']);
-        }
-
-        if (requestParameters['xEndUserTimezone'] != null) {
-            headerParameters['x-end-user-timezone'] = String(requestParameters['xEndUserTimezone']);
+        if (requestParameters['januaryEndUserID'] != null) {
+            headerParameters['January-End-User-ID'] = String(requestParameters['januaryEndUserID']);
         }
 
         if (this.configuration && this.configuration.accessToken) {
@@ -198,22 +173,80 @@ export class FoodLogsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Idempotent: deleting an unknown or already-deleted log returns the same success response, so it is safe to retry.
+     * **API key or client token.**  Idempotent: deleting an unknown or already-deleted log answers the same 204, so it is safe to retry.  Callable with a client token carrying the `food_logs:write` scope.
      * Delete a food log
      */
-    async deleteFoodLogRaw(requestParameters: DeleteFoodLogRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<DeleteFoodLogResponse>> {
+    async deleteFoodLogRaw(requestParameters: DeleteFoodLogRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
         const requestOptions = await this.deleteFoodLogRequestOpts(requestParameters);
         const response = await this.request(requestOptions, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => DeleteFoodLogResponseFromJSON(jsonValue));
+        return new runtime.VoidApiResponse(response);
     }
 
     /**
-     * Idempotent: deleting an unknown or already-deleted log returns the same success response, so it is safe to retry.
+     * **API key or client token.**  Idempotent: deleting an unknown or already-deleted log answers the same 204, so it is safe to retry.  Callable with a client token carrying the `food_logs:write` scope.
      * Delete a food log
      */
-    async deleteFoodLog(requestParameters: DeleteFoodLogRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<DeleteFoodLogResponse> {
-        const response = await this.deleteFoodLogRaw(requestParameters, initOverrides);
+    async deleteFoodLog(requestParameters: DeleteFoodLogRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.deleteFoodLogRaw(requestParameters, initOverrides);
+    }
+
+    /**
+     * Creates request options for getFoodLog without sending the request
+     */
+    async getFoodLogRequestOpts(requestParameters: GetFoodLogRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['logId'] == null) {
+            throw new runtime.RequiredError(
+                'logId',
+                'Required parameter "logId" was null or undefined when calling getFoodLog().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (requestParameters['januaryEndUserID'] != null) {
+            headerParameters['January-End-User-ID'] = String(requestParameters['januaryEndUserID']);
+        }
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearerAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/v1.2/food-logs/{log_id}`;
+        urlPath = urlPath.replace('{log_id}', encodeURIComponent(String(requestParameters['logId'])));
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * **API key or client token.**  Fetches one food log by the id returned when it was created.  Callable with a client token carrying the `food_logs:read` scope.
+     * Get a food log
+     */
+    async getFoodLogRaw(requestParameters: GetFoodLogRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FoodLog>> {
+        const requestOptions = await this.getFoodLogRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => FoodLogFromJSON(jsonValue));
+    }
+
+    /**
+     * **API key or client token.**  Fetches one food log by the id returned when it was created.  Callable with a client token carrying the `food_logs:read` scope.
+     * Get a food log
+     */
+    async getFoodLog(requestParameters: GetFoodLogRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<FoodLog> {
+        const response = await this.getFoodLogRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
@@ -221,45 +254,45 @@ export class FoodLogsApi extends runtime.BaseAPI {
      * Creates request options for listFoodLogs without sending the request
      */
     async listFoodLogsRequestOpts(requestParameters: ListFoodLogsRequest): Promise<runtime.RequestOpts> {
-        if (requestParameters['xEndUserId'] == null) {
+        if (requestParameters['startDate'] == null) {
             throw new runtime.RequiredError(
-                'xEndUserId',
-                'Required parameter "xEndUserId" was null or undefined when calling listFoodLogs().'
+                'startDate',
+                'Required parameter "startDate" was null or undefined when calling listFoodLogs().'
             );
         }
 
-        if (requestParameters['start'] == null) {
+        if (requestParameters['endDate'] == null) {
             throw new runtime.RequiredError(
-                'start',
-                'Required parameter "start" was null or undefined when calling listFoodLogs().'
+                'endDate',
+                'Required parameter "endDate" was null or undefined when calling listFoodLogs().'
             );
         }
 
-        if (requestParameters['end'] == null) {
+        if (requestParameters['timezone'] == null) {
             throw new runtime.RequiredError(
-                'end',
-                'Required parameter "end" was null or undefined when calling listFoodLogs().'
+                'timezone',
+                'Required parameter "timezone" was null or undefined when calling listFoodLogs().'
             );
         }
 
         const queryParameters: any = {};
 
-        if (requestParameters['start'] != null) {
-            queryParameters['start'] = (requestParameters['start'] as any).toISOString().substring(0,10);
+        if (requestParameters['startDate'] != null) {
+            queryParameters['start_date'] = (requestParameters['startDate'] as any).toISOString().substring(0,10);
         }
 
-        if (requestParameters['end'] != null) {
-            queryParameters['end'] = (requestParameters['end'] as any).toISOString().substring(0,10);
+        if (requestParameters['endDate'] != null) {
+            queryParameters['end_date'] = (requestParameters['endDate'] as any).toISOString().substring(0,10);
+        }
+
+        if (requestParameters['timezone'] != null) {
+            queryParameters['timezone'] = requestParameters['timezone'];
         }
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (requestParameters['xEndUserId'] != null) {
-            headerParameters['x-end-user-id'] = String(requestParameters['xEndUserId']);
-        }
-
-        if (requestParameters['xEndUserTimezone'] != null) {
-            headerParameters['x-end-user-timezone'] = String(requestParameters['xEndUserTimezone']);
+        if (requestParameters['januaryEndUserID'] != null) {
+            headerParameters['January-End-User-ID'] = String(requestParameters['januaryEndUserID']);
         }
 
         if (this.configuration && this.configuration.accessToken) {
@@ -282,7 +315,7 @@ export class FoodLogsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Returns the logs between `start` and `end` (both inclusive UTC calendar days), ordered by timestamp. An empty list is a valid result.
+     * **API key or client token.**  Returns the logs between `start_date` and `end_date` (both inclusive local calendar dates in `timezone`; the range spans at most 60 days), ordered by timestamp. An empty list is a valid result.  Callable with a client token carrying the `food_logs:read` scope.
      * List a user\'s food logs in a date range
      */
     async listFoodLogsRaw(requestParameters: ListFoodLogsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ListFoodLogsResponse>> {
@@ -293,7 +326,7 @@ export class FoodLogsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Returns the logs between `start` and `end` (both inclusive UTC calendar days), ordered by timestamp. An empty list is a valid result.
+     * **API key or client token.**  Returns the logs between `start_date` and `end_date` (both inclusive local calendar dates in `timezone`; the range spans at most 60 days), ordered by timestamp. An empty list is a valid result.  Callable with a client token carrying the `food_logs:read` scope.
      * List a user\'s food logs in a date range
      */
     async listFoodLogs(requestParameters: ListFoodLogsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ListFoodLogsResponse> {
@@ -305,13 +338,6 @@ export class FoodLogsApi extends runtime.BaseAPI {
      * Creates request options for updateFoodLog without sending the request
      */
     async updateFoodLogRequestOpts(requestParameters: UpdateFoodLogRequest): Promise<runtime.RequestOpts> {
-        if (requestParameters['xEndUserId'] == null) {
-            throw new runtime.RequiredError(
-                'xEndUserId',
-                'Required parameter "xEndUserId" was null or undefined when calling updateFoodLog().'
-            );
-        }
-
         if (requestParameters['logId'] == null) {
             throw new runtime.RequiredError(
                 'logId',
@@ -332,12 +358,8 @@ export class FoodLogsApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
-        if (requestParameters['xEndUserId'] != null) {
-            headerParameters['x-end-user-id'] = String(requestParameters['xEndUserId']);
-        }
-
-        if (requestParameters['xEndUserTimezone'] != null) {
-            headerParameters['x-end-user-timezone'] = String(requestParameters['xEndUserTimezone']);
+        if (requestParameters['januaryEndUserID'] != null) {
+            headerParameters['January-End-User-ID'] = String(requestParameters['januaryEndUserID']);
         }
 
         if (this.configuration && this.configuration.accessToken) {
@@ -362,7 +384,7 @@ export class FoodLogsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Replaces any subset of the log: `foods`, `timestamp_utc`, `name`.
+     * **API key or client token.**  Replaces any subset of the log: `foods`, `eaten_at`, `name`. Omitted fields are left unchanged.  Callable with a client token carrying the `food_logs:write` scope.
      * Update a food log
      */
     async updateFoodLogRaw(requestParameters: UpdateFoodLogRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FoodLog>> {
@@ -373,7 +395,7 @@ export class FoodLogsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Replaces any subset of the log: `foods`, `timestamp_utc`, `name`.
+     * **API key or client token.**  Replaces any subset of the log: `foods`, `eaten_at`, `name`. Omitted fields are left unchanged.  Callable with a client token carrying the `food_logs:write` scope.
      * Update a food log
      */
     async updateFoodLog(requestParameters: UpdateFoodLogRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<FoodLog> {

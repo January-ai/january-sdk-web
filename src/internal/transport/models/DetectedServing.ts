@@ -2,7 +2,7 @@
 /* eslint-disable */
 /**
  * January AI - Nutrition Intelligence APIs
- * Build food and metabolic intelligence into your product — one API for understanding what people eat and how food may affect them.  **Clinical-grade precision, consumer-grade experiences.** January builds the infrastructure underneath the product: turning messy health and nutrition data into reliable intelligence, so your team spends its time on the experience instead of the foundation.  **Security & compliance** — **SOC 2 Type II** · **HIPAA-aligned practices** · **BAA** and **Zero Data Retention (ZDR)** available  **What you can build** - **Scan food** — photo and text food recognition: detect foods and nutrition, then correct results conversationally - **Search the food database** — by name or barcode — and get healthier alternatives for any food - **Log food** — a per-user diary with day-range queries - **Predict glucose response** to any meal — no sensor required  **Getting started** 1. Create an API key in the [Developer Dashboard](https://dashboard.january.ai) — the full key is shown once, at creation. 2. Send it as `Authorization: Bearer <your key>` — click **Authorize** here to make every example below a live request. 3. Identify your end user with the `x-end-user-id` header wherever a request acts on their data.  **Support** — [support@january.ai](mailto:support@january.ai) · [Discord community](https://discord.gg/cYQeh3UnC) · [docs.january.ai](https://docs.january.ai)
+ * Build food and metabolic intelligence into your product — one API for understanding what people eat and how food may affect them.  **Clinical-grade precision, consumer-grade experiences.** January builds the infrastructure underneath the product: turning messy health and nutrition data into reliable intelligence, so your team spends its time on the experience instead of the foundation.  **Security & compliance** — **SOC 2 Type II** · **HIPAA-aligned practices** · **BAA** and **Zero Data Retention (ZDR)** available  **What you can build** - **Scan food** — photo and text food recognition: detect foods and nutrition, then correct results conversationally - **Search the food database** — by name or barcode — and get healthier alternatives for any food - **Log food** — a per-user diary with day-range queries - **Predict glucose response** to any meal — no sensor required  **Getting started** 1. Create an API key in the [Developer Dashboard](https://dashboard.january.ai) — the full key is shown once, at creation. 2. Send it as `Authorization: Bearer sk-…` — click **Authorize** here to make every example below a live request. 3. On the **food-logs** endpoints, say whose diary you are reading or writing with the `January-End-User-ID` header. No other endpoint takes it: everything else either asks the shared food database a question or works on the body you send, and neither depends on who the food is for.  **Calling from a mobile app** — your `sk-` key must never ship inside an app. Instead, exchange it on your backend for a *client token*: a credential that lasts up to two hours, acts as exactly one of your end users, and carries only the scopes you grant it (see the **authentication** section). Your app then calls these endpoints directly, with no proxy of your own in the request path. Both credentials travel in the same `Authorization: Bearer` header, and every endpoint below opens by saying which it accepts — **API key or client token**, or **API key only**.  **Support** — [support@january.ai](mailto:support@january.ai) · [Discord community](https://discord.gg/cYQeh3UnC) · [docs.january.ai](https://docs.january.ai)
  *
  * The version of the OpenAPI document: 1.2
  * Contact: support@january.ai
@@ -20,29 +20,29 @@ import { mapValues } from '../runtime.js';
  */
 export interface DetectedServing {
     /**
-     * Stable serving identifier, provisionally narrowed to JavaScript's safe integer range.
-     * @type {number}
-     * @memberof DetectedServing
-     */
-    id: number;
-    /**
-     *
-     * @type {number}
-     * @memberof DetectedServing
-     */
-    quantity?: number;
-    /**
-     *
+     * Null only when the producer sent a serving with no id.
      * @type {string}
      * @memberof DetectedServing
      */
-    unit: string;
+    id: string | null;
     /**
-     * Quantity the parser selected from the text ('2 cups' → 2); text scans only. Advisory — corrections reads the serving's own quantity.
+     * How much of `unit` this serving is; null when the producer reported none.
      * @type {number}
      * @memberof DetectedServing
      */
-    selectedQuantity?: number;
+    quantity: number | null;
+    /**
+     * Null only when the producer sent a serving with no unit.
+     * @type {string}
+     * @memberof DetectedServing
+     */
+    unit: string | null;
+    /**
+     * Quantity parsed from the text ('2 cups' → 2); null on image analyses. Advisory — corrections reads the serving's own quantity.
+     * @type {number}
+     * @memberof DetectedServing
+     */
+    selectedQuantity: number | null;
 }
 
 /**
@@ -50,7 +50,9 @@ export interface DetectedServing {
  */
 export function instanceOfDetectedServing(value: object): value is DetectedServing {
     if (!('id' in value) || value['id'] === undefined) return false;
+    if (!('quantity' in value) || value['quantity'] === undefined) return false;
     if (!('unit' in value) || value['unit'] === undefined) return false;
+    if ((!('selectedQuantity' in (value as Record<string, any>)) && !('selected_quantity' in (value as Record<string, any>))) || ((value as Record<string, any>)['selectedQuantity'] === undefined && (value as Record<string, any>)['selected_quantity'] === undefined)) return false;
     return true;
 }
 
@@ -65,9 +67,9 @@ export function DetectedServingFromJSONTyped(json: any, ignoreDiscriminator: boo
     return {
 
         'id': json['id'],
-        'quantity': json['quantity'] == null ? undefined : json['quantity'],
+        'quantity': json['quantity'],
         'unit': json['unit'],
-        'selectedQuantity': json['selected_quantity'] == null ? undefined : json['selected_quantity'],
+        'selectedQuantity': json['selected_quantity'],
     };
 }
 

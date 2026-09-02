@@ -35,9 +35,10 @@ export function getJanuaryClient() {
   const partnerAppSessionToken = process.env.PARTNER_APP_SESSION_TOKEN?.trim()
   const endUserId = getDefaultEndUserId()
   const apiKey = process.env.JANUARY_API_KEY ?? process.env.JANUARY_DEV_API_KEY
+  const testApiUrl = process.env.JANUARY_TEST_API_URL?.trim()
   const configuration = partnerTokenUrl
     ? `token:${partnerTokenUrl}:${partnerAppSessionToken ?? ''}:${endUserId}`
-    : `key:${apiKey?.trim() ?? ''}`
+    : `key:${apiKey?.trim() ?? ''}:${testApiUrl ?? ''}`
   if (cachedClient && cachedClientConfiguration === configuration) return cachedClient
 
   if (partnerTokenUrl) {
@@ -95,9 +96,18 @@ export function getJanuaryClient() {
 
   cachedClient = new JanuaryClient({
     developmentApiKey: apiKey,
+    ...(testApiUrl ? { fetch: createTestApiFetch(testApiUrl) } : {}),
   })
   cachedClientConfiguration = configuration
   return cachedClient
+}
+
+function createTestApiFetch(baseUrl: string): typeof fetch {
+  return async (input, init) => {
+    const source = new URL(typeof input === 'string' || input instanceof URL ? input : input.url)
+    const target = new URL(`${source.pathname}${source.search}`, baseUrl)
+    return fetch(target, init)
+  }
 }
 
 export function getDefaultEndUserId() {

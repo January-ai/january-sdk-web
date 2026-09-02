@@ -2,7 +2,7 @@
 /* eslint-disable */
 /**
  * January AI - Nutrition Intelligence APIs
- * Build food and metabolic intelligence into your product — one API for understanding what people eat and how food may affect them.  **Clinical-grade precision, consumer-grade experiences.** January builds the infrastructure underneath the product: turning messy health and nutrition data into reliable intelligence, so your team spends its time on the experience instead of the foundation.  **Security & compliance** — **SOC 2 Type II** · **HIPAA-aligned practices** · **BAA** and **Zero Data Retention (ZDR)** available  **What you can build** - **Scan food** — photo and text food recognition: detect foods and nutrition, then correct results conversationally - **Search the food database** — by name or barcode — and get healthier alternatives for any food - **Log food** — a per-user diary with day-range queries - **Predict glucose response** to any meal — no sensor required  **Getting started** 1. Create an API key in the [Developer Dashboard](https://dashboard.january.ai) — the full key is shown once, at creation. 2. Send it as `Authorization: Bearer <your key>` — click **Authorize** here to make every example below a live request. 3. Identify your end user with the `x-end-user-id` header wherever a request acts on their data.  **Support** — [support@january.ai](mailto:support@january.ai) · [Discord community](https://discord.gg/cYQeh3UnC) · [docs.january.ai](https://docs.january.ai)
+ * Build food and metabolic intelligence into your product — one API for understanding what people eat and how food may affect them.  **Clinical-grade precision, consumer-grade experiences.** January builds the infrastructure underneath the product: turning messy health and nutrition data into reliable intelligence, so your team spends its time on the experience instead of the foundation.  **Security & compliance** — **SOC 2 Type II** · **HIPAA-aligned practices** · **BAA** and **Zero Data Retention (ZDR)** available  **What you can build** - **Scan food** — photo and text food recognition: detect foods and nutrition, then correct results conversationally - **Search the food database** — by name or barcode — and get healthier alternatives for any food - **Log food** — a per-user diary with day-range queries - **Predict glucose response** to any meal — no sensor required  **Getting started** 1. Create an API key in the [Developer Dashboard](https://dashboard.january.ai) — the full key is shown once, at creation. 2. Send it as `Authorization: Bearer sk-…` — click **Authorize** here to make every example below a live request. 3. On the **food-logs** endpoints, say whose diary you are reading or writing with the `January-End-User-ID` header. No other endpoint takes it: everything else either asks the shared food database a question or works on the body you send, and neither depends on who the food is for.  **Calling from a mobile app** — your `sk-` key must never ship inside an app. Instead, exchange it on your backend for a *client token*: a credential that lasts up to two hours, acts as exactly one of your end users, and carries only the scopes you grant it (see the **authentication** section). Your app then calls these endpoints directly, with no proxy of your own in the request path. Both credentials travel in the same `Authorization: Bearer` header, and every endpoint below opens by saying which it accepts — **API key or client token**, or **API key only**.  **Support** — [support@january.ai](mailto:support@january.ai) · [Discord community](https://discord.gg/cYQeh3UnC) · [docs.january.ai](https://docs.january.ai)
  *
  * The version of the OpenAPI document: 1.2
  * Contact: support@january.ai
@@ -19,6 +19,11 @@ import {
     ErrorResponseToJSON,
 } from '../models/ErrorResponse.js';
 import {
+    type GetRestaurantMenuItemsResponse,
+    GetRestaurantMenuItemsResponseFromJSON,
+    GetRestaurantMenuItemsResponseToJSON,
+} from '../models/GetRestaurantMenuItemsResponse.js';
+import {
     type SearchRestaurantMenuItemsResponse,
     SearchRestaurantMenuItemsResponseFromJSON,
     SearchRestaurantMenuItemsResponseToJSON,
@@ -31,7 +36,6 @@ import {
 
 export interface GetRestaurantMenuItemsRequest {
     restaurantId: string;
-    xEndUserId?: string;
     limit?: number;
     offset?: number;
 }
@@ -40,8 +44,7 @@ export interface SearchRestaurantMenuItemsRequest {
     query: string;
     latitude: number;
     longitude: number;
-    xEndUserId?: string;
-    radius?: number;
+    radiusMeters?: number;
     limit?: number;
 }
 
@@ -49,8 +52,7 @@ export interface SearchRestaurantsRequest {
     query: string;
     latitude: number;
     longitude: number;
-    xEndUserId?: string;
-    radius?: number;
+    radiusMeters?: number;
     limit?: number;
 }
 
@@ -82,10 +84,6 @@ export class RestaurantsApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (requestParameters['xEndUserId'] != null) {
-            headerParameters['x-end-user-id'] = String(requestParameters['xEndUserId']);
-        }
-
         if (this.configuration && this.configuration.accessToken) {
             const token = this.configuration.accessToken;
             const tokenString = await token("bearerAuth", []);
@@ -107,21 +105,21 @@ export class RestaurantsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Load the selected restaurant menu directly by id, without a text query or location. Ordered by food name and id. Use limit and offset to load additional pages; total_count is the full menu count.
-     * Get menu items by restaurant id
+     * **API key or client token.**  The menu of one restaurant, by the `id` a `GET /v1.2/restaurants` result carries — a listing, not a search. Items come ordered by name with the nutrition their menu source publishes; each carries one serving, and `GET /v1.2/foods/{food_id}` returns the complete list. Page a long menu with `limit` and `offset`: a page shorter than `limit` is the last one. To find dishes across restaurants near a location, use `GET /v1.2/menu-items`.  Callable with a client token carrying the `restaurants:read` scope.
+     * List a restaurant\'s menu items
      */
-    async getRestaurantMenuItemsRaw(requestParameters: GetRestaurantMenuItemsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SearchRestaurantMenuItemsResponse>> {
+    async getRestaurantMenuItemsRaw(requestParameters: GetRestaurantMenuItemsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GetRestaurantMenuItemsResponse>> {
         const requestOptions = await this.getRestaurantMenuItemsRequestOpts(requestParameters);
         const response = await this.request(requestOptions, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => SearchRestaurantMenuItemsResponseFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response, (jsonValue) => GetRestaurantMenuItemsResponseFromJSON(jsonValue));
     }
 
     /**
-     * Load the selected restaurant menu directly by id, without a text query or location. Ordered by food name and id. Use limit and offset to load additional pages; total_count is the full menu count.
-     * Get menu items by restaurant id
+     * **API key or client token.**  The menu of one restaurant, by the `id` a `GET /v1.2/restaurants` result carries — a listing, not a search. Items come ordered by name with the nutrition their menu source publishes; each carries one serving, and `GET /v1.2/foods/{food_id}` returns the complete list. Page a long menu with `limit` and `offset`: a page shorter than `limit` is the last one. To find dishes across restaurants near a location, use `GET /v1.2/menu-items`.  Callable with a client token carrying the `restaurants:read` scope.
+     * List a restaurant\'s menu items
      */
-    async getRestaurantMenuItems(requestParameters: GetRestaurantMenuItemsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SearchRestaurantMenuItemsResponse> {
+    async getRestaurantMenuItems(requestParameters: GetRestaurantMenuItemsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GetRestaurantMenuItemsResponse> {
         const response = await this.getRestaurantMenuItemsRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -153,8 +151,8 @@ export class RestaurantsApi extends runtime.BaseAPI {
 
         const queryParameters: any = {};
 
-        if (requestParameters['radius'] != null) {
-            queryParameters['radius'] = requestParameters['radius'];
+        if (requestParameters['radiusMeters'] != null) {
+            queryParameters['radius_meters'] = requestParameters['radiusMeters'];
         }
 
         if (requestParameters['limit'] != null) {
@@ -175,10 +173,6 @@ export class RestaurantsApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (requestParameters['xEndUserId'] != null) {
-            headerParameters['x-end-user-id'] = String(requestParameters['xEndUserId']);
-        }
-
         if (this.configuration && this.configuration.accessToken) {
             const token = this.configuration.accessToken;
             const tokenString = await token("bearerAuth", []);
@@ -188,7 +182,7 @@ export class RestaurantsApi extends runtime.BaseAPI {
             }
         }
 
-        let urlPath = `/v1.2/restaurants/menu-items`;
+        let urlPath = `/v1.2/menu-items`;
 
         return {
             path: urlPath,
@@ -199,7 +193,7 @@ export class RestaurantsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Search dishes across restaurants near (`latitude`, `longitude`). Returns menu items with their nutrition values. `radius` and result distances are in meters, e.g. radius=5000 for 5 kilometers.
+     * **API key or client token.**  Search dishes across restaurants near (`latitude`, `longitude`), with the nutrition each menu source publishes. Use `radius_meters` to widen or narrow the search, e.g. `radius_meters=5000` for 5 kilometers; each result reports its own `distance_meters`. To find the restaurants themselves, use `GET /v1.2/restaurants`.  Callable with a client token carrying the `restaurants:read` scope.
      * Search menu items near a location
      */
     async searchRestaurantMenuItemsRaw(requestParameters: SearchRestaurantMenuItemsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SearchRestaurantMenuItemsResponse>> {
@@ -210,7 +204,7 @@ export class RestaurantsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Search dishes across restaurants near (`latitude`, `longitude`). Returns menu items with their nutrition values. `radius` and result distances are in meters, e.g. radius=5000 for 5 kilometers.
+     * **API key or client token.**  Search dishes across restaurants near (`latitude`, `longitude`), with the nutrition each menu source publishes. Use `radius_meters` to widen or narrow the search, e.g. `radius_meters=5000` for 5 kilometers; each result reports its own `distance_meters`. To find the restaurants themselves, use `GET /v1.2/restaurants`.  Callable with a client token carrying the `restaurants:read` scope.
      * Search menu items near a location
      */
     async searchRestaurantMenuItems(requestParameters: SearchRestaurantMenuItemsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SearchRestaurantMenuItemsResponse> {
@@ -245,8 +239,8 @@ export class RestaurantsApi extends runtime.BaseAPI {
 
         const queryParameters: any = {};
 
-        if (requestParameters['radius'] != null) {
-            queryParameters['radius'] = requestParameters['radius'];
+        if (requestParameters['radiusMeters'] != null) {
+            queryParameters['radius_meters'] = requestParameters['radiusMeters'];
         }
 
         if (requestParameters['limit'] != null) {
@@ -266,10 +260,6 @@ export class RestaurantsApi extends runtime.BaseAPI {
         }
 
         const headerParameters: runtime.HTTPHeaders = {};
-
-        if (requestParameters['xEndUserId'] != null) {
-            headerParameters['x-end-user-id'] = String(requestParameters['xEndUserId']);
-        }
 
         if (this.configuration && this.configuration.accessToken) {
             const token = this.configuration.accessToken;
@@ -291,7 +281,7 @@ export class RestaurantsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Search restaurants matching `query` around (`latitude`, `longitude`), ranked by proximity. When the name matches no restaurant, results may be menu items (`type: \"menu_item\"`). `radius` and result distances are in meters.
+     * **API key or client token.**  Search restaurants matching `query` around (`latitude`, `longitude`), ranked by proximity. Every result is a restaurant — `type` is always `restaurant`. To search the dishes those restaurants serve, use `GET /v1.2/menu-items`.  Callable with a client token carrying the `restaurants:read` scope.
      * Search restaurants near a location
      */
     async searchRestaurantsRaw(requestParameters: SearchRestaurantsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SearchRestaurantsResponse>> {
@@ -302,7 +292,7 @@ export class RestaurantsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Search restaurants matching `query` around (`latitude`, `longitude`), ranked by proximity. When the name matches no restaurant, results may be menu items (`type: \"menu_item\"`). `radius` and result distances are in meters.
+     * **API key or client token.**  Search restaurants matching `query` around (`latitude`, `longitude`), ranked by proximity. Every result is a restaurant — `type` is always `restaurant`. To search the dishes those restaurants serve, use `GET /v1.2/menu-items`.  Callable with a client token carrying the `restaurants:read` scope.
      * Search restaurants near a location
      */
     async searchRestaurants(requestParameters: SearchRestaurantsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SearchRestaurantsResponse> {

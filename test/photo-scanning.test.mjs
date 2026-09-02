@@ -11,7 +11,7 @@ test('photo scan sends the public URL and PNG data URI through the public client
   const requests = [];
   const fetch = async (input, init) => {
     requests.push({ url: String(input), init });
-    return new Response(JSON.stringify({ meal_name: 'Burger and fries', detections: [] }), {
+    return new Response(JSON.stringify({ meal_name: 'Burger and fries', total_nutrients: {}, detections: [] }), {
       status: 200,
       headers: { 'content-type': 'application/json' },
     });
@@ -22,7 +22,7 @@ test('photo scan sends the public URL and PNG data URI through the public client
   await client.foodAnalysis.analyzePhoto({ image: dataUri });
 
   assert.equal(requests.length, 2);
-  assert.ok(requests.every(({ url }) => new URL(url).pathname === '/v1.2/food-scans/photo'));
+  assert.ok(requests.every(({ url }) => new URL(url).pathname === '/v1.2/food-analysis/image'));
   assert.ok(requests.every(({ init }) => init.method === 'POST'));
   assert.equal(JSON.parse(requests[0].init.body).image, burgerImageUrl);
   const encodedImage = JSON.parse(requests[1].init.body).image;

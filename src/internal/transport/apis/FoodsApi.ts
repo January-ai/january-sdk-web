@@ -2,7 +2,7 @@
 /* eslint-disable */
 /**
  * January AI - Nutrition Intelligence APIs
- * Build food and metabolic intelligence into your product — one API for understanding what people eat and how food may affect them.  **Clinical-grade precision, consumer-grade experiences.** January builds the infrastructure underneath the product: turning messy health and nutrition data into reliable intelligence, so your team spends its time on the experience instead of the foundation.  **Security & compliance** — **SOC 2 Type II** · **HIPAA-aligned practices** · **BAA** and **Zero Data Retention (ZDR)** available  **What you can build** - **Scan food** — photo and text food recognition: detect foods and nutrition, then correct results conversationally - **Search the food database** — by name or barcode — and get healthier alternatives for any food - **Log food** — a per-user diary with day-range queries - **Predict glucose response** to any meal — no sensor required  **Getting started** 1. Create an API key in the [Developer Dashboard](https://dashboard.january.ai) — the full key is shown once, at creation. 2. Send it as `Authorization: Bearer <your key>` — click **Authorize** here to make every example below a live request. 3. Identify your end user with the `x-end-user-id` header wherever a request acts on their data.  **Support** — [support@january.ai](mailto:support@january.ai) · [Discord community](https://discord.gg/cYQeh3UnC) · [docs.january.ai](https://docs.january.ai)
+ * Build food and metabolic intelligence into your product — one API for understanding what people eat and how food may affect them.  **Clinical-grade precision, consumer-grade experiences.** January builds the infrastructure underneath the product: turning messy health and nutrition data into reliable intelligence, so your team spends its time on the experience instead of the foundation.  **Security & compliance** — **SOC 2 Type II** · **HIPAA-aligned practices** · **BAA** and **Zero Data Retention (ZDR)** available  **What you can build** - **Scan food** — photo and text food recognition: detect foods and nutrition, then correct results conversationally - **Search the food database** — by name or barcode — and get healthier alternatives for any food - **Log food** — a per-user diary with day-range queries - **Predict glucose response** to any meal — no sensor required  **Getting started** 1. Create an API key in the [Developer Dashboard](https://dashboard.january.ai) — the full key is shown once, at creation. 2. Send it as `Authorization: Bearer sk-…` — click **Authorize** here to make every example below a live request. 3. On the **food-logs** endpoints, say whose diary you are reading or writing with the `January-End-User-ID` header. No other endpoint takes it: everything else either asks the shared food database a question or works on the body you send, and neither depends on who the food is for.  **Calling from a mobile app** — your `sk-` key must never ship inside an app. Instead, exchange it on your backend for a *client token*: a credential that lasts up to two hours, acts as exactly one of your end users, and carries only the scopes you grant it (see the **authentication** section). Your app then calls these endpoints directly, with no proxy of your own in the request path. Both credentials travel in the same `Authorization: Bearer` header, and every endpoint below opens by saying which it accepts — **API key or client token**, or **API key only**.  **Support** — [support@january.ai](mailto:support@january.ai) · [Discord community](https://discord.gg/cYQeh3UnC) · [docs.january.ai](https://docs.january.ai)
  *
  * The version of the OpenAPI document: 1.2
  * Contact: support@january.ai
@@ -56,32 +56,27 @@ import {
 
 export interface AutocompleteFoodsRequest {
     query: string;
-    xEndUserId?: string;
-    category?: AutocompleteFoodCategory;
+    type?: AutocompleteFoodCategory;
     limit?: number;
 }
 
 export interface GetFoodRequest {
-    foodId: number;
-    xEndUserId?: string;
+    foodId: string;
 }
 
 export interface LookupFoodByBarcodeRequest {
-    upc: string;
-    xEndUserId?: string;
+    barcode: string;
 }
 
 export interface SearchFoodsRequest {
     query: string;
-    xEndUserId?: string;
-    category?: FoodCategory;
+    type?: FoodCategory;
     limit?: number;
 }
 
 export interface SuggestFoodAlternativesRequest {
-    foodId: number;
+    foodId: string;
     suggestFoodAlternativesBody: SuggestFoodAlternativesBody;
-    xEndUserId?: string;
 }
 
 /**
@@ -106,8 +101,8 @@ export class FoodsApi extends runtime.BaseAPI {
             queryParameters['query'] = requestParameters['query'];
         }
 
-        if (requestParameters['category'] != null) {
-            queryParameters['category'] = requestParameters['category'];
+        if (requestParameters['type'] != null) {
+            queryParameters['type'] = requestParameters['type'];
         }
 
         if (requestParameters['limit'] != null) {
@@ -115,10 +110,6 @@ export class FoodsApi extends runtime.BaseAPI {
         }
 
         const headerParameters: runtime.HTTPHeaders = {};
-
-        if (requestParameters['xEndUserId'] != null) {
-            headerParameters['x-end-user-id'] = String(requestParameters['xEndUserId']);
-        }
 
         if (this.configuration && this.configuration.accessToken) {
             const token = this.configuration.accessToken;
@@ -140,7 +131,7 @@ export class FoodsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Lightweight food suggestions for a partial name, built for type-ahead (\"ban\" → banana, banana bread, …): generic foods first, then branded, each with its id, name, brand, a thumbnail and calories. Once the user picks one, fetch `GET /v1.2/foods/{food_id}` for servings and full nutrition. `items` is empty for fewer than 2 letters or digits, no match, or a search-index error (the suggestion service fails open so a typing user is not interrupted); an unreachable service still answers with the standard 502/504.
+     * **API key or client token.**  Lightweight food suggestions for a partial name, built for type-ahead (\"ban\" → banana, banana bread, …): generic foods first, then branded, each with its id, name, brand, a thumbnail and calories. Once the user picks one, fetch `GET /v1.2/foods/{food_id}` for servings and full nutrition. `items` is empty for fewer than 2 letters or digits, no match, or a search-index error (the suggestion service fails open so a typing user is not interrupted); an unreachable service still answers with the standard 502/504.  Callable with a client token carrying the `foods:read` scope.
      * Autocomplete food names
      */
     async autocompleteFoodsRaw(requestParameters: AutocompleteFoodsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AutocompleteFoodsResponse>> {
@@ -151,7 +142,7 @@ export class FoodsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Lightweight food suggestions for a partial name, built for type-ahead (\"ban\" → banana, banana bread, …): generic foods first, then branded, each with its id, name, brand, a thumbnail and calories. Once the user picks one, fetch `GET /v1.2/foods/{food_id}` for servings and full nutrition. `items` is empty for fewer than 2 letters or digits, no match, or a search-index error (the suggestion service fails open so a typing user is not interrupted); an unreachable service still answers with the standard 502/504.
+     * **API key or client token.**  Lightweight food suggestions for a partial name, built for type-ahead (\"ban\" → banana, banana bread, …): generic foods first, then branded, each with its id, name, brand, a thumbnail and calories. Once the user picks one, fetch `GET /v1.2/foods/{food_id}` for servings and full nutrition. `items` is empty for fewer than 2 letters or digits, no match, or a search-index error (the suggestion service fails open so a typing user is not interrupted); an unreachable service still answers with the standard 502/504.  Callable with a client token carrying the `foods:read` scope.
      * Autocomplete food names
      */
     async autocompleteFoods(requestParameters: AutocompleteFoodsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AutocompleteFoodsResponse> {
@@ -174,10 +165,6 @@ export class FoodsApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (requestParameters['xEndUserId'] != null) {
-            headerParameters['x-end-user-id'] = String(requestParameters['xEndUserId']);
-        }
-
         if (this.configuration && this.configuration.accessToken) {
             const token = this.configuration.accessToken;
             const tokenString = await token("bearerAuth", []);
@@ -199,7 +186,7 @@ export class FoodsApi extends runtime.BaseAPI {
     }
 
     /**
-     * One food\'s full record — most importantly the **complete list of serving sizes**. Search, barcode, and scan results carry a single default serving; fetch the food here to let an end user pick \"1 cup\" vs \"100 g\" vs \"1 medium\" when logging or predicting. Nutrition is per the default serving, in the shared nutrient vocabulary.
+     * **API key or client token.**  One food\'s full record — most importantly the **complete list of serving sizes**. Search, barcode, and food-analysis results carry a single default serving; fetch the food here to let an end user pick \"1 cup\" vs \"100 g\" vs \"1 medium\" when logging or predicting. Nutrition is per the default serving, in the shared nutrient vocabulary.  Callable with a client token carrying the `foods:read` scope.
      * Get a food
      */
     async getFoodRaw(requestParameters: GetFoodRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FoodSearchItem>> {
@@ -210,7 +197,7 @@ export class FoodsApi extends runtime.BaseAPI {
     }
 
     /**
-     * One food\'s full record — most importantly the **complete list of serving sizes**. Search, barcode, and scan results carry a single default serving; fetch the food here to let an end user pick \"1 cup\" vs \"100 g\" vs \"1 medium\" when logging or predicting. Nutrition is per the default serving, in the shared nutrient vocabulary.
+     * **API key or client token.**  One food\'s full record — most importantly the **complete list of serving sizes**. Search, barcode, and food-analysis results carry a single default serving; fetch the food here to let an end user pick \"1 cup\" vs \"100 g\" vs \"1 medium\" when logging or predicting. Nutrition is per the default serving, in the shared nutrient vocabulary.  Callable with a client token carrying the `foods:read` scope.
      * Get a food
      */
     async getFood(requestParameters: GetFoodRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<FoodSearchItem> {
@@ -222,20 +209,16 @@ export class FoodsApi extends runtime.BaseAPI {
      * Creates request options for lookupFoodByBarcode without sending the request
      */
     async lookupFoodByBarcodeRequestOpts(requestParameters: LookupFoodByBarcodeRequest): Promise<runtime.RequestOpts> {
-        if (requestParameters['upc'] == null) {
+        if (requestParameters['barcode'] == null) {
             throw new runtime.RequiredError(
-                'upc',
-                'Required parameter "upc" was null or undefined when calling lookupFoodByBarcode().'
+                'barcode',
+                'Required parameter "barcode" was null or undefined when calling lookupFoodByBarcode().'
             );
         }
 
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
-
-        if (requestParameters['xEndUserId'] != null) {
-            headerParameters['x-end-user-id'] = String(requestParameters['xEndUserId']);
-        }
 
         if (this.configuration && this.configuration.accessToken) {
             const token = this.configuration.accessToken;
@@ -246,8 +229,8 @@ export class FoodsApi extends runtime.BaseAPI {
             }
         }
 
-        let urlPath = `/v1.2/foods/barcode/{upc}`;
-        urlPath = urlPath.replace('{upc}', encodeURIComponent(String(requestParameters['upc'])));
+        let urlPath = `/v1.2/foods/barcode/{barcode}`;
+        urlPath = urlPath.replace('{barcode}', encodeURIComponent(String(requestParameters['barcode'])));
 
         return {
             path: urlPath,
@@ -258,21 +241,21 @@ export class FoodsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Exact lookup of a food by its barcode. For free-text search, use `GET /v1.2/foods` instead.
+     * **API key or client token.**  Exact lookup of the food a barcode names — one food, not a list. The `barcode` on the returned food is the database\'s normalized form and may differ from the digits you scanned in leading zeros, so display it rather than comparing it. For free-text search, use `GET /v1.2/foods` instead.  Callable with a client token carrying the `foods:read` scope.
      * Look up a food by barcode
      */
-    async lookupFoodByBarcodeRaw(requestParameters: LookupFoodByBarcodeRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FoodSearchResults>> {
+    async lookupFoodByBarcodeRaw(requestParameters: LookupFoodByBarcodeRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FoodSearchItem>> {
         const requestOptions = await this.lookupFoodByBarcodeRequestOpts(requestParameters);
         const response = await this.request(requestOptions, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => FoodSearchResultsFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response, (jsonValue) => FoodSearchItemFromJSON(jsonValue));
     }
 
     /**
-     * Exact lookup of a food by its barcode. For free-text search, use `GET /v1.2/foods` instead.
+     * **API key or client token.**  Exact lookup of the food a barcode names — one food, not a list. The `barcode` on the returned food is the database\'s normalized form and may differ from the digits you scanned in leading zeros, so display it rather than comparing it. For free-text search, use `GET /v1.2/foods` instead.  Callable with a client token carrying the `foods:read` scope.
      * Look up a food by barcode
      */
-    async lookupFoodByBarcode(requestParameters: LookupFoodByBarcodeRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<FoodSearchResults> {
+    async lookupFoodByBarcode(requestParameters: LookupFoodByBarcodeRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<FoodSearchItem> {
         const response = await this.lookupFoodByBarcodeRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -294,8 +277,8 @@ export class FoodsApi extends runtime.BaseAPI {
             queryParameters['query'] = requestParameters['query'];
         }
 
-        if (requestParameters['category'] != null) {
-            queryParameters['category'] = requestParameters['category'];
+        if (requestParameters['type'] != null) {
+            queryParameters['type'] = requestParameters['type'];
         }
 
         if (requestParameters['limit'] != null) {
@@ -303,10 +286,6 @@ export class FoodsApi extends runtime.BaseAPI {
         }
 
         const headerParameters: runtime.HTTPHeaders = {};
-
-        if (requestParameters['xEndUserId'] != null) {
-            headerParameters['x-end-user-id'] = String(requestParameters['xEndUserId']);
-        }
 
         if (this.configuration && this.configuration.accessToken) {
             const token = this.configuration.accessToken;
@@ -328,7 +307,7 @@ export class FoodsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Full-text search over the January food database, returning up to 40 ranked matches. To look up a scanned barcode, use `GET /v1.2/foods/barcode/{upc}` instead.
+     * **API key or client token.**  Full-text search over the January food database, returning up to 40 ranked matches. Generic foods, branded products and recipes are searched together unless `type` narrows it to one. To look up a scanned barcode, use `GET /v1.2/foods/barcode/{barcode}` instead.  Callable with a client token carrying the `foods:read` scope.
      * Search foods by name
      */
     async searchFoodsRaw(requestParameters: SearchFoodsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FoodSearchResults>> {
@@ -339,7 +318,7 @@ export class FoodsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Full-text search over the January food database, returning up to 40 ranked matches. To look up a scanned barcode, use `GET /v1.2/foods/barcode/{upc}` instead.
+     * **API key or client token.**  Full-text search over the January food database, returning up to 40 ranked matches. Generic foods, branded products and recipes are searched together unless `type` narrows it to one. To look up a scanned barcode, use `GET /v1.2/foods/barcode/{barcode}` instead.  Callable with a client token carrying the `foods:read` scope.
      * Search foods by name
      */
     async searchFoods(requestParameters: SearchFoodsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<FoodSearchResults> {
@@ -371,10 +350,6 @@ export class FoodsApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
-        if (requestParameters['xEndUserId'] != null) {
-            headerParameters['x-end-user-id'] = String(requestParameters['xEndUserId']);
-        }
-
         if (this.configuration && this.configuration.accessToken) {
             const token = this.configuration.accessToken;
             const tokenString = await token("bearerAuth", []);
@@ -397,7 +372,7 @@ export class FoodsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Returns healthier alternatives for a food, honoring the given dietary restrictions and preferences. Omit either array (or send `[]`) if it does not apply. An empty `alternatives` result is valid — no suitable alternatives were found.
+     * **API key or client token.**  Returns healthier alternatives for a food, honoring the given dietary restrictions and preferences. Omit either array (or send `[]`) if it does not apply. An empty `alternatives` result is valid — no suitable alternatives were found.  Callable with a client token carrying the `foods:read` scope.
      * Suggest healthier alternatives for a food
      */
     async suggestFoodAlternativesRaw(requestParameters: SuggestFoodAlternativesRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SuggestFoodAlternativesResponse>> {
@@ -408,7 +383,7 @@ export class FoodsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Returns healthier alternatives for a food, honoring the given dietary restrictions and preferences. Omit either array (or send `[]`) if it does not apply. An empty `alternatives` result is valid — no suitable alternatives were found.
+     * **API key or client token.**  Returns healthier alternatives for a food, honoring the given dietary restrictions and preferences. Omit either array (or send `[]`) if it does not apply. An empty `alternatives` result is valid — no suitable alternatives were found.  Callable with a client token carrying the `foods:read` scope.
      * Suggest healthier alternatives for a food
      */
     async suggestFoodAlternatives(requestParameters: SuggestFoodAlternativesRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SuggestFoodAlternativesResponse> {

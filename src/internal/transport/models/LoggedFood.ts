@@ -2,7 +2,7 @@
 /* eslint-disable */
 /**
  * January AI - Nutrition Intelligence APIs
- * Build food and metabolic intelligence into your product — one API for understanding what people eat and how food may affect them.  **Clinical-grade precision, consumer-grade experiences.** January builds the infrastructure underneath the product: turning messy health and nutrition data into reliable intelligence, so your team spends its time on the experience instead of the foundation.  **Security & compliance** — **SOC 2 Type II** · **HIPAA-aligned practices** · **BAA** and **Zero Data Retention (ZDR)** available  **What you can build** - **Scan food** — photo and text food recognition: detect foods and nutrition, then correct results conversationally - **Search the food database** — by name or barcode — and get healthier alternatives for any food - **Log food** — a per-user diary with day-range queries - **Predict glucose response** to any meal — no sensor required  **Getting started** 1. Create an API key in the [Developer Dashboard](https://dashboard.january.ai) — the full key is shown once, at creation. 2. Send it as `Authorization: Bearer <your key>` — click **Authorize** here to make every example below a live request. 3. Identify your end user with the `x-end-user-id` header wherever a request acts on their data.  **Support** — [support@january.ai](mailto:support@january.ai) · [Discord community](https://discord.gg/cYQeh3UnC) · [docs.january.ai](https://docs.january.ai)
+ * Build food and metabolic intelligence into your product — one API for understanding what people eat and how food may affect them.  **Clinical-grade precision, consumer-grade experiences.** January builds the infrastructure underneath the product: turning messy health and nutrition data into reliable intelligence, so your team spends its time on the experience instead of the foundation.  **Security & compliance** — **SOC 2 Type II** · **HIPAA-aligned practices** · **BAA** and **Zero Data Retention (ZDR)** available  **What you can build** - **Scan food** — photo and text food recognition: detect foods and nutrition, then correct results conversationally - **Search the food database** — by name or barcode — and get healthier alternatives for any food - **Log food** — a per-user diary with day-range queries - **Predict glucose response** to any meal — no sensor required  **Getting started** 1. Create an API key in the [Developer Dashboard](https://dashboard.january.ai) — the full key is shown once, at creation. 2. Send it as `Authorization: Bearer sk-…` — click **Authorize** here to make every example below a live request. 3. On the **food-logs** endpoints, say whose diary you are reading or writing with the `January-End-User-ID` header. No other endpoint takes it: everything else either asks the shared food database a question or works on the body you send, and neither depends on who the food is for.  **Calling from a mobile app** — your `sk-` key must never ship inside an app. Instead, exchange it on your backend for a *client token*: a credential that lasts up to two hours, acts as exactly one of your end users, and carries only the scopes you grant it (see the **authentication** section). Your app then calls these endpoints directly, with no proxy of your own in the request path. Both credentials travel in the same `Authorization: Bearer` header, and every endpoint below opens by saying which it accepts — **API key or client token**, or **API key only**.  **Support** — [support@january.ai](mailto:support@january.ai) · [Discord community](https://discord.gg/cYQeh3UnC) · [docs.january.ai](https://docs.january.ai)
  *
  * The version of the OpenAPI document: 1.2
  * Contact: support@january.ai
@@ -13,13 +13,6 @@
  */
 
 import { mapValues } from '../runtime.js';
-import type { FoodLogInputServing } from './FoodLogInputServing.js';
-import {
-    FoodLogInputServingFromJSON,
-    FoodLogInputServingFromJSONTyped,
-    FoodLogInputServingToJSON,
-    FoodLogInputServingToJSONTyped,
-} from './FoodLogInputServing.js';
 import type { NutritionFacts } from './NutritionFacts.js';
 import {
     NutritionFactsFromJSON,
@@ -42,41 +35,41 @@ import {
  */
 export interface LoggedFood {
     /**
-     * Stable food identifier, provisionally narrowed to JavaScript's safe integer range.
-     * @type {number}
+     * Food id from a search or food-analysis result. Null only when the upstream sent a food with no id.
+     * @type {string}
      * @memberof LoggedFood
      */
-    id: number;
+    foodId: string | null;
+    /**
+     * Null only when the upstream sent none.
+     * @type {string}
+     * @memberof LoggedFood
+     */
+    name: string | null;
+    /**
+     * Null for generic (non-branded) foods.
+     * @type {string}
+     * @memberof LoggedFood
+     */
+    brandName: string | null;
     /**
      *
      * @type {string}
      * @memberof LoggedFood
      */
-    name: string;
-    /**
-     *
-     * @type {string}
-     * @memberof LoggedFood
-     */
-    brandName?: string | null;
-    /**
-     *
-     * @type {string}
-     * @memberof LoggedFood
-     */
-    imageUrl?: string | null;
+    imageUrl: string | null;
     /**
      *
      * @type {number}
      * @memberof LoggedFood
      */
-    glycemicIndex?: number | null;
+    glycemicIndex: number | null;
     /**
      *
      * @type {number}
      * @memberof LoggedFood
      */
-    glycemicLoad?: number | null;
+    glycemicLoad: number | null;
     /**
      *
      * @type {NutritionFacts}
@@ -84,28 +77,32 @@ export interface LoggedFood {
      */
     nutrients: NutritionFacts;
     /**
-     *
-     * @type {FoodLogInputServing}
+     * How many of the serving below were consumed. Null only when the upstream sent no consumed quantity.
+     * @type {number}
      * @memberof LoggedFood
      */
-    consumedServing: FoodLogInputServing;
+    quantity: number | null;
     /**
      *
      * @type {ServingDetails}
      * @memberof LoggedFood
      */
-    servingDetails: ServingDetails;
+    serving: ServingDetails;
 }
 
 /**
  * Check if a given object implements the LoggedFood interface.
  */
 export function instanceOfLoggedFood(value: object): value is LoggedFood {
-    if (!('id' in value) || value['id'] === undefined) return false;
+    if ((!('foodId' in (value as Record<string, any>)) && !('food_id' in (value as Record<string, any>))) || ((value as Record<string, any>)['foodId'] === undefined && (value as Record<string, any>)['food_id'] === undefined)) return false;
     if (!('name' in value) || value['name'] === undefined) return false;
+    if ((!('brandName' in (value as Record<string, any>)) && !('brand_name' in (value as Record<string, any>))) || ((value as Record<string, any>)['brandName'] === undefined && (value as Record<string, any>)['brand_name'] === undefined)) return false;
+    if ((!('imageUrl' in (value as Record<string, any>)) && !('image_url' in (value as Record<string, any>))) || ((value as Record<string, any>)['imageUrl'] === undefined && (value as Record<string, any>)['image_url'] === undefined)) return false;
+    if ((!('glycemicIndex' in (value as Record<string, any>)) && !('glycemic_index' in (value as Record<string, any>))) || ((value as Record<string, any>)['glycemicIndex'] === undefined && (value as Record<string, any>)['glycemic_index'] === undefined)) return false;
+    if ((!('glycemicLoad' in (value as Record<string, any>)) && !('glycemic_load' in (value as Record<string, any>))) || ((value as Record<string, any>)['glycemicLoad'] === undefined && (value as Record<string, any>)['glycemic_load'] === undefined)) return false;
     if (!('nutrients' in value) || value['nutrients'] === undefined) return false;
-    if ((!('consumedServing' in (value as Record<string, any>)) && !('consumed_serving' in (value as Record<string, any>))) || ((value as Record<string, any>)['consumedServing'] === undefined && (value as Record<string, any>)['consumed_serving'] === undefined)) return false;
-    if ((!('servingDetails' in (value as Record<string, any>)) && !('serving_details' in (value as Record<string, any>))) || ((value as Record<string, any>)['servingDetails'] === undefined && (value as Record<string, any>)['serving_details'] === undefined)) return false;
+    if (!('quantity' in value) || value['quantity'] === undefined) return false;
+    if (!('serving' in value) || value['serving'] === undefined) return false;
     return true;
 }
 
@@ -119,15 +116,15 @@ export function LoggedFoodFromJSONTyped(json: any, ignoreDiscriminator: boolean)
     }
     return {
 
-        'id': json['id'],
+        'foodId': json['food_id'],
         'name': json['name'],
-        'brandName': json['brand_name'] === undefined ? undefined : json['brand_name'] === null ? null : json['brand_name'],
-        'imageUrl': json['image_url'] === undefined ? undefined : json['image_url'] === null ? null : json['image_url'],
-        'glycemicIndex': json['glycemic_index'] === undefined ? undefined : json['glycemic_index'] === null ? null : json['glycemic_index'],
-        'glycemicLoad': json['glycemic_load'] === undefined ? undefined : json['glycemic_load'] === null ? null : json['glycemic_load'],
+        'brandName': json['brand_name'],
+        'imageUrl': json['image_url'],
+        'glycemicIndex': json['glycemic_index'],
+        'glycemicLoad': json['glycemic_load'],
         'nutrients': NutritionFactsFromJSON(json['nutrients']),
-        'consumedServing': FoodLogInputServingFromJSON(json['consumed_serving']),
-        'servingDetails': ServingDetailsFromJSON(json['serving_details']),
+        'quantity': json['quantity'],
+        'serving': ServingDetailsFromJSON(json['serving']),
     };
 }
 
@@ -142,14 +139,14 @@ export function LoggedFoodToJSONTyped(value?: LoggedFood | null, ignoreDiscrimin
 
     return {
 
-        'id': value['id'],
+        'food_id': value['foodId'],
         'name': value['name'],
         'brand_name': value['brandName'],
         'image_url': value['imageUrl'],
         'glycemic_index': value['glycemicIndex'],
         'glycemic_load': value['glycemicLoad'],
         'nutrients': NutritionFactsToJSON(value['nutrients']),
-        'consumed_serving': FoodLogInputServingToJSON(value['consumedServing']),
-        'serving_details': ServingDetailsToJSON(value['servingDetails']),
+        'quantity': value['quantity'],
+        'serving': ServingDetailsToJSON(value['serving']),
     };
 }

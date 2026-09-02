@@ -216,17 +216,15 @@ export const getRestaurantMenuItems = createServerFn({ method: 'GET' })
         const page = await client.restaurants.getMenuItems({
           restaurantId: data.restaurantId,
           endUserId: data.endUserId,
+          limit: 100,
           offset: items.length,
         })
         items.push(...page.items)
-        if (!page.items.length || items.length >= page.totalCount) return { totalCount: page.totalCount, items }
+        if (page.items.length < 100) return { totalCount: items.length, items }
       }
     } catch (error) {
-      const routeIsNotDeployed = error instanceof JanuaryError
-        && error.status === 404
-        && error.message.includes('No v1.2 endpoint matches GET /v1.2/restaurants/')
-        && error.message.includes('/menu-items')
-      if (!routeIsNotDeployed) throw error
+      const menuIsUnavailable = error instanceof JanuaryError && error.status === 404
+      if (!menuIsUnavailable) throw error
       const page = await client.restaurants.searchMenuItems({
         query: data.restaurantName,
         latitude: data.latitude,

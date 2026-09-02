@@ -2,7 +2,7 @@
 /* eslint-disable */
 /**
  * January AI - Nutrition Intelligence APIs
- * Build food and metabolic intelligence into your product — one API for understanding what people eat and how food may affect them.  **Clinical-grade precision, consumer-grade experiences.** January builds the infrastructure underneath the product: turning messy health and nutrition data into reliable intelligence, so your team spends its time on the experience instead of the foundation.  **Security & compliance** — **SOC 2 Type II** · **HIPAA-aligned practices** · **BAA** and **Zero Data Retention (ZDR)** available  **What you can build** - **Scan food** — photo and text food recognition: detect foods and nutrition, then correct results conversationally - **Search the food database** — by name or barcode — and get healthier alternatives for any food - **Log food** — a per-user diary with day-range queries - **Predict glucose response** to any meal — no sensor required  **Getting started** 1. Create an API key in the [Developer Dashboard](https://dashboard.january.ai) — the full key is shown once, at creation. 2. Send it as `Authorization: Bearer <your key>` — click **Authorize** here to make every example below a live request. 3. Identify your end user with the `x-end-user-id` header wherever a request acts on their data.  **Support** — [support@january.ai](mailto:support@january.ai) · [Discord community](https://discord.gg/cYQeh3UnC) · [docs.january.ai](https://docs.january.ai)
+ * Build food and metabolic intelligence into your product — one API for understanding what people eat and how food may affect them.  **Clinical-grade precision, consumer-grade experiences.** January builds the infrastructure underneath the product: turning messy health and nutrition data into reliable intelligence, so your team spends its time on the experience instead of the foundation.  **Security & compliance** — **SOC 2 Type II** · **HIPAA-aligned practices** · **BAA** and **Zero Data Retention (ZDR)** available  **What you can build** - **Scan food** — photo and text food recognition: detect foods and nutrition, then correct results conversationally - **Search the food database** — by name or barcode — and get healthier alternatives for any food - **Log food** — a per-user diary with day-range queries - **Predict glucose response** to any meal — no sensor required  **Getting started** 1. Create an API key in the [Developer Dashboard](https://dashboard.january.ai) — the full key is shown once, at creation. 2. Send it as `Authorization: Bearer sk-…` — click **Authorize** here to make every example below a live request. 3. On the **food-logs** endpoints, say whose diary you are reading or writing with the `January-End-User-ID` header. No other endpoint takes it: everything else either asks the shared food database a question or works on the body you send, and neither depends on who the food is for.  **Calling from a mobile app** — your `sk-` key must never ship inside an app. Instead, exchange it on your backend for a *client token*: a credential that lasts up to two hours, acts as exactly one of your end users, and carries only the scopes you grant it (see the **authentication** section). Your app then calls these endpoints directly, with no proxy of your own in the request path. Both credentials travel in the same `Authorization: Bearer` header, and every endpoint below opens by saying which it accepts — **API key or client token**, or **API key only**.  **Support** — [support@january.ai](mailto:support@january.ai) · [Discord community](https://discord.gg/cYQeh3UnC) · [docs.january.ai](https://docs.january.ai)
  *
  * The version of the OpenAPI document: 1.2
  * Contact: support@january.ai
@@ -13,13 +13,13 @@
  */
 
 import { mapValues } from '../runtime.js';
-import type { FoodDetection } from './FoodDetection.js';
+import type { FoodScan } from './FoodScan.js';
 import {
-    FoodDetectionFromJSON,
-    FoodDetectionFromJSONTyped,
-    FoodDetectionToJSON,
-    FoodDetectionToJSONTyped,
-} from './FoodDetection.js';
+    FoodScanFromJSON,
+    FoodScanFromJSONTyped,
+    FoodScanToJSON,
+    FoodScanToJSONTyped,
+} from './FoodScan.js';
 
 /**
  *
@@ -28,31 +28,25 @@ import {
  */
 export interface CorrectPhotoScanBody {
     /**
-     * The meal name from the scan, when it returned one (photo scans do; text scans don't). Defaults to 'Meal'.
-     * @type {string}
+     *
+     * @type {FoodScan}
      * @memberof CorrectPhotoScanBody
      */
-    mealName?: string;
-    /**
-     * The detections array from a photo or text food scan, exactly as returned. Omitted zero-value nutrient keys are filled in automatically; each detection needs at least one serving.
-     * @type {Array<FoodDetection>}
-     * @memberof CorrectPhotoScanBody
-     */
-    detections: Array<FoodDetection>;
+    analysis: FoodScan;
     /**
      * Plain-English description of what to correct.
      * @type {string}
      * @memberof CorrectPhotoScanBody
      */
-    userInput: string;
+    instruction: string;
 }
 
 /**
  * Check if a given object implements the CorrectPhotoScanBody interface.
  */
 export function instanceOfCorrectPhotoScanBody(value: object): value is CorrectPhotoScanBody {
-    if (!('detections' in value) || value['detections'] === undefined) return false;
-    if ((!('userInput' in (value as Record<string, any>)) && !('user_input' in (value as Record<string, any>))) || ((value as Record<string, any>)['userInput'] === undefined && (value as Record<string, any>)['user_input'] === undefined)) return false;
+    if (!('analysis' in value) || value['analysis'] === undefined) return false;
+    if (!('instruction' in value) || value['instruction'] === undefined) return false;
     return true;
 }
 
@@ -66,9 +60,8 @@ export function CorrectPhotoScanBodyFromJSONTyped(json: any, ignoreDiscriminator
     }
     return {
 
-        'mealName': json['meal_name'] == null ? undefined : json['meal_name'],
-        'detections': ((json['detections'] as Array<any>).map(FoodDetectionFromJSON)),
-        'userInput': json['user_input'],
+        'analysis': FoodScanFromJSON(json['analysis']),
+        'instruction': json['instruction'],
     };
 }
 
@@ -83,8 +76,7 @@ export function CorrectPhotoScanBodyToJSONTyped(value?: CorrectPhotoScanBody | n
 
     return {
 
-        'meal_name': value['mealName'],
-        'detections': ((value['detections'] as Array<any>).map(FoodDetectionToJSON)),
-        'user_input': value['userInput'],
+        'analysis': FoodScanToJSON(value['analysis']),
+        'instruction': value['instruction'],
     };
 }

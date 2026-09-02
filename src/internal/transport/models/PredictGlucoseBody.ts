@@ -2,7 +2,7 @@
 /* eslint-disable */
 /**
  * January AI - Nutrition Intelligence APIs
- * Build food and metabolic intelligence into your product — one API for understanding what people eat and how food may affect them.  **Clinical-grade precision, consumer-grade experiences.** January builds the infrastructure underneath the product: turning messy health and nutrition data into reliable intelligence, so your team spends its time on the experience instead of the foundation.  **Security & compliance** — **SOC 2 Type II** · **HIPAA-aligned practices** · **BAA** and **Zero Data Retention (ZDR)** available  **What you can build** - **Scan food** — photo and text food recognition: detect foods and nutrition, then correct results conversationally - **Search the food database** — by name or barcode — and get healthier alternatives for any food - **Log food** — a per-user diary with day-range queries - **Predict glucose response** to any meal — no sensor required  **Getting started** 1. Create an API key in the [Developer Dashboard](https://dashboard.january.ai) — the full key is shown once, at creation. 2. Send it as `Authorization: Bearer <your key>` — click **Authorize** here to make every example below a live request. 3. Identify your end user with the `x-end-user-id` header wherever a request acts on their data.  **Support** — [support@january.ai](mailto:support@january.ai) · [Discord community](https://discord.gg/cYQeh3UnC) · [docs.january.ai](https://docs.january.ai)
+ * Build food and metabolic intelligence into your product — one API for understanding what people eat and how food may affect them.  **Clinical-grade precision, consumer-grade experiences.** January builds the infrastructure underneath the product: turning messy health and nutrition data into reliable intelligence, so your team spends its time on the experience instead of the foundation.  **Security & compliance** — **SOC 2 Type II** · **HIPAA-aligned practices** · **BAA** and **Zero Data Retention (ZDR)** available  **What you can build** - **Scan food** — photo and text food recognition: detect foods and nutrition, then correct results conversationally - **Search the food database** — by name or barcode — and get healthier alternatives for any food - **Log food** — a per-user diary with day-range queries - **Predict glucose response** to any meal — no sensor required  **Getting started** 1. Create an API key in the [Developer Dashboard](https://dashboard.january.ai) — the full key is shown once, at creation. 2. Send it as `Authorization: Bearer sk-…` — click **Authorize** here to make every example below a live request. 3. On the **food-logs** endpoints, say whose diary you are reading or writing with the `January-End-User-ID` header. No other endpoint takes it: everything else either asks the shared food database a question or works on the body you send, and neither depends on who the food is for.  **Calling from a mobile app** — your `sk-` key must never ship inside an app. Instead, exchange it on your backend for a *client token*: a credential that lasts up to two hours, acts as exactly one of your end users, and carries only the scopes you grant it (see the **authentication** section). Your app then calls these endpoints directly, with no proxy of your own in the request path. Both credentials travel in the same `Authorization: Bearer` header, and every endpoint below opens by saying which it accepts — **API key or client token**, or **API key only**.  **Support** — [support@january.ai](mailto:support@january.ai) · [Discord community](https://discord.gg/cYQeh3UnC) · [docs.january.ai](https://docs.january.ai)
  *
  * The version of the OpenAPI document: 1.2
  * Contact: support@january.ai
@@ -55,6 +55,12 @@ export interface PredictGlucoseBody {
      */
     userProfile: GlucosePredictionProfile;
     /**
+     * The IANA timezone the end user is in. The prediction depends on the meal's local time of day.
+     * @type {string}
+     * @memberof PredictGlucoseBody
+     */
+    timezone: string;
+    /**
      * The meal to predict the glucose response for.
      * @type {Array<FoodLogInputFood>}
      * @memberof PredictGlucoseBody
@@ -67,7 +73,7 @@ export interface PredictGlucoseBody {
      */
     startTime: Date;
     /**
-     * Optional CGM history for personalization; requires consumed_foods.
+     * Optional CGM history, to personalize the prediction to this end user. Send it together with `consumed_foods` covering the same period — **at least 5 complete days of paired history**, which is what the model needs to train on them. Fewer is refused with `invalid_request`. Omit both fields for a standard prediction, which needs no sensor and no history.
      * @type {Array<CgmReading>}
      * @memberof PredictGlucoseBody
      */
@@ -85,6 +91,7 @@ export interface PredictGlucoseBody {
  */
 export function instanceOfPredictGlucoseBody(value: object): value is PredictGlucoseBody {
     if ((!('userProfile' in (value as Record<string, any>)) && !('user_profile' in (value as Record<string, any>))) || ((value as Record<string, any>)['userProfile'] === undefined && (value as Record<string, any>)['user_profile'] === undefined)) return false;
+    if (!('timezone' in value) || value['timezone'] === undefined) return false;
     if (!('foods' in value) || value['foods'] === undefined) return false;
     if ((!('startTime' in (value as Record<string, any>)) && !('start_time' in (value as Record<string, any>))) || ((value as Record<string, any>)['startTime'] === undefined && (value as Record<string, any>)['start_time'] === undefined)) return false;
     return true;
@@ -101,6 +108,7 @@ export function PredictGlucoseBodyFromJSONTyped(json: any, ignoreDiscriminator: 
     return {
 
         'userProfile': GlucosePredictionProfileFromJSON(json['user_profile']),
+        'timezone': json['timezone'],
         'foods': ((json['foods'] as Array<any>).map(FoodLogInputFoodFromJSON)),
         'startTime': (new Date(json['start_time'])),
         'cgmData': json['cgm_data'] == null ? undefined : ((json['cgm_data'] as Array<any>).map(CgmReadingFromJSON)),
@@ -120,6 +128,7 @@ export function PredictGlucoseBodyToJSONTyped(value?: PredictGlucoseBody | null,
     return {
 
         'user_profile': GlucosePredictionProfileToJSON(value['userProfile']),
+        'timezone': value['timezone'],
         'foods': ((value['foods'] as Array<any>).map(FoodLogInputFoodToJSON)),
         'start_time': value['startTime'].toISOString(),
         'cgm_data': value['cgmData'] == null ? undefined : ((value['cgmData'] as Array<any>).map(CgmReadingToJSON)),

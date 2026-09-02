@@ -13,32 +13,60 @@ export class FoodAnalysisResource {
 
   async analyzePhoto(request: ScanFoodPhotoRequest): Promise<FoodScan> {
     if (!request.image.trim()) throw new TypeError('A base64-encoded image is required.');
-    return executeRequest(() => this.api.scanFoodPhoto({
+    return mapFoodScan(await executeRequest(() => this.api.scanFoodPhoto({
       scanFoodPhotoBody: { image: request.image },
-      ...(request.endUserId !== undefined ? { xEndUserId: request.endUserId } : {}),
-    }, request.signal ? { signal: request.signal } : undefined));
+    }, request.signal ? { signal: request.signal } : undefined)));
   }
 
   async analyzeDescription(request: SearchFoodsByNaturalLanguageRequest): Promise<FoodScan> {
     const query = request.query.trim();
     if (query.length === 0) throw new TypeError('A meal description is required.');
-    return executeRequest(() => this.api.searchFoodsByNaturalLanguage({
+    return mapFoodScan(await executeRequest(() => this.api.searchFoodsByNaturalLanguage({
       searchFoodsByNaturalLanguageBody: { text: query },
-      ...(request.endUserId !== undefined ? { xEndUserId: request.endUserId } : {}),
-    }, request.signal ? { signal: request.signal } : undefined));
+    }, request.signal ? { signal: request.signal } : undefined)));
   }
 
   async correct(request: CorrectPhotoScanRequest): Promise<FoodScan> {
-    return executeRequest(() => this.api.correctPhotoScan({
+    return mapFoodScan(await executeRequest(() => this.api.correctPhotoScan({
       correctPhotoScanBody: {
-        mealName: request.mealName,
-        detections: request.detections.map((detection) => ({
-          ...detection,
-          food: { ...detection.food, servings: detection.food.servings ?? [] },
-        })),
-        userInput: request.userInput,
+        analysis: toTransportFoodScan(request.analysis),
+        instruction: request.instruction,
       },
-      ...(request.endUserId !== undefined ? { xEndUserId: request.endUserId } : {}),
-    }, request.signal ? { signal: request.signal } : undefined));
+    }, request.signal ? { signal: request.signal } : undefined)));
   }
+}
+
+function mapFoodScan(scan: import('../internal/transport/models/FoodScan.js').FoodScan): FoodScan {
+  return {
+    mealName: scan.mealName,
+    totalNutrients: scan.totalNutrients,
+    detections: scan.detections.map((detection) => ({
+      confidenceScore: detection.confidence ?? undefined,
+      food: {
+        ...detection.food,
+        servings: detection.food.servings.map((serving) => ({ ...serving })),
+      },
+    })),
+  };
+}
+
+function toTransportFoodScan(scan: FoodScan): import('../internal/transport/models/FoodScan.js').FoodScan {
+  return {
+    mealName: scan.mealName,
+    totalNutrients: scan.totalNutrients,
+    detections: scan.detections.map((detection) => ({
+      confidence: detection.confidenceScore ?? null,
+      food: {
+        id: detection.food.id ?? null,
+        name: detection.food.name,
+        brandName: detection.food.brandName ?? null,
+        nutrients: detection.food.nutrients,
+        servings: (detection.food.servings ?? []).map((serving) => ({
+          ...serving,
+          quantity: serving.quantity ?? null,
+          selectedQuantity: serving.selectedQuantity ?? null,
+        })),
+      },
+    })),
+  };
 }

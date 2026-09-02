@@ -2,7 +2,7 @@
 /* eslint-disable */
 /**
  * January AI - Nutrition Intelligence APIs
- * Build food and metabolic intelligence into your product — one API for understanding what people eat and how food may affect them.  **Clinical-grade precision, consumer-grade experiences.** January builds the infrastructure underneath the product: turning messy health and nutrition data into reliable intelligence, so your team spends its time on the experience instead of the foundation.  **Security & compliance** — **SOC 2 Type II** · **HIPAA-aligned practices** · **BAA** and **Zero Data Retention (ZDR)** available  **What you can build** - **Scan food** — photo and text food recognition: detect foods and nutrition, then correct results conversationally - **Search the food database** — by name or barcode — and get healthier alternatives for any food - **Log food** — a per-user diary with day-range queries - **Predict glucose response** to any meal — no sensor required  **Getting started** 1. Create an API key in the [Developer Dashboard](https://dashboard.january.ai) — the full key is shown once, at creation. 2. Send it as `Authorization: Bearer <your key>` — click **Authorize** here to make every example below a live request. 3. Identify your end user with the `x-end-user-id` header wherever a request acts on their data.  **Support** — [support@january.ai](mailto:support@january.ai) · [Discord community](https://discord.gg/cYQeh3UnC) · [docs.january.ai](https://docs.january.ai)
+ * Build food and metabolic intelligence into your product — one API for understanding what people eat and how food may affect them.  **Clinical-grade precision, consumer-grade experiences.** January builds the infrastructure underneath the product: turning messy health and nutrition data into reliable intelligence, so your team spends its time on the experience instead of the foundation.  **Security & compliance** — **SOC 2 Type II** · **HIPAA-aligned practices** · **BAA** and **Zero Data Retention (ZDR)** available  **What you can build** - **Scan food** — photo and text food recognition: detect foods and nutrition, then correct results conversationally - **Search the food database** — by name or barcode — and get healthier alternatives for any food - **Log food** — a per-user diary with day-range queries - **Predict glucose response** to any meal — no sensor required  **Getting started** 1. Create an API key in the [Developer Dashboard](https://dashboard.january.ai) — the full key is shown once, at creation. 2. Send it as `Authorization: Bearer sk-…` — click **Authorize** here to make every example below a live request. 3. On the **food-logs** endpoints, say whose diary you are reading or writing with the `January-End-User-ID` header. No other endpoint takes it: everything else either asks the shared food database a question or works on the body you send, and neither depends on who the food is for.  **Calling from a mobile app** — your `sk-` key must never ship inside an app. Instead, exchange it on your backend for a *client token*: a credential that lasts up to two hours, acts as exactly one of your end users, and carries only the scopes you grant it (see the **authentication** section). Your app then calls these endpoints directly, with no proxy of your own in the request path. Both credentials travel in the same `Authorization: Bearer` header, and every endpoint below opens by saying which it accepts — **API key or client token**, or **API key only**.  **Support** — [support@january.ai](mailto:support@january.ai) · [Discord community](https://discord.gg/cYQeh3UnC) · [docs.january.ai](https://docs.january.ai)
  *
  * The version of the OpenAPI document: 1.2
  * Contact: support@january.ai
@@ -31,8 +31,6 @@ import {
 
 export interface PredictGlucoseRequest {
     predictGlucoseBody: PredictGlucoseBody;
-    xEndUserId?: string;
-    xEndUserTimezone?: string;
 }
 
 /**
@@ -57,14 +55,6 @@ export class GlucoseApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
-        if (requestParameters['xEndUserId'] != null) {
-            headerParameters['x-end-user-id'] = String(requestParameters['xEndUserId']);
-        }
-
-        if (requestParameters['xEndUserTimezone'] != null) {
-            headerParameters['x-end-user-timezone'] = String(requestParameters['xEndUserTimezone']);
-        }
-
         if (this.configuration && this.configuration.accessToken) {
             const token = this.configuration.accessToken;
             const tokenString = await token("bearerAuth", []);
@@ -86,7 +76,7 @@ export class GlucoseApi extends runtime.BaseAPI {
     }
 
     /**
-     * Predicts the glucose curve a meal will produce for the given profile. Optionally personalize by sending cgm_data with the consumed_foods eaten during it (both together; the upstream needs at least five complete days of paired history). Without x-end-user-id, the partner itself is the acting user.
+     * **API key or client token.**  Predicts the glucose curve a meal will produce for the given profile and body.timezone (required — the IANA timezone the end user is in; the prediction depends on the meal\'s local time of day). Optionally personalize by sending cgm_data with the consumed_foods eaten during it (both together; the upstream needs at least five complete days of paired history). Nothing is stored, so there is no end-user identity to send: the request acts as the partner itself.  Callable with a client token carrying the `glucose:read` scope.
      * Predict the glucose response to a meal
      */
     async predictGlucoseRaw(requestParameters: PredictGlucoseRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GlucosePrediction>> {
@@ -97,7 +87,7 @@ export class GlucoseApi extends runtime.BaseAPI {
     }
 
     /**
-     * Predicts the glucose curve a meal will produce for the given profile. Optionally personalize by sending cgm_data with the consumed_foods eaten during it (both together; the upstream needs at least five complete days of paired history). Without x-end-user-id, the partner itself is the acting user.
+     * **API key or client token.**  Predicts the glucose curve a meal will produce for the given profile and body.timezone (required — the IANA timezone the end user is in; the prediction depends on the meal\'s local time of day). Optionally personalize by sending cgm_data with the consumed_foods eaten during it (both together; the upstream needs at least five complete days of paired history). Nothing is stored, so there is no end-user identity to send: the request acts as the partner itself.  Callable with a client token carrying the `glucose:read` scope.
      * Predict the glucose response to a meal
      */
     async predictGlucose(requestParameters: PredictGlucoseRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GlucosePrediction> {
