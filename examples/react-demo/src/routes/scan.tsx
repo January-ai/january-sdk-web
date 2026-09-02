@@ -170,7 +170,7 @@ function ScanPage() {
                 <ImagePlus aria-hidden="true" className="size-5" />
                 Choose from library
               </SecondaryButton>
-              <SecondaryButton className="sm:col-span-2" onClick={() => { setImage(sampleImage); setImageUrl(sampleImage); scan.reset(); setResultOpen(false) }} type="button">
+              <SecondaryButton className="sm:col-span-2" onClick={() => { setImage(sampleImage); setImageUrl(sampleImage); scan.reset() }} type="button">
                 <Utensils aria-hidden="true" className="size-5" />
                 Use sample meal
               </SecondaryButton>

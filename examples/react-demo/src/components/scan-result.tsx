@@ -11,12 +11,13 @@ import { Button, Card, ErrorMessage, SectionLabel } from './ui'
 
 type MealAnalysis = Awaited<ReturnType<typeof analyzeFoodPhoto>>
 type MealPrediction = Awaited<ReturnType<typeof predictMealGlucose>>
+type MealServing = NonNullable<NonNullable<MealAnalysis['detections']>[number]['food']['servings']>[number]
 
 export function ScanResult({ result, onAnalyzeAnother }: { result: MealAnalysis; onAnalyzeAnother(): void }) {
   const session = useUserSession()
   const nutrients = result.totalNutrients
-  const foods = result.detections.flatMap((detection) => {
-    const serving = detection.food.servings.find((candidate) => candidate.id)
+  const foods = (result.detections ?? []).flatMap((detection) => {
+    const serving = detection.food.servings?.find((candidate) => candidate.id)
     if (!detection.food.id || !serving?.id) return []
     return [{
       foodId: detection.food.id,
@@ -58,7 +59,7 @@ export function ScanResult({ result, onAnalyzeAnother }: { result: MealAnalysis;
             <div className="grid size-12 place-items-center rounded-xl bg-[var(--app-control)]"><Utensils aria-hidden="true" className="size-5 text-stone-600" /></div>
             <div className="min-w-0 flex-1">
               <div className="font-bold">{detection.food.name}</div>
-              <div className="mt-1 text-sm text-stone-500">{servingLabel(detection.food.servings[0])}{detection.confidenceScore ? ` · ${confidenceLabel(detection.confidenceScore)}` : ''}</div>
+              <div className="mt-1 text-sm text-stone-500">{servingLabel(detection.food.servings?.[0])}{detection.confidenceScore ? ` · ${confidenceLabel(detection.confidenceScore)}` : ''}</div>
             </div>
           </div>
         ))}
@@ -101,7 +102,7 @@ function MealPredictionPanel({ result }: { result: MealPrediction }) {
   )
 }
 
-function servingLabel(serving: MealAnalysis['detections'][number]['food']['servings'][number] | undefined) {
+function servingLabel(serving: MealServing | undefined) {
   if (!serving) return 'Serving estimated'
   const quantity = serving.selectedQuantity ?? serving.quantity
   return [quantity, serving.unit].filter((value) => value !== null && value !== undefined).join(' ') || 'Serving estimated'

@@ -346,6 +346,7 @@ function startAudioMeter(stream: MediaStream, onLevel: (level: number) => void):
   source.connect(analyser);
   const samples = new Uint8Array(analyser.fftSize);
   let frame = 0;
+  let stopped = false;
   const measure = () => {
     analyser.getByteTimeDomainData(samples);
     let sum = 0;
@@ -358,6 +359,8 @@ function startAudioMeter(stream: MediaStream, onLevel: (level: number) => void):
   };
   frame = requestAnimationFrame(measure);
   return () => {
+    if (stopped) return;
+    stopped = true;
     cancelAnimationFrame(frame);
     source.disconnect();
     void context.close();

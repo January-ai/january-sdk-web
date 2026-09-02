@@ -131,7 +131,7 @@ export function getJanuaryClient() {
 
   if (!apiKey?.trim()) {
     throw new Error(
-      'Add PARTNER_TOKEN_URL or JANUARY_API_KEY to .env.local, then restart the demo.',
+      'Add PARTNER_TOKEN_URL, JANUARY_API_KEY, JANUARY_PROD_API_KEY, or JANUARY_DEV_API_KEY to .env.local, then restart the demo.',
     )
   }
 
