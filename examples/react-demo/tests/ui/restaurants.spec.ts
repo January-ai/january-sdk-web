@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 
-const fixtureApi = 'http://127.0.0.1:18767'
+import { fixtureApi, openDemo } from './demo'
 
 async function control(route: string, options: { status?: number; empty?: boolean } = {}) {
   const query = new URLSearchParams({ route })
@@ -10,10 +10,9 @@ async function control(route: string, options: { status?: number; empty?: boolea
 }
 
 async function openRestaurant(page: Page) {
-  await page.goto('/search')
+  await openDemo(page, '/search')
   await expect(page.getByRole('button', { name: 'Search foods' })).toBeVisible()
-  await page.waitForTimeout(500)
-  await page.locator('input[name="catalog-kind"][value="restaurants"]').check({ force: true })
+  await page.getByText('Restaurants', { exact: true }).click()
   await expect(page.getByRole('button', { name: 'Search nearby' })).toBeVisible()
   await page.locator('#catalog-search').fill('Fixture Cafe')
   await page.getByRole('button', { name: 'Search nearby' }).click()

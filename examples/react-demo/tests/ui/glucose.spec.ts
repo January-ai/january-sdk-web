@@ -13,7 +13,7 @@ test('selects a string-ID food and completes glucose prediction', async ({ page 
   await page.getByRole('button', { name: /Fixture Pizza/ }).click()
   await expect(page.getByText('Fixture Pizza', { exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'Predict glucose response' }).click()
-  await expect(page.getByText('Likely peak')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Likely peak' })).toBeVisible()
   await expect(page.getByText('132')).toBeVisible()
 })
 
