@@ -75,6 +75,8 @@ jobs:
 
       - name: Typecheck, build, and run React example UAT
         run: npm run demo:web:check
+        env:
+          npm_config_ignore_scripts: "true"
 
       - name: Install the packed SDK in a clean ESM project
         run: |

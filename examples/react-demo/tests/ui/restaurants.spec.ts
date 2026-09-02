@@ -1,8 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 
-import { openDemo } from './demo'
-
-const fixtureApi = 'http://127.0.0.1:18767'
+import { fixtureApi, openDemo } from './demo'
 
 async function control(route: string, options: { status?: number; empty?: boolean } = {}) {
   const query = new URLSearchParams({ route })
