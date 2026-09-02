@@ -20,12 +20,12 @@ Install the resulting tarball in your application and commit the lockfile:
 npm install /path/to/januaryai-sdk-0.1.0.tgz
 ```
 
-See the [installation guide](Documentation/GitBook/getting-started/installation.md)
+See the [installation guide](https://docs.january.ai/web-and-node.js-sdk/web-sdk/getting-started/installation)
 for package and runtime requirements.
 
 ## Documentation
 
-The [Web SDK GitBook](Documentation/GitBook/README.md) covers the
+The [Web SDK GitBook](https://docs.january.ai/web-and-node.js-sdk/web-sdk) covers the
 runtime security boundary, backend token exchange, complete provider code, first
 request, all resources, retries, cancellation, packaging, testing, and support.
 
@@ -47,7 +47,7 @@ const january = new JanuaryClient({
 
 Production authentication uses client tokens. A browser application uses a
 short-lived token returned by its own authenticated backend. Start with
-the [backend token endpoint](Documentation/GitBook/getting-started/backend-token-endpoint.md).
+the [backend token endpoint](https://docs.january.ai/web-and-node.js-sdk/web-sdk/getting-started/backend-token-endpoint).
 
 Development API-key authentication is available for local testing only and
 prints a runtime warning. Never ship a partner API key in a browser bundle or
