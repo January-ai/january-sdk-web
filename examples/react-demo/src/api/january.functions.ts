@@ -71,7 +71,7 @@ export const getFoodDetails = createServerFn({ method: 'GET' })
 export const searchFoodCatalog = createServerFn({ method: 'GET' })
   .validator(z.object({
     query: z.string().trim().min(1).max(256),
-    mode: z.enum(['name', 'description', 'barcode']),
+    mode: z.enum(['name', 'barcode']),
     category: z.enum([FoodCategory.general, FoodCategory.branded, FoodCategory.recipe]).optional(),
     endUserId: optionalUserId,
   }))
@@ -79,41 +79,6 @@ export const searchFoodCatalog = createServerFn({ method: 'GET' })
     const client = getJanuaryClient()
     if (data.mode === 'barcode') {
       return client.foods.lookupBarcode({ upc: data.query, endUserId: data.endUserId })
-    }
-    if (data.mode === 'description') {
-      const response = await client.foodAnalysis.analyzeDescription({ query: data.query, endUserId: data.endUserId })
-      const items = (response.detections ?? []).map((detection, index) => ({
-        type: FoodCategory.generic,
-        id: detection.food.id ?? `detected-${index + 1}`,
-        name: detection.food.name,
-        brandName: detection.food.brandName ?? null,
-        calories: detection.food.nutrients.calories?.value ?? null,
-        protein: detection.food.nutrients.protein?.value ?? null,
-        carbohydrates: detection.food.nutrients.carbohydrates?.value ?? null,
-        netCarbohydrates: detection.food.nutrients.netCarbohydrates?.value ?? null,
-        totalFat: detection.food.nutrients.totalFat?.value ?? null,
-        saturatedFat: detection.food.nutrients.saturatedFat?.value ?? null,
-        fiber: detection.food.nutrients.fiber?.value ?? null,
-        totalSugars: detection.food.nutrients.totalSugars?.value ?? null,
-        addedSugars: detection.food.nutrients.addedSugars?.value ?? null,
-        sodium: detection.food.nutrients.sodium?.value ?? null,
-        potassium: null,
-        cholesterol: null,
-        glycemicIndex: null,
-        glycemicLoad: null,
-        photoUrl: null,
-        barcode: null,
-        nutrients: null,
-        servings: (detection.food.servings ?? []).map((serving) => ({
-          id: serving.id,
-          quantity: serving.quantity ?? 1,
-          unit: serving.unit,
-          scalingFactor: 1,
-          weightGrams: null,
-          isPrimary: false,
-        })),
-      }))
-      return { totalCount: items.length, items }
     }
     return client.foods.search({
       query: data.query,
@@ -141,6 +106,13 @@ export const searchRestaurantMenuItems = createServerFn({ method: 'GET' })
 export const analyzeFoodPhoto = createServerFn({ method: 'POST' })
   .validator(z.object({ image: z.string().min(1), endUserId: optionalUserId }))
   .handler(({ data }) => getJanuaryClient().foodAnalysis.analyzePhoto(data))
+
+export const analyzeFoodDescription = createServerFn({ method: 'POST' })
+  .validator(z.object({ description: z.string().trim().min(1).max(512), endUserId: optionalUserId }))
+  .handler(({ data }) => getJanuaryClient().foodAnalysis.analyzeDescription({
+    query: data.description,
+    ...(data.endUserId ? { endUserId: data.endUserId } : {}),
+  }))
 
 export const listFoodLogs = createServerFn({ method: 'GET' })
   .validator(z.object({
@@ -216,6 +188,50 @@ export const predictGlucose = createServerFn({ method: 'POST' })
         healthConditions: data.healthConditions,
       },
       foods: [{ id: data.foodId, serving: { id: data.servingId, quantity: data.quantity } }],
+      startTime: new Date(data.startTime),
+    }
+    const client = getJanuaryClient()
+    return data.endUserId
+      ? client.forUser({ endUserId: data.endUserId, endUserTimezone: data.endUserTimezone }).glucose.predict(request)
+      : client.glucose.predict({ ...request, endUserTimezone: data.endUserTimezone })
+  })
+
+export const predictMealGlucose = createServerFn({ method: 'POST' })
+  .validator(z.object({
+    age: z.number().int().min(18).max(120),
+    sex: z.enum([Sex.female, Sex.male]),
+    height: z.number().min(36).max(96),
+    weight: z.number().min(60).max(700),
+    activityLevel: z.enum([
+      ActivityLevel.sedentary,
+      ActivityLevel.lightlyActive,
+      ActivityLevel.moderatelyActive,
+      ActivityLevel.veryActive,
+    ]),
+    healthConditions: z.array(z.enum([MedicalCondition.type2Diabetes, MedicalCondition.prediabetes])),
+    foods: z.array(z.object({
+      foodId: foodIdSchema,
+      servingId: servingIdSchema,
+      quantity: z.number().positive().max(100),
+    })).min(1).max(100),
+    startTime: z.iso.datetime(),
+    endUserId: optionalUserId,
+    endUserTimezone: z.string().trim().min(1).max(100),
+  }))
+  .handler(({ data }) => {
+    const request = {
+      userProfile: {
+        age: data.age,
+        sex: data.sex,
+        height: { value: data.height, unit: HeightUnit.inches },
+        weight: { value: data.weight, unit: WeightUnit.pounds },
+        activityLevel: data.activityLevel,
+        healthConditions: data.healthConditions,
+      },
+      foods: data.foods.map((food) => ({
+        id: food.foodId,
+        serving: { id: food.servingId, quantity: food.quantity },
+      })),
       startTime: new Date(data.startTime),
     }
     const client = getJanuaryClient()

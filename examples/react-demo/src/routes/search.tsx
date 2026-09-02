@@ -18,13 +18,13 @@ import { FoodSuggestionList } from '~/components/food-autocomplete'
 import { NetworkImage } from '~/components/network-image'
 import { LocationChooser, cityLocations, defaultCity, type CityID, type Coordinates } from '~/components/search/location-chooser'
 import { RestaurantInspector } from '~/components/search/restaurant-inspector'
+import { VoiceSearchInput } from '~/components/search/voice-search-input'
 import { SegmentedControl } from '~/components/segmented-control'
 import {
   Button,
   Card,
   EmptyState,
   ErrorMessage,
-  InputFrame,
   Page,
   PageHeader,
   ResultRow,
@@ -35,7 +35,7 @@ import { formatNumber } from '~/lib/utils'
 import { primaryServingLabel } from '~/lib/food-display'
 
 type CatalogKind = 'foods' | 'restaurants'
-type FoodMode = 'name' | 'description' | 'barcode'
+type FoodMode = 'name' | 'barcode'
 type FoodCategoryFilter = 'all' | 'generic' | 'branded' | 'recipe'
 interface SearchParams {
   q?: string
@@ -180,16 +180,13 @@ function SearchPage() {
 
             <div className="mt-6">
               <label className="mb-2 block text-sm font-semibold text-stone-700" htmlFor="catalog-search">{kind === 'foods' ? 'What are you looking for?' : 'Restaurant or cuisine'}</label>
-              <InputFrame className="min-h-14" htmlFor="catalog-search">
-                <SearchIcon aria-hidden="true" className="size-5 text-stone-500" />
-                <input
-                  className="min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-stone-400"
-                  id="catalog-search"
-                  onChange={(event) => { setDraft(event.target.value); setAcceptedSuggestion(null) }}
-                  placeholder={kind === 'foods' ? 'Try “Greek yogurt”' : 'Try “pizza”'}
-                  value={draft}
-                />
-              </InputFrame>
+              <VoiceSearchInput
+                disabled={kind === 'foods' && mode === 'barcode'}
+                id="catalog-search"
+                onChange={(value) => { setDraft(value); setAcceptedSuggestion(null) }}
+                placeholder={kind === 'foods' ? 'Try “Greek yogurt”' : 'Try “pizza”'}
+                value={draft}
+              />
             </div>
 
             {draft.trim() !== acceptedSuggestion && suggestions.data?.items.length ? (
@@ -203,7 +200,7 @@ function SearchPage() {
                   label="Search by"
                   name="food-mode"
                   onChange={setMode}
-                  options={[{ value: 'name', label: 'Name' }, { value: 'description', label: 'Meal description' }, { value: 'barcode', label: 'Barcode' }]}
+                  options={[{ value: 'name', label: 'Name' }, { value: 'barcode', label: 'Barcode' }]}
                   value={mode}
                   variant="outlined"
                 />
@@ -274,7 +271,7 @@ function SearchPage() {
                   ))}
                 </Card>
               ) : (
-                <EmptyState description="Try a broader name or a different search mode." icon={<Utensils aria-hidden="true" className="size-6" />} title="No foods matched" />
+                <EmptyState description="Try a broader food name or check the barcode." icon={<Utensils aria-hidden="true" className="size-6" />} title="No foods matched" />
               )}
             </div>
           ) : restaurants.data ? (

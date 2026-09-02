@@ -61,6 +61,33 @@ const logs = await user.foodLogs.list({ start: '2026-08-01', end: '2026-08-31' }
 The scoped client exposes Foods, Restaurants, Photo Scanning, Food Logs, and
 Glucose. Recreate it when the signed-in account changes.
 
+## Capture a voice query
+
+`VoiceCaptureSession` is a framework-free browser helper that records microphone
+audio and publishes live state, duration, audio level, and partial-transcript
+updates. A completed capture always returns an audio `Blob`; `transcript` is
+included when the browser exposes speech recognition.
+
+```ts
+import { VoiceCaptureSession } from '@januaryai/web-sdk';
+
+const voice = new VoiceCaptureSession();
+const unsubscribe = voice.subscribe((snapshot) => {
+  renderRecordingState(snapshot);
+});
+
+await voice.start({ language: 'en-US' });
+const capture = await voice.stop();
+searchInput.value = capture.transcript ?? '';
+
+unsubscribe();
+voice.dispose();
+```
+
+Use voice capture only from a user gesture, serve the app over HTTPS (localhost
+is accepted for local development), and provide a typed-search fallback. See the
+[voice capture guide](Documentation/GitBook/guides/voice-capture.md).
+
 ## Menu items by restaurant ID
 
 Use the ID of a `restaurant` search result to load its menu, independently of search text and location.
