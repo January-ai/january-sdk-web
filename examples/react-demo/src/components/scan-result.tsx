@@ -1,8 +1,7 @@
 import { Activity, Utensils } from 'lucide-react'
 import { ActivityLevel, Sex } from '@januaryai/web-sdk'
 import { useMutation } from '@tanstack/react-query'
-import type { analyzeFoodPhoto, predictMealGlucose } from '~/api/january.functions'
-import { predictMealGlucose as requestMealGlucosePrediction } from '~/api/january.functions'
+import { analyzeFoodPhoto, predictMealGlucose as requestMealGlucosePrediction } from '~/api/january.functions'
 import { useUserSession } from '~/components/user-session'
 import { cn, formatNumber } from '~/lib/utils'
 import { GlucoseChart, friendlyImpact, impactClass } from './glucose-prediction'
@@ -10,7 +9,7 @@ import { MacroGrid } from './macro-grid'
 import { Button, Card, ErrorMessage, SectionLabel } from './ui'
 
 type MealAnalysis = Awaited<ReturnType<typeof analyzeFoodPhoto>>
-type MealPrediction = Awaited<ReturnType<typeof predictMealGlucose>>
+type MealPrediction = Awaited<ReturnType<typeof requestMealGlucosePrediction>>
 type MealServing = NonNullable<NonNullable<MealAnalysis['detections']>[number]['food']['servings']>[number]
 
 export function ScanResult({ result, onAnalyzeAnother }: { result: MealAnalysis; onAnalyzeAnother(): void }) {

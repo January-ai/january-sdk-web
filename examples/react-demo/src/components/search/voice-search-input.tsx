@@ -21,8 +21,13 @@ export function VoiceSearchInput({ disabled = false, id, onChange, placeholder, 
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => setMounted(true), [])
-  useEffect(() => session.subscribe(setSnapshot), [session])
-  useEffect(() => () => session.dispose(), [session])
+  useEffect(() => {
+    const unsubscribe = session.subscribe(setSnapshot)
+    return () => {
+      unsubscribe()
+      session.dispose()
+    }
+  }, [session])
   useEffect(() => {
     if (disabled && snapshot.state !== 'idle') session.cancel()
   }, [disabled, session, snapshot.state])
@@ -61,7 +66,7 @@ export function VoiceSearchInput({ disabled = false, id, onChange, placeholder, 
       >
         <input
           className={recording || busy ? 'sr-only' : 'min-w-0 flex-1 bg-transparent px-1 text-base outline-none placeholder:text-stone-400'}
-          disabled={disabled || recording || busy}
+          disabled={recording || busy}
           id={id}
           onChange={(event) => onChange(event.target.value)}
           placeholder={placeholder}
