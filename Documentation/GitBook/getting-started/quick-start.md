@@ -14,12 +14,13 @@ import {
   JanuaryError,
   JanuaryClient,
   JanuaryTokenProviderError,
+  type JanuaryClientTokenResponse,
 } from '@januaryai/sdk';
 
-const endUserId = authenticatedAccount.stableId;
+const endUserId = 'replace-with-your-stable-user-id';
 
-async function fetchJanuaryToken() {
-  let response;
+async function fetchJanuaryToken(): Promise<JanuaryClientTokenResponse> {
+  let response: Response;
   try {
     response = await fetch('/api/january-token', {
       method: 'GET',
@@ -41,7 +42,7 @@ async function fetchJanuaryToken() {
       { retryable: response.status === 408 || response.status === 429 || response.status >= 500 },
     );
   }
-  return response.json();
+  return response.json() as Promise<JanuaryClientTokenResponse>;
 }
 
 const january = new JanuaryClient({
@@ -59,7 +60,7 @@ export async function renderJanuaryQuickStart(output: HTMLElement) {
       limit: 5,
     });
 
-    output.textContent = response.items.map((food) => food.name).join('\n');
+    output.innerText = response.items.map((food) => food.name).join('\n');
   } catch (error) {
     if (error instanceof JanuaryError) {
       console.error('January request failed', {
@@ -86,7 +87,11 @@ start the application's normal development server:
 import { renderJanuaryQuickStart } from './january-quickstart';
 
 const output = document.querySelector<HTMLElement>('#january-results');
-if (output) await renderJanuaryQuickStart(output);
+if (output) {
+  void renderJanuaryQuickStart(output).catch(() => {
+    // renderJanuaryQuickStart already logs the typed January error details.
+  });
+}
 ```
 
 The page renders the returned food names inside `#january-results`. The exact

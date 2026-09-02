@@ -10,7 +10,7 @@
     "prebuild": "npm --prefix ../.. run build",
     "build": "vite build",
     "precheck": "npm --prefix ../.. run build",
-    "check": "npm run typecheck && npm test && npm run build && npm run test:ui",
+    "check": "npm run typecheck && npm test && vite build && npm run test:ui",
     "typecheck": "tsc --noEmit",
     "test": "node --experimental-strip-types --test src/lib/*.test.ts",
     "test:ui": "playwright test"
