@@ -1,4 +1,4 @@
-import type { FoodSuggestion } from '@januaryai/sdk'
+import type { FoodSuggestion } from '@januaryai/web-sdk'
 import { useQuery } from '@tanstack/react-query'
 import { LoaderCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'

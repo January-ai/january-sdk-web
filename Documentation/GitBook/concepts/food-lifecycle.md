@@ -15,7 +15,7 @@ the search field and run `search`; it should not open a serving picker. After a
 search result is selected, call `get` before showing servings.
 
 ```ts
-import { FoodPortion } from '@januaryai/sdk';
+import { FoodPortion } from '@januaryai/web-sdk';
 
 const results = await january.foods.search({ query: 'banana' });
 const selected = results.items[0];

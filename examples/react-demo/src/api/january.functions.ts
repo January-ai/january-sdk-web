@@ -11,7 +11,7 @@ import {
   type FoodLog,
   type GetFoodRequest,
   type GetRestaurantMenuItemsRequest,
-} from '@januaryai/sdk'
+} from '@januaryai/web-sdk'
 import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
 import {
@@ -235,7 +235,7 @@ export const getRestaurantMenuItems = createServerFn({ method: 'GET' })
   .handler(async ({ data }) => {
     const client = getJanuaryClient()
     try {
-      const items: import('@januaryai/sdk').RestaurantMenuItem[] = []
+      const items: import('@januaryai/web-sdk').RestaurantMenuItem[] = []
       while (true) {
         const page = await client.restaurants.getMenuItems({
           restaurantId: data.restaurantId,

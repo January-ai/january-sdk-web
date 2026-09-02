@@ -86,4 +86,4 @@ jobs:
           npm init -y >/dev/null
           npm pkg set type=module >/dev/null
           npm install "$GITHUB_WORKSPACE/$archive"
-          node --input-type=module -e "import { JanuaryClient } from '@januaryai/sdk'; if (typeof JanuaryClient !== 'function') process.exit(1)"
+          node --input-type=module -e "import { JanuaryClient } from '@januaryai/web-sdk'; if (typeof JanuaryClient !== 'function') process.exit(1)"

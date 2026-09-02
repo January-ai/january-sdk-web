@@ -15,7 +15,7 @@ import {
   JanuaryClient,
   JanuaryTokenProviderError,
   type JanuaryClientTokenResponse,
-} from '@januaryai/sdk';
+} from '@januaryai/web-sdk';
 
 const endUserId = 'replace-with-your-stable-user-id';
 

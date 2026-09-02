@@ -5,7 +5,7 @@ preserve aspect ratio, limit the longest edge to 1,000 pixels, JPEG-compress at
 quality 0.7, and return an upload-ready data URI.
 
 ```ts
-import { preparePhotoScanImage } from '@januaryai/sdk';
+import { preparePhotoScanImage } from '@januaryai/web-sdk';
 
 const file = fileInput.files?.[0];
 if (!file) throw new Error('Choose a meal image');

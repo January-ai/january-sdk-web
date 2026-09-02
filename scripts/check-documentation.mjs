@@ -66,4 +66,20 @@ for (const [name, source] of [
   }
 }
 
+const retiredPackageName = ["@januaryai", "sdk"].join("/");
+for (const file of markdown) {
+  const source = await readFile(file, "utf8");
+  if (source.includes(retiredPackageName)) {
+    throw new Error(`${file} still references the retired Web SDK package name.`);
+  }
+}
+
+const readme = await readFile(path.join(root, "README.md"), "utf8");
+const installation = await readFile(path.join(docsRoot, "getting-started", "installation.md"), "utf8");
+for (const [name, source] of [["README", readme], ["installation guide", installation]]) {
+  if (!source.includes("npm install @januaryai/web-sdk")) {
+    throw new Error(`${name} must install the public @januaryai/web-sdk package.`);
+  }
+}
+
 console.log(`Validated ${docs.length} GitBook pages, internal links, and restaurant-menu documentation.`);

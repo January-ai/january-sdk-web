@@ -14,7 +14,7 @@ import {
   JanuaryClient,
   JanuaryTokenProviderError,
   type JanuaryClientTokenResponse,
-} from '@januaryai/sdk';
+} from '@januaryai/web-sdk';
 
 async function fetchJanuaryToken(): Promise<JanuaryClientTokenResponse> {
   const response = await fetch('/api/january-token', {

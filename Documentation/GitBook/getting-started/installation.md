@@ -1,29 +1,17 @@
 # Installation
 
-Build a package from the repository source:
+Install the public package from npm:
 
 ```bash
-git clone https://github.com/January-ai/january-sdk-web.git
-cd january-sdk-web
-npm ci
-npm test
-npm pack
-```
-
-The final command writes `januaryai-sdk-0.1.0.tgz`. Install that packed
-tarball into the application and commit the resulting lockfile:
-
-```bash
-npm install /path/to/januaryai-sdk-0.1.0.tgz
+npm install @januaryai/web-sdk
 ```
 
 ```ts
-import { JanuaryClient } from '@januaryai/sdk';
+import { JanuaryClient } from '@januaryai/web-sdk';
 ```
 
-The packed artifact is ESM-first and includes its TypeScript declarations.
-Keep the tarball in an access-controlled artifact store and use the application
-lockfile to make installs reproducible.
+The package is ESM-first and includes its TypeScript declarations. Commit your
+application lockfile to make installs reproducible.
 
 ## Requirements
 
