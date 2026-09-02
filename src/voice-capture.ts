@@ -21,14 +21,10 @@ export class VoiceCaptureError extends Error {
 export interface VoiceCaptureOptions {
   /** BCP 47 locale used by browser speech recognition. Defaults to the document locale. */
   language?: string;
-  /** Optional MediaRecorder bit rate. */
-  audioBitsPerSecond?: number;
 }
 
 export interface VoiceCaptureResult {
-  audio: Blob;
   durationMs: number;
-  mimeType: string;
   /** Present when this browser provides speech recognition and recognized speech. */
   transcript?: string;
 }
@@ -46,7 +42,7 @@ export interface VoiceCaptureObserver {
 }
 
 export interface VoiceCaptureRecording {
-  stop(): Promise<{ audio: Blob; transcript?: string }>;
+  stop(): Promise<{ transcript?: string }>;
   cancel(): void;
 }
 
@@ -151,9 +147,7 @@ export class VoiceCaptureSession {
       }
       const transcript = normalizeTranscript(result.transcript ?? this.snapshotValue.partialTranscript);
       const capture: VoiceCaptureResult = {
-        audio: result.audio,
         durationMs,
-        mimeType: result.audio.type || 'application/octet-stream',
         ...(transcript ? { transcript } : {}),
       };
       this.reset();
@@ -262,22 +256,14 @@ function createBrowserRecording(
   options: VoiceCaptureOptions,
   observer: VoiceCaptureObserver,
 ): VoiceCaptureRecording {
-  const mimeType = preferredMimeType(Recorder);
-  const recorder = new Recorder(stream, {
-    ...(mimeType ? { mimeType } : {}),
-    ...(options.audioBitsPerSecond ? { audioBitsPerSecond: options.audioBitsPerSecond } : {}),
-  });
-  const chunks: Blob[] = [];
+  const recorder = new Recorder(stream);
   let finalTranscript = '';
   let cancelled = false;
   let recognition: SpeechRecognitionLike | undefined;
-  let stopPromise: Promise<{ audio: Blob; transcript?: string }> | undefined;
+  let stopPromise: Promise<{ transcript?: string }> | undefined;
   const stopMeter = startAudioMeter(stream, observer.onAudioLevel);
 
-  recorder.addEventListener('dataavailable', (event) => {
-    if (event.data.size > 0) chunks.push(event.data);
-  });
-  recorder.start(250);
+  recorder.start();
 
   if (Recognition) {
     recognition = new Recognition();
@@ -301,7 +287,7 @@ function createBrowserRecording(
     }
   }
 
-  function finish(): Promise<{ audio: Blob; transcript?: string }> {
+  function finish(): Promise<{ transcript?: string }> {
     if (stopPromise) return stopPromise;
     stopPromise = new Promise((resolve, reject) => {
       recorder.addEventListener('stop', () => {
@@ -311,8 +297,7 @@ function createBrowserRecording(
           reject(new VoiceCaptureError('cancelled', 'Voice capture was cancelled.'));
           return;
         }
-        const audio = new Blob(chunks, { type: recorder.mimeType || mimeType || 'application/octet-stream' });
-        resolve({ audio, ...(normalizeTranscript(finalTranscript) ? { transcript: normalizeTranscript(finalTranscript) } : {}) });
+        resolve(normalizeTranscript(finalTranscript) ? { transcript: normalizeTranscript(finalTranscript) } : {});
       }, { once: true });
       recorder.addEventListener('error', () => reject(new VoiceCaptureError('recordingFailed', 'The browser could not record audio.')), { once: true });
       if (recorder.state === 'inactive') {
@@ -368,10 +353,6 @@ function startAudioMeter(stream: MediaStream, onLevel: (level: number) => void):
     source.disconnect();
     void context.close();
   };
-}
-
-function preferredMimeType(Recorder: typeof MediaRecorder): string | undefined {
-  return ['audio/webm;codecs=opus', 'audio/mp4', 'audio/ogg;codecs=opus'].find((type) => Recorder.isTypeSupported(type));
 }
 
 function normalizeTranscript(value: string): string {

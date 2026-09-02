@@ -63,10 +63,10 @@ Glucose. Recreate it when the signed-in account changes.
 
 ## Capture a voice query
 
-`VoiceCaptureSession` is a framework-free browser helper that records microphone
-audio and publishes live state, duration, audio level, and partial-transcript
-updates. A completed capture always returns an audio `Blob`; `transcript` is
-included when the browser exposes speech recognition.
+`VoiceCaptureSession` is a framework-free browser helper that captures microphone
+input for transcription and publishes live state, duration, audio level, and
+partial-transcript updates. A completed capture returns the transcript and
+duration; the SDK does not retain or return recorded audio.
 
 ```ts
 import { VoiceCaptureSession } from '@januaryai/web-sdk';

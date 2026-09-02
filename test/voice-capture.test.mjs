@@ -7,7 +7,7 @@ function fixtureAdapter(overrides = {}) {
   let cancelled = false;
   const recording = {
     async stop() {
-      return { audio: new Blob(['voice'], { type: 'audio/webm' }), transcript: '  greek   yogurt  ' };
+      return { transcript: '  greek   yogurt  ' };
     },
     cancel() { cancelled = true; },
   };
@@ -26,7 +26,7 @@ function fixtureAdapter(overrides = {}) {
   };
 }
 
-test('voice capture publishes recording updates and returns normalized audio results', async () => {
+test('voice capture publishes recording updates and returns a normalized transcript', async () => {
   let now = 1_000;
   const fixture = fixtureAdapter();
   const session = new VoiceCaptureSession(fixture.adapter, () => now);
@@ -40,8 +40,6 @@ test('voice capture publishes recording updates and returns normalized audio res
   const result = await session.stop();
 
   assert.equal(result.transcript, 'greek yogurt');
-  assert.equal(result.audio.type, 'audio/webm');
-  assert.equal(result.mimeType, 'audio/webm');
   assert.equal(result.durationMs, 1_250);
   assert.equal(states[0], 'requestingPermission');
   assert.ok(states.slice(1, -2).every((state) => state === 'recording'));
@@ -49,11 +47,11 @@ test('voice capture publishes recording updates and returns normalized audio res
   assert.deepEqual(session.snapshot, { state: 'idle', audioLevel: 0, durationMs: 0, partialTranscript: '' });
 });
 
-test('voice capture can return audio when browser transcription is unavailable', async () => {
+test('voice capture does not retain audio when browser transcription is unavailable', async () => {
   const fixture = fixtureAdapter({ isTranscriptionSupported: false });
   fixture.adapter.start = async (_options, observer) => {
     fixture.adapterObserver = observer;
-    return { stop: async () => ({ audio: new Blob(['voice'], { type: 'audio/mp4' }) }), cancel() {} };
+    return { stop: async () => ({}), cancel() {} };
   };
   const session = new VoiceCaptureSession(fixture.adapter, () => 100);
 
@@ -61,7 +59,7 @@ test('voice capture can return audio when browser transcription is unavailable',
   const result = await session.stop();
 
   assert.equal(result.transcript, undefined);
-  assert.equal(result.mimeType, 'audio/mp4');
+  assert.deepEqual(result, { durationMs: 0 });
   assert.equal(session.isTranscriptionSupported, false);
 });
 
