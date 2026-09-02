@@ -266,7 +266,11 @@ function createBrowserRecording(
   let stopPromise: Promise<{ transcript?: string }> | undefined;
   const stopMeter = startAudioMeter(stream, observer.onAudioLevel);
 
-  recorder.start();
+  recorder.addEventListener('dataavailable', () => {
+    // Request bounded chunks so the browser can release recorded audio instead
+    // of buffering the full capture. Audio payloads are intentionally discarded.
+  });
+  recorder.start(1_000);
 
   if (Recognition) {
     recognition = new Recognition();
