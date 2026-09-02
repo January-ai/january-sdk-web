@@ -26,17 +26,17 @@ export interface AutocompleteFoodsRequest {
 }
 
 export interface FoodSuggestion {
-  id: string;
-  name: string | null;
-  brandName: string | null;
-  photoUrl: string | null;
+  id: ContractFoodSuggestion['id'];
+  name: ContractFoodSuggestion['name'];
+  brandName: ContractFoodSuggestion['brandName'];
+  photoUrl: ContractFoodSuggestion['imageUrl'];
   nutrients: NutritionFacts | null;
 }
 
 export interface AutocompleteFoodsResponse { items: FoodSuggestion[] }
 
 export interface GetFoodRequest {
-  foodId: string;
+  foodId: ContractFoodSearchItem['id'];
   endUserId?: string;
   signal?: AbortSignal;
 }
@@ -55,10 +55,10 @@ export interface FoodSearchResults {
 }
 
 export interface FoodSearchItem {
-  id: string;
+  id: ContractFoodSearchItem['id'];
   type: FoodCategory;
-  name: string | null;
-  brandName: string | null;
+  name: ContractFoodSearchItem['name'];
+  brandName: ContractFoodSearchItem['brandName'];
   calories: number | null;
   protein: number | null;
   carbohydrates: number | null;
@@ -71,21 +71,21 @@ export interface FoodSearchItem {
   sodium: number | null;
   potassium: number | null;
   cholesterol: number | null;
-  glycemicIndex: number | null;
-  glycemicLoad: number | null;
-  photoUrl: string | null;
-  barcode: string | null;
+  glycemicIndex: ContractFoodSearchItem['glycemicIndex'];
+  glycemicLoad: ContractFoodSearchItem['glycemicLoad'];
+  photoUrl: ContractFoodSearchItem['imageUrl'];
+  barcode: ContractFoodSearchItem['barcode'];
   servings: ServingOption[];
   nutrients: NutritionFacts | null;
 }
 
 export interface ServingOption {
-  id: string | null;
-  quantity: number | null;
-  unit: string | null;
-  scalingFactor: number;
-  weightGrams: number | null;
-  isPrimary: boolean | null;
+  id: ContractServingOption['id'];
+  quantity: ContractServingOption['quantity'];
+  unit: ContractServingOption['unit'];
+  scalingFactor: ContractServingOption['scalingFactor'];
+  weightGrams: ContractServingOption['weightGrams'];
+  isPrimary: ContractServingOption['isPrimary'];
 }
 
 export interface NutrientAmount {
@@ -190,7 +190,7 @@ export type FoodAlternative = DetectedFood;
 export interface SuggestFoodAlternativesResponse { alternatives: FoodAlternative[] }
 
 export interface GetRestaurantMenuItemsRequest {
-  restaurantId: string;
+  restaurantId: ContractRestaurant['id'];
   limit?: number;
   offset?: number;
   endUserId?: string;
@@ -212,22 +212,22 @@ export type RestaurantResultType = typeof RestaurantResultType[keyof typeof Rest
 
 export interface Restaurant {
   type: RestaurantResultType;
-  id: string;
-  name: string | null;
-  isChain?: boolean | null;
-  distance?: number | null;
-  city?: string | null;
-  address1?: string | null;
-  address2?: string | null;
+  id: ContractRestaurant['id'];
+  name: ContractRestaurant['name'];
+  isChain?: ContractRestaurant['isChain'];
+  distance?: ContractRestaurant['distanceMeters'];
+  city?: ContractRestaurant['city'];
+  address1?: ContractRestaurant['address1'];
+  address2?: ContractRestaurant['address2'];
 }
 
 export interface SearchRestaurantsResponse { totalCount: number; items: Restaurant[] }
 
 export interface RestaurantMenuItem {
-  type: string;
-  id: string;
-  name: string | null;
-  restaurantName: string | null;
+  type: ContractRestaurantMenuItem['type'];
+  id: ContractRestaurantMenuItem['id'];
+  name: ContractRestaurantMenuItem['name'];
+  restaurantName: ContractRestaurantMenuItem['restaurantName'];
   isChain?: boolean | null;
   energy?: number | null;
   protein?: number | null;
@@ -290,8 +290,11 @@ export interface CorrectPhotoScanRequest {
   signal?: AbortSignal;
 }
 
-export interface ServingSelection { id: string; quantity: number }
-export interface FoodSelection { id: string; serving: ServingSelection }
+export interface ServingSelection {
+  id: ContractFoodLogInputFood['servingId'];
+  quantity: ContractFoodLogInputFood['quantity'];
+}
+export interface FoodSelection { id: ContractFoodLogInputFood['foodId']; serving: ServingSelection }
 
 export interface PartnerUserContext {
   endUserId: string;
@@ -387,3 +390,9 @@ export interface GlucosePrediction {
   impact: string | null;
   chart: GlucoseChart;
 }
+import type { FoodLogInputFood as ContractFoodLogInputFood } from './internal/transport/models/FoodLogInputFood.js';
+import type { FoodSearchItem as ContractFoodSearchItem } from './internal/transport/models/FoodSearchItem.js';
+import type { FoodSuggestion as ContractFoodSuggestion } from './internal/transport/models/FoodSuggestion.js';
+import type { Restaurant as ContractRestaurant } from './internal/transport/models/Restaurant.js';
+import type { RestaurantMenuSearchItem as ContractRestaurantMenuItem } from './internal/transport/models/RestaurantMenuSearchItem.js';
+import type { ServingOption as ContractServingOption } from './internal/transport/models/ServingOption.js';

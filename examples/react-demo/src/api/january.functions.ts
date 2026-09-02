@@ -7,17 +7,40 @@ import {
   MedicalCondition,
   Sex,
   WeightUnit,
+  type FoodSelection,
+  type FoodLog,
+  type GetFoodRequest,
+  type GetRestaurantMenuItemsRequest,
 } from '@januaryai/sdk'
 import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
-import { getDefaultEndUserId, getJanuaryClient, hasJanuaryConfiguration } from './january.server'
+import {
+  getDemoConfigurationDetails,
+  getJanuaryClient,
+  mintFreshDemoClientToken,
+  revokeDemoClientTokens,
+} from './january.server'
 
 const optionalUserId = z.string().trim().max(256).optional()
+const foodIdSchema: z.ZodType<GetFoodRequest['foodId']> = z.string().trim().min(1).max(256)
+const servingIdSchema: z.ZodType<FoodSelection['serving']['id']> = z.string().trim().min(1).max(256)
+const restaurantIdSchema: z.ZodType<GetRestaurantMenuItemsRequest['restaurantId']> = z.string().regex(/^[A-Za-z0-9_-]{1,256}$/)
+const foodLogIdSchema: z.ZodType<NonNullable<FoodLog['id']>> = z.string().trim().min(1).max(256)
 
-export const getDemoConfiguration = createServerFn({ method: 'GET' }).handler(() => ({
-  configured: hasJanuaryConfiguration(),
-  defaultEndUserId: getDefaultEndUserId(),
-}))
+export const getDemoConfiguration = createServerFn({ method: 'GET' })
+  .handler(() => getDemoConfigurationDetails())
+
+export const refreshDemoClientToken = createServerFn({ method: 'POST' })
+  .handler(async () => {
+    await mintFreshDemoClientToken()
+    return getDemoConfigurationDetails()
+  })
+
+export const revokeAllDemoClientTokens = createServerFn({ method: 'POST' })
+  .handler(async () => {
+    await revokeDemoClientTokens()
+    return getDemoConfigurationDetails()
+  })
 
 const foodSearchSchema = z.object({
   query: z.string().trim().min(1).max(256),
@@ -40,7 +63,7 @@ export const autocompleteFoods = createServerFn({ method: 'GET' })
 
 export const getFoodDetails = createServerFn({ method: 'GET' })
   .validator(z.object({
-    foodId: z.number().int().positive(),
+    foodId: foodIdSchema,
     endUserId: optionalUserId,
   }))
   .handler(({ data }) => getJanuaryClient().foods.get(data))
@@ -60,7 +83,8 @@ export const searchFoodCatalog = createServerFn({ method: 'GET' })
     if (data.mode === 'description') {
       const response = await client.foodAnalysis.analyzeDescription({ query: data.query, endUserId: data.endUserId })
       const items = (response.detections ?? []).map((detection, index) => ({
-        id: detection.food.id ?? -(index + 1),
+        type: FoodCategory.generic,
+        id: detection.food.id ?? `detected-${index + 1}`,
         name: detection.food.name,
         brandName: detection.food.brandName ?? null,
         calories: detection.food.nutrients.calories?.value ?? null,
@@ -78,7 +102,7 @@ export const searchFoodCatalog = createServerFn({ method: 'GET' })
         glycemicIndex: null,
         glycemicLoad: null,
         photoUrl: null,
-        upc: null,
+        barcode: null,
         nutrients: null,
         servings: (detection.food.servings ?? []).map((serving) => ({
           id: serving.id,
@@ -131,13 +155,13 @@ export const listFoodLogs = createServerFn({ method: 'GET' })
   })
 
 const foodSelectionSchema = z.object({
-  id: z.number().int().positive(),
-  serving: z.object({ id: z.number().int().positive(), quantity: z.number().positive().max(100) }),
+  id: foodIdSchema,
+  serving: z.object({ id: servingIdSchema, quantity: z.number().positive().max(100) }),
 })
 
 export const saveFoodLog = createServerFn({ method: 'POST' })
   .validator(z.object({
-    logId: z.string().uuid().optional(),
+    logId: foodLogIdSchema.optional(),
     foods: z.array(foodSelectionSchema).min(1),
     timestampUtc: z.iso.datetime(),
     name: z.string().trim().max(120).optional(),
@@ -152,7 +176,7 @@ export const saveFoodLog = createServerFn({ method: 'POST' })
 
 export const deleteFoodLog = createServerFn({ method: 'POST' })
   .validator(z.object({
-    logId: z.string().uuid(),
+    logId: foodLogIdSchema,
     endUserId: z.string().trim().min(1).max(256),
     endUserTimezone: z.string().trim().min(1).max(100),
   }))
@@ -174,8 +198,8 @@ export const predictGlucose = createServerFn({ method: 'POST' })
       ActivityLevel.veryActive,
     ]),
     healthConditions: z.array(z.enum([MedicalCondition.type2Diabetes, MedicalCondition.prediabetes])),
-    foodId: z.number().int().positive(),
-    servingId: z.number().int().positive(),
+    foodId: foodIdSchema,
+    servingId: servingIdSchema,
     quantity: z.number().positive().max(100),
     startTime: z.iso.datetime(),
     endUserId: optionalUserId,
@@ -202,7 +226,7 @@ export const predictGlucose = createServerFn({ method: 'POST' })
 
 export const getRestaurantMenuItems = createServerFn({ method: 'GET' })
   .validator(z.object({
-    restaurantId: z.string().regex(/^[A-Za-z0-9_-]{1,256}$/),
+    restaurantId: restaurantIdSchema,
     restaurantName: z.string().trim().min(1).max(256),
     latitude: z.number().min(-90).max(90),
     longitude: z.number().min(-180).max(180),
@@ -219,7 +243,12 @@ export const getRestaurantMenuItems = createServerFn({ method: 'GET' })
           limit: 100,
           offset: items.length,
         })
-        items.push(...page.items)
+        items.push(...page.items.flatMap((item) => item.id ? [{
+          ...item,
+          id: item.id,
+          type: 'menu_item' as const,
+          restaurantName: data.restaurantName,
+        }] : []))
         if (page.items.length < 100) return { totalCount: items.length, items }
       }
     } catch (error) {
@@ -238,7 +267,7 @@ export const getRestaurantMenuItems = createServerFn({ method: 'GET' })
         .toLocaleLowerCase()
         .replace(/[^a-z0-9]+/g, ' ')
         .trim()
-      const items = page.items.filter((item) => normalize(item.restaurantName) === normalize(data.restaurantName))
+      const items = page.items.filter((item) => item.restaurantName && normalize(item.restaurantName) === normalize(data.restaurantName))
       return { totalCount: items.length, items }
     }
   })

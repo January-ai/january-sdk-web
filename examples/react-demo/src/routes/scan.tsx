@@ -224,13 +224,13 @@ function ScanPage() {
                     onClick={() => navigate({
                       to: '/food/$foodId',
                       params: { foodId: String(food.id) },
-                      search: { q: food.name, upc },
+                      search: { q: food.name ?? '', upc },
                     })}
                     type="button"
                   >
                     <NetworkImage alt="" className="size-14 shrink-0 rounded-2xl" fallback={<Utensils aria-hidden="true" className="size-5 text-[var(--app-positive)]" />} src={food.photoUrl} />
                     <div className="min-w-0 flex-1">
-                      <div className="truncate text-lg font-bold">{food.name}</div>
+                      <div className="truncate text-lg font-bold">{food.name ?? 'Unnamed food'}</div>
                       <div className="mt-1 text-sm text-stone-500">{[food.brandName, food.calories == null ? null : `${formatNumber(food.calories)} cal`, food.servings[0]?.unit].filter(Boolean).join(' · ')}</div>
                     </div>
                     <ArrowRight aria-hidden="true" className="size-5 shrink-0 text-stone-400" />

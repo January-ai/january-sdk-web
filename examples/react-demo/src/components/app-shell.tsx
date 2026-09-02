@@ -1,11 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
 import {
   BookOpenText,
-  Sparkles,
 } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { useEffect, type ReactNode } from 'react'
 import { getDemoConfiguration } from '~/api/january.functions'
-import { cn } from '~/lib/utils'
+import { AuthenticationStatusCard } from './authentication-status-card'
 import { appBrand } from './app-brand'
 import { DesktopNavItem, MobileNavItem, navigation } from './app-navigation'
 import { BrandMark } from './brand-mark'
@@ -18,6 +17,11 @@ export function AppShell({ children }: { children: ReactNode }) {
     staleTime: Number.POSITIVE_INFINITY,
   })
 
+  useEffect(() => {
+    document.documentElement.dataset.appHydrated = 'true'
+    return () => { delete document.documentElement.dataset.appHydrated }
+  }, [])
+
   return (
     <UserSessionProvider defaultEndUserId={configuration.data?.defaultEndUserId}>
     <div className="h-dvh overflow-hidden bg-[var(--app-canvas)] text-[var(--app-ink)]">
@@ -28,25 +32,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             {navigation.map((item) => <DesktopNavItem key={item.to} {...item} />)}
           </nav>
           <div className="mt-auto space-y-5 pt-10">
-            <div className="rounded-3xl border border-stone-300 bg-white/70 p-5 shadow-sm">
-              <div className="flex items-center gap-2 text-xs font-bold uppercase text-stone-500">
-                <Sparkles aria-hidden="true" className="size-4" />
-                {appBrand.environmentLabel}
-              </div>
-              <p className="mt-3 text-pretty text-sm leading-6 text-stone-600">
-                Requests run through the local TypeScript SDK on the server.
-              </p>
-              <div className="mt-4 flex items-center gap-2 text-sm font-semibold">
-                <span
-                  aria-hidden="true"
-                  className={cn(
-                    'size-2.5 rounded-full',
-                    configuration.data?.configured ? 'bg-emerald-600' : 'bg-amber-600',
-                  )}
-                />
-                {configuration.data?.configured ? 'API key configured' : 'API key required'}
-              </div>
-            </div>
+            <AuthenticationStatusCard />
             <a
               className="flex min-h-11 items-center gap-3 text-sm font-semibold text-stone-600 hover:text-stone-950"
               href={appBrand.documentationUrl}

@@ -12,9 +12,9 @@ import { Button, Card, ErrorMessage, InputFrame, ResultRow, SecondaryButton, Sec
 import { formatNumber } from '~/lib/utils'
 
 interface SelectedFood {
-  id: number
+  id: string
   name: string
-  servingId: number
+  servingId: string
   servingUnit: string
   quantity: number
   servings: ServingChoice[]
@@ -27,14 +27,19 @@ export function FoodLogEditor({ log, onSaved }: { log?: FoodLog; onSaved(): void
   const [query, setQuery] = useState('')
   const [submittedQuery, setSubmittedQuery] = useState('')
   const [acceptedSuggestion, setAcceptedSuggestion] = useState<string | null>(null)
-  const [foods, setFoods] = useState<SelectedFood[]>(() => log?.foods.map((food) => ({
-    id: food.id,
-    name: food.name,
-    servingId: food.consumedServing.id,
-    servingUnit: food.servingDetails.unit,
-    quantity: food.consumedServing.quantity,
-    servings: [{ id: food.consumedServing.id, quantity: 1, unit: food.servingDetails.unit }],
-  })) ?? [])
+  const [foods, setFoods] = useState<SelectedFood[]>(() => log?.foods.flatMap((food) => {
+    const id = food.id
+    const servingId = food.consumedServing.id
+    if (!id || !servingId) return []
+    return [{
+      id,
+      name: food.name ?? 'Unnamed food',
+      servingId,
+      servingUnit: food.servingDetails.unit ?? 'serving',
+      quantity: food.consumedServing.quantity ?? 1,
+      servings: [{ id: servingId, quantity: 1, unit: food.servingDetails.unit ?? 'serving' }],
+    }]
+  }) ?? [])
   const hydratedFood = useHydratedFood()
   const autocomplete = useFoodAutocomplete(query, session.endUserId, acceptedSuggestion)
   const search = useQuery({
@@ -44,7 +49,7 @@ export function FoodLogEditor({ log, onSaved }: { log?: FoodLog; onSaved(): void
   })
   const save = useMutation({
     mutationFn: () => saveFoodLog({ data: {
-      ...(log ? { logId: log.id } : {}),
+      ...(log?.id ? { logId: log.id } : {}),
       foods: foods.map((food) => ({ id: food.id, serving: { id: food.servingId, quantity: food.quantity } })),
       timestampUtc: new Date(timestamp).toISOString(),
       ...(name.trim() ? { name: name.trim() } : {}),
@@ -54,17 +59,18 @@ export function FoodLogEditor({ log, onSaved }: { log?: FoodLog; onSaved(): void
     onSuccess: onSaved,
   })
 
-  function addFood(food: { id: number }) {
+  function addFood(food: { id: string }) {
     if (foods.some((item) => item.id === food.id)) return
     hydratedFood.mutate(food, {
       onSuccess: (completeFood) => {
         const serving = completeFood.servings.find((item) => item.isPrimary) ?? completeFood.servings[0]
-        if (!serving) return
+        if (!serving?.id) return
+        const servingId = serving.id
         setFoods((current) => current.some((item) => item.id === completeFood.id) ? current : [...current, {
           id: completeFood.id,
-          name: completeFood.name,
-          servingId: serving.id,
-          servingUnit: serving.unit,
+          name: completeFood.name ?? 'Unnamed food',
+          servingId,
+          servingUnit: serving.unit ?? 'serving',
           quantity: 1,
           servings: completeFood.servings,
         }])
@@ -99,12 +105,13 @@ export function FoodLogEditor({ log, onSaved }: { log?: FoodLog; onSaved(): void
       <FoodSuggestionList
         items={autocomplete.items}
         onSelect={(suggestion) => {
-          setQuery(suggestion.name)
-          setAcceptedSuggestion(suggestion.name)
-          setSubmittedQuery(suggestion.name)
+          const name = suggestion.name ?? ''
+          setQuery(name)
+          setAcceptedSuggestion(name)
+          setSubmittedQuery(name)
         }}
       />
-      {search.isPending && submittedQuery ? <SkeletonList /> : search.isError ? <ErrorMessage error={search.error} /> : search.data?.items.length ? <Card className="max-h-64 overflow-y-auto">{search.data.items.map((food) => <ResultRow busy={hydratedFood.isPending && hydratedFood.variables?.id === food.id} disabled={hydratedFood.isPending || foods.some((item) => item.id === food.id)} key={food.id} media={<NetworkImage alt="" className="size-full" fallback={<Utensils aria-hidden="true" className="size-5" />} src={food.photoUrl} />} meta={`${formatNumber(food.calories, 0)} cal · ${food.servings[0]?.unit ?? 'No serving'}`} onClick={() => addFood(food)} title={foods.some((item) => item.id === food.id) ? `${food.name} · Added` : food.name} />)}</Card> : null}
+      {search.isPending && submittedQuery ? <SkeletonList /> : search.isError ? <ErrorMessage error={search.error} /> : search.data?.items.length ? <Card className="max-h-64 overflow-y-auto">{search.data.items.map((food) => <ResultRow busy={hydratedFood.isPending && hydratedFood.variables?.id === food.id} disabled={hydratedFood.isPending || foods.some((item) => item.id === food.id)} key={food.id} media={<NetworkImage alt="" className="size-full" fallback={<Utensils aria-hidden="true" className="size-5" />} src={food.photoUrl} />} meta={`${formatNumber(food.calories, 0)} cal · ${food.servings[0]?.unit ?? 'No serving'}`} onClick={() => addFood(food)} title={foods.some((item) => item.id === food.id) ? `${food.name ?? 'Unnamed food'} · Added` : food.name ?? 'Unnamed food'} />)}</Card> : null}
       {hydratedFood.isError && <ErrorMessage error={hydratedFood.error} />}
       {save.isError && <ErrorMessage error={save.error} />}
       <Button busy={save.isPending} className="w-full" disabled={!foods.length || !session.endUserId || !timestamp} onClick={() => save.mutate()} type="button">{log ? 'Update meal' : 'Create meal'}</Button>

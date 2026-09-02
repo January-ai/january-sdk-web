@@ -40,7 +40,7 @@ function GlucosePage() {
   const [submittedQuery, setSubmittedQuery] = useState('')
   const [acceptedSuggestion, setAcceptedSuggestion] = useState<string | null>(null)
   const [food, setFood] = useState<FoodSearchItem | null>(null)
-  const [servingId, setServingId] = useState<number | null>(null)
+  const [servingId, setServingId] = useState<string | null>(null)
   const [quantity, setQuantity] = useState(1)
   const [age, setAge] = useState(42)
   const [sex, setSex] = useState<(typeof Sex)[keyof typeof Sex]>(Sex.female)
@@ -59,7 +59,7 @@ function GlucosePage() {
   const prediction = useMutation({
     mutationFn: () => {
       const serving = food?.servings.find((item) => item.id === servingId)
-      if (!food || !serving) throw new Error('Choose a food with a serving before predicting glucose.')
+      if (!food || !serving?.id) throw new Error('Choose a food with a serving before predicting glucose.')
       return predictGlucose({ data: {
         age,
         sex,
@@ -77,12 +77,13 @@ function GlucosePage() {
     },
   })
 
-  function chooseFood(candidate: { id: number }) {
+  function chooseFood(candidate: { id: string }) {
     hydratedFood.mutate(candidate, { onSuccess: (completeFood) => {
       const serving = completeFood.servings.find((option) => option.isPrimary) ?? completeFood.servings[0]
-      if (!serving) return
+      if (!serving?.id) return
+      const servingId = serving.id
       setFood(completeFood)
-      setServingId(serving.id)
+      setServingId(servingId)
       setQuantity(1)
       prediction.reset()
     } })
@@ -163,9 +164,10 @@ function GlucosePage() {
             {!food && <div className="mt-3"><FoodSuggestionList
               items={autocomplete.items}
               onSelect={(suggestion) => {
-                setQueryDraft(suggestion.name)
-                setAcceptedSuggestion(suggestion.name)
-                setSubmittedQuery(suggestion.name)
+                const name = suggestion.name ?? ''
+                setQueryDraft(name)
+                setAcceptedSuggestion(name)
+                setSubmittedQuery(name)
               }}
             /></div>}
           </Card>
@@ -197,7 +199,7 @@ function GlucosePage() {
                       media={<NetworkImage alt="" className="size-full" fallback={<Utensils aria-hidden="true" className="size-5 text-stone-600" />} src={item.photoUrl} />}
                       meta={`${formatNumber(item.calories, 0)} cal · ${item.servings[0] ? `${item.servings[0].quantity} ${item.servings[0].unit}` : 'No serving'}`}
                       onClick={() => chooseFood(item)}
-                      title={item.name}
+                      title={item.name ?? 'Unnamed food'}
                     />
                   ))}
                 </Card>
@@ -212,7 +214,7 @@ function GlucosePage() {
   )
 }
 
-function PredictionResult({ food, servingId, quantity, result }: { food: FoodSearchItem; servingId: number; quantity: number; result: Awaited<ReturnType<typeof predictGlucose>> }) {
+function PredictionResult({ food, servingId, quantity, result }: { food: FoodSearchItem; servingId: string; quantity: number; result: Awaited<ReturnType<typeof predictGlucose>> }) {
   const peak = result.prediction.reduce((best, point) => point.value > best.value ? point : best, result.prediction[0] ?? { minutes: 0, value: 0 })
   return (
     <div className="space-y-5">

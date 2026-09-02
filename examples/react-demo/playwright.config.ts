@@ -3,6 +3,7 @@ import { defineConfig, devices } from '@playwright/test'
 export default defineConfig({
   testDir: './tests/ui',
   fullyParallel: false,
+  workers: 1,
   preserveOutput: 'always',
   retries: 0,
   reporter: 'line',
@@ -21,8 +22,9 @@ export default defineConfig({
     {
       command: 'npm run dev -- --host 127.0.0.1 --port 3010',
       env: {
-        JANUARY_DEV_API_KEY: 'fixture-key',
+        JANUARY_END_USER_ID: 'fixture-user',
         JANUARY_TEST_API_URL: 'http://127.0.0.1:18767',
+        PARTNER_TOKEN_URL: 'http://127.0.0.1:18767/january-token',
       },
       port: 3010,
       reuseExistingServer: false,

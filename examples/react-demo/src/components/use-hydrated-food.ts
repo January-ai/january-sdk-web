@@ -6,7 +6,7 @@ export function useHydratedFood() {
   const session = useUserSession()
 
   return useMutation({
-    mutationFn: (food: { id: number }) => getFoodDetails({
+    mutationFn: (food: { id: string }) => getFoodDetails({
       data: {
         foodId: food.id,
         ...(session.endUserId ? { endUserId: session.endUserId } : {}),

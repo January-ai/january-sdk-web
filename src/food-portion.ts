@@ -31,8 +31,9 @@ export class FoodPortion {
   private constructor(food: FoodSearchItem, serving: ServingOption, quantity: number) {
     const servingQuantity = serving.quantity;
     const servingId = serving.id;
-    if (servingQuantity == null || servingId == null) throw new FoodPortionError('invalid_serving');
-    const scale = quantity * serving.scalingFactor / servingQuantity;
+    const scalingFactor = serving.scalingFactor;
+    if (servingQuantity == null || servingId == null || scalingFactor == null) throw new FoodPortionError('invalid_serving');
+    const scale = quantity * scalingFactor / servingQuantity;
     this.foodId = food.id;
     this.serving = serving;
     this.quantity = quantity;
@@ -52,7 +53,7 @@ export class FoodPortion {
       : food.servings.find((item) => item.id === options.servingId);
     if (!serving) throw new FoodPortionError('serving_not_found');
     if (serving.id == null || serving.quantity == null || !Number.isFinite(serving.quantity) || serving.quantity <= 0
-      || !Number.isFinite(serving.scalingFactor) || serving.scalingFactor <= 0) {
+      || serving.scalingFactor == null || !Number.isFinite(serving.scalingFactor) || serving.scalingFactor <= 0) {
       throw new FoodPortionError('invalid_serving');
     }
     const quantity = options.quantity ?? serving.quantity;
