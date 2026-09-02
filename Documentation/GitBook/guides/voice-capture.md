@@ -77,5 +77,5 @@ needed, and disclose any storage or processing performed by your application.
 
 The Search screen in `examples/react-demo` places a microphone beside the food
 or restaurant query. While recording it shows a live audio meter, duration,
-partial transcript, stop, and cancel controls. Stopping appends recognized text
+stop, and cancel controls. Stopping appends recognized text
 to the query and discards the local audio blob. Barcode mode disables voice input.

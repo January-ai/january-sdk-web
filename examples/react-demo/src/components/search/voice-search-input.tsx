@@ -50,7 +50,7 @@ export function VoiceSearchInput({ disabled = false, id, onChange, placeholder, 
 
   const busy = snapshot.state === 'requestingPermission' || snapshot.state === 'processing'
   const recording = snapshot.state === 'recording'
-  const voiceSupported = mounted && session.isSupported
+  const voiceSupported = mounted && session.isSupported && session.isTranscriptionSupported
   const micDisabled = disabled || busy || !voiceSupported
 
   return (
@@ -105,6 +105,7 @@ export function VoiceSearchInput({ disabled = false, id, onChange, placeholder, 
 
       {error ? <p aria-live="polite" className="mt-2 text-pretty text-sm text-red-700">{error}</p> : null}
       {mounted && !session.isSupported ? <p className="mt-2 text-sm text-stone-500">Voice capture needs a browser with microphone recording support.</p> : null}
+      {mounted && session.isSupported && !session.isTranscriptionSupported ? <p className="mt-2 text-sm text-stone-500">Voice search needs browser speech-recognition support. You can still type your query.</p> : null}
     </div>
   )
 }

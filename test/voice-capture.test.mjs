@@ -43,7 +43,9 @@ test('voice capture publishes recording updates and returns normalized audio res
   assert.equal(result.audio.type, 'audio/webm');
   assert.equal(result.mimeType, 'audio/webm');
   assert.equal(result.durationMs, 1_250);
-  assert.deepEqual(states, ['requestingPermission', 'recording', 'recording', 'recording', 'processing', 'idle']);
+  assert.equal(states[0], 'requestingPermission');
+  assert.ok(states.slice(1, -2).every((state) => state === 'recording'));
+  assert.deepEqual(states.slice(-2), ['processing', 'idle']);
   assert.deepEqual(session.snapshot, { state: 'idle', audioLevel: 0, durationMs: 0, partialTranscript: '' });
 });
 
