@@ -24,6 +24,7 @@ async function fetchJanuaryToken(): Promise<JanuaryClientTokenResponse> {
   try {
     response = await fetch('/api/january-token', {
       method: 'GET',
+      cache: 'no-store',
       credentials: 'include',
       headers: {
         Accept: 'application/json',
@@ -42,7 +43,7 @@ async function fetchJanuaryToken(): Promise<JanuaryClientTokenResponse> {
       { retryable: response.status === 408 || response.status === 429 || response.status >= 500 },
     );
   }
-  return response.json() as Promise<JanuaryClientTokenResponse>;
+  return await response.json() as JanuaryClientTokenResponse;
 }
 
 const january = new JanuaryClient({
