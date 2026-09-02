@@ -291,19 +291,19 @@ function createBrowserRecording(
     if (stopPromise) return stopPromise;
     stopPromise = new Promise((resolve, reject) => {
       recorder.addEventListener('stop', () => {
-        stopMeter();
-        for (const track of stream.getTracks()) track.stop();
+        releaseResources();
         if (cancelled) {
           reject(new VoiceCaptureError('cancelled', 'Voice capture was cancelled.'));
           return;
         }
         resolve(normalizeTranscript(finalTranscript) ? { transcript: normalizeTranscript(finalTranscript) } : {});
       }, { once: true });
-      recorder.addEventListener('error', () => reject(new VoiceCaptureError('recordingFailed', 'The browser could not record audio.')), { once: true });
+      recorder.addEventListener('error', () => {
+        releaseResources();
+        reject(new VoiceCaptureError('recordingFailed', 'The browser could not record audio.'));
+      }, { once: true });
       if (recorder.state === 'inactive') {
-        stopMeter();
-        try { recognition?.abort(); } catch { /* already stopped */ }
-        for (const track of stream.getTracks()) track.stop();
+        releaseResources();
         reject(new VoiceCaptureError('recordingFailed', 'The audio recorder stopped unexpectedly.'));
         return;
       }
@@ -313,14 +313,18 @@ function createBrowserRecording(
     return stopPromise;
   }
 
+  function releaseResources(): void {
+    stopMeter();
+    try { recognition?.abort(); } catch { /* already stopped */ }
+    for (const track of stream.getTracks()) track.stop();
+  }
+
   return {
     stop: finish,
     cancel() {
       cancelled = true;
-      stopMeter();
-      try { recognition?.abort(); } catch { /* already stopped */ }
+      releaseResources();
       if (recorder.state !== 'inactive') recorder.stop();
-      for (const track of stream.getTracks()) track.stop();
     },
   };
 }
