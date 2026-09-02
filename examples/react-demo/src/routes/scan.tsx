@@ -100,30 +100,27 @@ function ScanPage() {
         title={method === 'photo' ? 'Scan a meal photo.' : method === 'description' ? 'Describe what was eaten.' : 'Look up a packaged food.'}
       />
 
-      <div aria-label="Scan method" className="mt-8 grid max-w-2xl grid-cols-3 rounded-2xl bg-[#e9e2d4] p-1.5" role="tablist">
+      <div aria-label="Scan method" className="mt-8 grid max-w-2xl grid-cols-3 rounded-2xl bg-[#e9e2d4] p-1.5" role="group">
         <button
-          aria-selected={method === 'photo'}
+          aria-pressed={method === 'photo'}
           className={`flex min-h-12 items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold transition ${method === 'photo' ? 'bg-stone-950 text-white shadow-sm' : 'text-stone-600 hover:bg-white/70'}`}
           onClick={() => chooseMethod('photo')}
-          role="tab"
           type="button"
         >
           <Camera aria-hidden="true" className="size-4" /> Meal photo
         </button>
         <button
-          aria-selected={method === 'description'}
+          aria-pressed={method === 'description'}
           className={`flex min-h-12 items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold transition ${method === 'description' ? 'bg-stone-950 text-white shadow-sm' : 'text-stone-600 hover:bg-white/70'}`}
           onClick={() => chooseMethod('description')}
-          role="tab"
           type="button"
         >
           <MessageSquareText aria-hidden="true" className="size-4" /> Describe meal
         </button>
         <button
-          aria-selected={method === 'upc'}
+          aria-pressed={method === 'upc'}
           className={`flex min-h-12 items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold transition ${method === 'upc' ? 'bg-stone-950 text-white shadow-sm' : 'text-stone-600 hover:bg-white/70'}`}
           onClick={() => chooseMethod('upc')}
-          role="tab"
           type="button"
         >
           <Barcode aria-hidden="true" className="size-4" /> UPC code

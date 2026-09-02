@@ -131,7 +131,7 @@ test('permission errors reset the session and preserve a stable code', async () 
 test('adapter failures are mapped when DOMException is unavailable', async () => {
   const originalDOMException = globalThis.DOMException;
   try {
-    delete globalThis.DOMException;
+    globalThis.DOMException = undefined;
     const fixture = fixtureAdapter({
       async start() { throw new Error('adapter failed'); },
     });
