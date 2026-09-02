@@ -100,7 +100,11 @@ export function VoiceSearchInput({ disabled = false, id, onChange, placeholder, 
               className="grid size-9 shrink-0 place-items-center rounded-full bg-stone-100 text-stone-700 transition-colors hover:bg-stone-200 disabled:cursor-not-allowed disabled:opacity-35"
               disabled={micDisabled}
               onClick={() => void toggleCapture()}
-              title={mounted && !session.isSupported ? 'Voice capture is not supported in this browser' : 'Search with your voice'}
+              title={mounted && !session.isSupported
+                ? 'Voice capture is not supported in this browser'
+                : mounted && !session.isTranscriptionSupported
+                  ? 'Voice transcription is not supported in this browser'
+                  : 'Search with your voice'}
               type="button"
             >
               <Mic aria-hidden="true" className="size-4" />
