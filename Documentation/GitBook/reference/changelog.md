@@ -9,7 +9,7 @@
 * User-scoped Foods, Restaurants, Photo Scanning, Food Logs, and Glucose clients
 * Food autocomplete, hydration, and local portion calculations
 * Browser photo preparation helper
-* Browser voice capture with audio blobs, live levels, duration, and optional speech transcripts
+* Browser voice transcription with live levels and duration, without retaining recorded audio
 * Typed imperial and metric glucose-profile measurements
 * Shared, white-label-ready React demo components
 * Paginated restaurant-menu lookup by restaurant ID, ready after backend deployment

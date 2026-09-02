@@ -85,7 +85,7 @@ export class VoiceCaptureSession {
   }
 
   get snapshot(): VoiceCaptureSnapshot {
-    return this.snapshotValue;
+    return { ...this.snapshotValue };
   }
 
   subscribe(listener: (snapshot: VoiceCaptureSnapshot) => void): () => void {
@@ -188,7 +188,7 @@ export class VoiceCaptureSession {
 
   private update(patch: Partial<VoiceCaptureSnapshot>): void {
     this.snapshotValue = { ...this.snapshotValue, ...patch };
-    for (const listener of this.listeners) listener(this.snapshotValue);
+    for (const listener of this.listeners) listener({ ...this.snapshotValue });
   }
 }
 

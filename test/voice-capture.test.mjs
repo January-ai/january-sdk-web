@@ -63,6 +63,19 @@ test('voice capture does not retain audio when browser transcription is unavaila
   assert.equal(session.isTranscriptionSupported, false);
 });
 
+test('voice capture snapshots cannot mutate internal session state', async () => {
+  const fixture = fixtureAdapter();
+  const session = new VoiceCaptureSession(fixture.adapter);
+
+  session.snapshot.state = 'processing';
+  assert.equal(session.snapshot.state, 'idle');
+
+  session.subscribe((snapshot) => { snapshot.state = 'idle'; });
+  await session.start();
+  assert.equal(session.snapshot.state, 'recording');
+  session.cancel();
+});
+
 test('cancel stops the active capture and returns to idle', async () => {
   const fixture = fixtureAdapter();
   const session = new VoiceCaptureSession(fixture.adapter);
