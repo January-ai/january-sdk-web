@@ -24,6 +24,7 @@ async function fetchJanuaryToken(): Promise<JanuaryClientTokenResponse> {
   try {
     response = await fetch('/api/january-token', {
       method: 'GET',
+      // The server must also return Cache-Control: no-store.
       cache: 'no-store',
       credentials: 'include',
       headers: {
@@ -43,7 +44,7 @@ async function fetchJanuaryToken(): Promise<JanuaryClientTokenResponse> {
       { retryable: response.status === 408 || response.status === 429 || response.status >= 500 },
     );
   }
-  return await response.json() as JanuaryClientTokenResponse;
+  return (await response.json()) as JanuaryClientTokenResponse;
 }
 
 const january = new JanuaryClient({
@@ -61,7 +62,8 @@ export async function renderJanuaryQuickStart(output: HTMLElement) {
       limit: 5,
     });
 
-    output.innerText = response.items.map((food) => food.name).join('\n');
+    output.style.whiteSpace = 'pre-line';
+    output.textContent = response.items.map((food) => food.name).join('\n');
   } catch (error) {
     if (error instanceof JanuaryError) {
       console.error('January request failed', {

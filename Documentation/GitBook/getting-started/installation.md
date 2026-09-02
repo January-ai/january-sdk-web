@@ -1,6 +1,6 @@
 # Installation
 
-Build an immutable package from the repository source:
+Build a package from the repository source:
 
 ```bash
 git clone https://github.com/January-ai/january-sdk-web.git
