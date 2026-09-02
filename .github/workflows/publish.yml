@@ -53,6 +53,7 @@ jobs:
           test "$package_name" = "@januaryai/web-sdk"
           test "$RELEASE_TAG" = "$expected_tag"
 
+          git fetch --no-tags origin '+refs/heads/main:refs/remotes/origin/main'
           git merge-base --is-ancestor HEAD origin/main
 
           if [[ "$package_version" == *-* ]]; then

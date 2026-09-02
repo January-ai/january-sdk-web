@@ -1,7 +1,7 @@
 # Releasing the Web SDK
 
-1. Update `version` in `package.json` and record the change in `CHANGELOG.md` on `main`.
-2. Create a GitHub Release whose tag is exactly `v<package version>`.
+1. Update `version` in `package.json` on `main`.
+2. Create a GitHub Release with release notes whose tag is exactly `v<package version>`.
 3. Mark versions containing a SemVer prerelease suffix as GitHub prereleases.
 
 The release workflow accepts tags whose commits are contained in `main`'s history,
