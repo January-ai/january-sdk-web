@@ -44,6 +44,7 @@ export function VoiceSearchInput({ disabled = false, id, onChange, placeholder, 
         await session.start({ language: document.documentElement.lang || navigator.language })
       }
     } catch (cause) {
+      if (cause instanceof VoiceCaptureError && cause.code === 'cancelled') return
       setError(messageForError(cause))
     }
   }
@@ -62,7 +63,6 @@ export function VoiceSearchInput({ disabled = false, id, onChange, placeholder, 
     <div>
       <div
         className={`flex min-h-14 min-w-0 items-center gap-3 rounded-2xl px-3 transition-colors ${recording ? 'bg-stone-950 text-white shadow-lg shadow-stone-900/10' : 'border border-stone-300 bg-white focus-within:bg-stone-50'}`}
-        role={recording ? 'status' : undefined}
       >
         <input
           className={recording || busy ? 'sr-only' : 'min-w-0 flex-1 bg-transparent px-1 text-base outline-none placeholder:text-stone-400'}

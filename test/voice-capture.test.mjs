@@ -76,6 +76,21 @@ test('voice capture snapshots cannot mutate internal session state', async () =>
   session.cancel();
 });
 
+test('voice capture suppresses insignificant audio-level updates', async () => {
+  const fixture = fixtureAdapter();
+  const session = new VoiceCaptureSession(fixture.adapter);
+  const levels = [];
+  session.subscribe((snapshot) => levels.push(snapshot.audioLevel));
+
+  await session.start();
+  fixture.observer.onAudioLevel(0.5);
+  fixture.observer.onAudioLevel(0.51);
+  fixture.observer.onAudioLevel(0.54);
+
+  assert.deepEqual(levels.filter((level) => level > 0), [0.5, 0.54]);
+  session.cancel();
+});
+
 test('cancel stops the active capture and returns to idle', async () => {
   const fixture = fixtureAdapter();
   const session = new VoiceCaptureSession(fixture.adapter);

@@ -107,7 +107,10 @@ export class VoiceCaptureSession {
       const recording = await this.adapter.start(options, {
         onAudioLevel: (audioLevel) => {
           if (generation === this.generation && this.snapshotValue.state === 'recording') {
-            this.update({ audioLevel: normalizeAudioLevel(audioLevel) });
+            const normalizedLevel = normalizeAudioLevel(audioLevel);
+            if (Math.abs(normalizedLevel - this.snapshotValue.audioLevel) >= 0.02) {
+              this.update({ audioLevel: normalizedLevel });
+            }
           }
         },
         onPartialTranscript: (partialTranscript) => {
@@ -330,7 +333,11 @@ function createBrowserRecording(
 }
 
 function startAudioMeter(stream: MediaStream, onLevel: (level: number) => void): () => void {
-  if (typeof AudioContext === 'undefined') return () => undefined;
+  if (
+    typeof AudioContext === 'undefined'
+    || typeof requestAnimationFrame === 'undefined'
+    || typeof cancelAnimationFrame === 'undefined'
+  ) return () => undefined;
   const context = new AudioContext();
   const source = context.createMediaStreamSource(stream);
   const analyser = context.createAnalyser();
