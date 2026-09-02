@@ -20,9 +20,20 @@ test('analyzes the sample meal photo and renders detections', async ({ page }) =
   await openDemo(page, '/scan')
   await page.getByRole('button', { name: 'Use sample meal' }).click()
   await page.getByRole('button', { name: 'Analyze meal' }).click()
-  await expect(page.getByRole('dialog', { name: 'Meal analysis' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'What January sees' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Fixture photo meal' })).toBeVisible()
   await expect(page.getByText('Fixture Pizza', { exact: true })).toBeVisible()
+})
+
+test('analyzes a meal description and renders inline results', async ({ page }) => {
+  await openDemo(page, '/scan')
+  await page.getByRole('tab', { name: 'Describe meal' }).click()
+  await page.getByRole('textbox', { name: 'What did you eat?' }).fill('pizza and salad')
+  await page.getByRole('button', { name: 'Analyze meal description' }).click()
+  await expect(page.getByRole('heading', { name: 'What January understood' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Fixture meal' })).toBeVisible()
+  await expect(page.getByText('Fixture Pizza', { exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Show glucose prediction' })).toBeVisible()
 })
 
 test('shows a barcode lookup server error', async ({ page }) => {

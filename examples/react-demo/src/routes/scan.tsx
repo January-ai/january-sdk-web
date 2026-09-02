@@ -1,13 +1,13 @@
 import { useMutation } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
-import { ArrowRight, Barcode, Camera, ImagePlus, Link as LinkIcon, ScanLine, Utensils } from 'lucide-react'
+import { ArrowRight, Barcode, Camera, ImagePlus, Link as LinkIcon, MessageSquareText, ScanLine, Utensils } from 'lucide-react'
 import { useRef, useState } from 'react'
-import { analyzeFoodPhoto, searchFoodCatalog } from '~/api/january.functions'
+import { analyzeFoodDescription, analyzeFoodPhoto, searchFoodCatalog } from '~/api/january.functions'
 import { BarcodeCamera } from '~/components/barcode-camera'
-import { Dialog } from '~/components/dialog'
 import { NetworkImage } from '~/components/network-image'
 import { ScanResult } from '~/components/scan-result'
 import { useUserSession } from '~/components/user-session'
+import { VoiceSearchInput } from '~/components/search/voice-search-input'
 import {
   Button,
   Card,
@@ -33,17 +33,22 @@ function ScanPage() {
   const navigate = Route.useNavigate()
   const fileInput = useRef<HTMLInputElement>(null)
   const cameraInput = useRef<HTMLInputElement>(null)
-  const [method, setMethod] = useState<'photo' | 'upc'>('photo')
+  const [method, setMethod] = useState<'photo' | 'description' | 'upc'>('photo')
   const [image, setImage] = useState('')
   const [imageUrl, setImageUrl] = useState('')
+  const [description, setDescription] = useState('')
   const [upc, setUpc] = useState('')
-  const [resultOpen, setResultOpen] = useState(false)
   const scan = useMutation({
     mutationFn: () => analyzeFoodPhoto({ data: {
       image,
       ...(session.endUserId ? { endUserId: session.endUserId } : {}),
     } }),
-    onSuccess: () => setResultOpen(true),
+  })
+  const descriptionScan = useMutation({
+    mutationFn: () => analyzeFoodDescription({ data: {
+      description,
+      ...(session.endUserId ? { endUserId: session.endUserId } : {}),
+    } }),
   })
   const barcodeLookup = useMutation({
     mutationFn: () => searchFoodCatalog({ data: {
@@ -59,7 +64,6 @@ function ScanPage() {
     setImage(preparedImage)
     setImageUrl('')
     scan.reset()
-    setResultOpen(false)
   }
 
   function useUrl() {
@@ -67,7 +71,21 @@ function ScanPage() {
     if (!value) return
     setImage(value)
     scan.reset()
-    setResultOpen(false)
+  }
+
+  function chooseMethod(nextMethod: 'photo' | 'description' | 'upc') {
+    setMethod(nextMethod)
+  }
+
+  function resetPhotoAnalysis() {
+    setImage('')
+    setImageUrl('')
+    scan.reset()
+  }
+
+  function resetDescriptionAnalysis() {
+    setDescription('')
+    descriptionScan.reset()
   }
 
   return (
@@ -75,25 +93,36 @@ function ScanPage() {
       <PageHeader
         description={method === 'photo'
           ? 'Provide a public image URL or upload a file. The image is analyzed through the SDK without exposing your API key.'
-          : 'Enter the UPC printed beneath a packaged food barcode to look it up through the January food database.'}
-        eyebrow="Visual nutrition"
-        title={method === 'photo' ? 'Scan a meal, not a label.' : 'Look up a packaged food.'}
+          : method === 'description'
+            ? 'Type or dictate the complete meal. January analyzes the foods, quantities, and combined nutrition as one meal.'
+            : 'Enter the UPC printed beneath a packaged food barcode to look it up through the January food database.'}
+        eyebrow="Meal analysis"
+        title={method === 'photo' ? 'Scan a meal photo.' : method === 'description' ? 'Describe what was eaten.' : 'Look up a packaged food.'}
       />
 
-      <div aria-label="Scan method" className="mt-8 grid max-w-xl grid-cols-2 rounded-2xl bg-[#e9e2d4] p-1.5" role="tablist">
+      <div aria-label="Scan method" className="mt-8 grid max-w-2xl grid-cols-3 rounded-2xl bg-[#e9e2d4] p-1.5" role="tablist">
         <button
           aria-selected={method === 'photo'}
           className={`flex min-h-12 items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold transition ${method === 'photo' ? 'bg-stone-950 text-white shadow-sm' : 'text-stone-600 hover:bg-white/70'}`}
-          onClick={() => setMethod('photo')}
+          onClick={() => chooseMethod('photo')}
           role="tab"
           type="button"
         >
           <Camera aria-hidden="true" className="size-4" /> Meal photo
         </button>
         <button
+          aria-selected={method === 'description'}
+          className={`flex min-h-12 items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold transition ${method === 'description' ? 'bg-stone-950 text-white shadow-sm' : 'text-stone-600 hover:bg-white/70'}`}
+          onClick={() => chooseMethod('description')}
+          role="tab"
+          type="button"
+        >
+          <MessageSquareText aria-hidden="true" className="size-4" /> Describe meal
+        </button>
+        <button
           aria-selected={method === 'upc'}
           className={`flex min-h-12 items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold transition ${method === 'upc' ? 'bg-stone-950 text-white shadow-sm' : 'text-stone-600 hover:bg-white/70'}`}
-          onClick={() => setMethod('upc')}
+          onClick={() => chooseMethod('upc')}
           role="tab"
           type="button"
         >
@@ -141,7 +170,7 @@ function ScanPage() {
                 <ImagePlus aria-hidden="true" className="size-5" />
                 Choose from library
               </SecondaryButton>
-              <SecondaryButton className="sm:col-span-2" onClick={() => { setImage(sampleImage); setImageUrl(sampleImage); scan.reset(); setResultOpen(false) }} type="button">
+              <SecondaryButton className="sm:col-span-2" onClick={() => { setImage(sampleImage); setImageUrl(sampleImage); scan.reset() }} type="button">
                 <Utensils aria-hidden="true" className="size-5" />
                 Use sample meal
               </SecondaryButton>
@@ -167,7 +196,7 @@ function ScanPage() {
           ) : scan.isError ? (
             <ErrorMessage error={scan.error} />
           ) : scan.data ? (
-            <Card className="p-6"><h3 className="font-serif text-3xl">Analysis ready</h3><p className="mt-3 leading-7 text-stone-600">Review the detected foods, nutrition, and confidence labels in the result dialog.</p><Button className="mt-6 w-full" onClick={() => setResultOpen(true)} type="button">View analysis</Button></Card>
+            <ScanResult onAnalyzeAnother={resetPhotoAnalysis} result={scan.data} />
           ) : (
             <Card className="p-6">
               <h3 className="text-balance font-serif text-3xl">Photo ready</h3>
@@ -178,7 +207,52 @@ function ScanPage() {
             </Card>
           )}
         </section>
-      </div> : (
+      </div> : method === 'description' ? (
+        <div className="mt-8 grid gap-8 xl:grid-cols-[minmax(0,0.85fr)_minmax(420px,1.15fr)]">
+          <Card className="h-fit p-6 sm:p-8">
+            <div className="grid size-14 place-items-center rounded-2xl bg-stone-950 text-white">
+              <MessageSquareText aria-hidden="true" className="size-6" />
+            </div>
+            <h2 className="mt-6 font-serif text-4xl">Describe the whole meal</h2>
+            <p className="mt-3 text-pretty leading-7 text-stone-600">Include quantities, drinks, toppings, and sides. Use the microphone to dictate instead of typing.</p>
+            <div className="mt-7">
+              <label className="mb-2 block text-sm font-semibold text-stone-700" htmlFor="meal-description">What did you eat?</label>
+              <VoiceSearchInput
+                id="meal-description"
+                onChange={(value) => {
+                  setDescription(value)
+                  descriptionScan.reset()
+                }}
+                placeholder="e.g. Two tacos and a Diet Coke"
+                value={description}
+              />
+            </div>
+            <Button
+              busy={descriptionScan.isPending}
+              className="mt-4 w-full"
+              disabled={!description.trim() || descriptionScan.isPending}
+              onClick={() => descriptionScan.mutate()}
+              type="button"
+            >
+              Analyze meal description
+            </Button>
+          </Card>
+
+          <section aria-live="polite">
+            <div className="mb-4">
+              <SectionLabel>Analysis</SectionLabel>
+              <h2 className="mt-2 text-balance font-serif text-4xl">What January understood</h2>
+            </div>
+            {descriptionScan.isError ? (
+              <ErrorMessage error={descriptionScan.error} />
+            ) : descriptionScan.data ? (
+              <ScanResult onAnalyzeAnother={resetDescriptionAnalysis} result={descriptionScan.data} />
+            ) : (
+              <EmptyState description="Type or dictate a complete meal description, then analyze it through the SDK." icon={<MessageSquareText aria-hidden="true" className="size-6" />} title="Waiting for a meal description" />
+            )}
+          </section>
+        </div>
+      ) : (
         <div className="mt-8 grid gap-8 xl:grid-cols-[minmax(0,0.85fr)_minmax(420px,1.15fr)]">
           <Card className="h-fit p-6 sm:p-8">
             <div className="grid size-14 place-items-center rounded-2xl bg-stone-950 text-white">
@@ -245,9 +319,6 @@ function ScanPage() {
           </section>
         </div>
       )}
-      <Dialog onClose={() => setResultOpen(false)} open={resultOpen && Boolean(scan.data)} title="Meal analysis">
-        {scan.data && <ScanResult onAnalyzeAnother={() => { setResultOpen(false); setImage(''); setImageUrl(''); scan.reset() }} result={scan.data} />}
-      </Dialog>
     </Page>
   )
 }

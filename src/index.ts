@@ -45,6 +45,17 @@ export type {
   PhotoScanImageOptions,
   PreparedPhotoScanImage,
 } from './photo-scan-image.js';
+export { browserVoiceCaptureAdapter, VoiceCaptureError, VoiceCaptureSession } from './voice-capture.js';
+export type {
+  VoiceCaptureAdapter,
+  VoiceCaptureErrorCode,
+  VoiceCaptureObserver,
+  VoiceCaptureOptions,
+  VoiceCaptureRecording,
+  VoiceCaptureResult,
+  VoiceCaptureSnapshot,
+  VoiceCaptureState,
+} from './voice-capture.js';
 export { FoodsResource } from './resources/foods.js';
 export { RestaurantsResource } from './resources/restaurants.js';
 export { FoodAnalysisResource } from './resources/photo-scanning.js';

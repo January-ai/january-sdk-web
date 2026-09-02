@@ -4,7 +4,7 @@ import type { ComponentType } from 'react'
 
 export const navigation = [
   { to: '/search', label: 'Search', description: 'Foods & restaurants', icon: Search },
-  { to: '/scan', label: 'Meal scan', description: 'Analyze a photo', icon: Camera },
+  { to: '/scan', label: 'Meal scan', description: 'Photo or description', icon: Camera },
   { to: '/food-logs', label: 'Food logs', description: 'Meal history', icon: ClipboardList },
   { to: '/glucose', label: 'Glucose', description: 'Predict a response', icon: TrendingUp },
 ] as const

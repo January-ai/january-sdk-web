@@ -4,12 +4,17 @@ A full-stack React and TypeScript demo built with TanStack Start, TanStack
 Router, and TanStack Query. January API requests run in server functions so the
 development API key is never included in the browser bundle.
 
+The Search screen also demonstrates local browser voice capture. Press the
+microphone beside a food or restaurant query to record, transcribe when supported,
+cancel, and stop. The demo uses only the transcript and never displays or sends
+the captured audio.
+
 ## Run locally
 
 From the SDK repository root, add the development credential to `.env.local`:
 
 ```sh
-JANUARY_DEV_API_KEY=your-development-key
+JANUARY_API_KEY=your-development-key
 JANUARY_END_USER_ID=your-test-user-id
 ```
 
@@ -22,6 +27,8 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
+Allow microphone access when the Search screen requests it. Voice capture needs
+a secure context; localhost is accepted for this local flow.
 
 To exercise the short-lived-token provider against January's production token
 exchange, copy the repository's example environment file and replace the local

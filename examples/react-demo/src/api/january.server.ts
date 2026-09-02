@@ -21,7 +21,7 @@ function loadLocalDemoEnvironment() {
 export function hasJanuaryConfiguration() {
   return Boolean(
     process.env.PARTNER_TOKEN_URL?.trim()
-    || (process.env.JANUARY_API_KEY ?? process.env.JANUARY_DEV_API_KEY)?.trim(),
+    || (process.env.JANUARY_API_KEY ?? process.env.JANUARY_PROD_API_KEY ?? process.env.JANUARY_DEV_API_KEY)?.trim(),
   )
 }
 
@@ -36,7 +36,7 @@ let tokenState:
 
 export async function getDemoConfigurationDetails() {
   const partnerTokenUrl = process.env.PARTNER_TOKEN_URL?.trim()
-  const apiKey = (process.env.JANUARY_API_KEY ?? process.env.JANUARY_DEV_API_KEY)?.trim()
+  const apiKey = (process.env.JANUARY_API_KEY ?? process.env.JANUARY_PROD_API_KEY ?? process.env.JANUARY_DEV_API_KEY)?.trim()
   const authMode = partnerTokenUrl
     ? 'client-token'
     : apiKey
@@ -99,7 +99,7 @@ export function getJanuaryClient() {
   const partnerTokenUrl = process.env.PARTNER_TOKEN_URL?.trim()
   const partnerAppSessionToken = process.env.PARTNER_APP_SESSION_TOKEN?.trim()
   const endUserId = getDefaultEndUserId()
-  const apiKey = process.env.JANUARY_API_KEY ?? process.env.JANUARY_DEV_API_KEY
+  const apiKey = process.env.JANUARY_API_KEY ?? process.env.JANUARY_PROD_API_KEY ?? process.env.JANUARY_DEV_API_KEY
   const testApiUrl = process.env.JANUARY_TEST_API_URL?.trim()
   const configuration = partnerTokenUrl
     ? `token:${partnerTokenUrl}:${partnerAppSessionToken ?? ''}:${endUserId}`
@@ -131,7 +131,7 @@ export function getJanuaryClient() {
 
   if (!apiKey?.trim()) {
     throw new Error(
-      'Add PARTNER_TOKEN_URL or JANUARY_DEV_API_KEY to .env.local, then restart the demo.',
+      'Add PARTNER_TOKEN_URL, JANUARY_API_KEY, JANUARY_PROD_API_KEY, or JANUARY_DEV_API_KEY to .env.local, then restart the demo.',
     )
   }
 

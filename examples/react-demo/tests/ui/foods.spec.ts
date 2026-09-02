@@ -30,14 +30,6 @@ test('shows an empty food-search state without an error', async ({ page }) => {
   await expect(page.getByText('Request failed')).toHaveCount(0)
 })
 
-test('runs natural-language food analysis', async ({ page }) => {
-  await openDemo(page, '/search')
-  await page.getByRole('radio', { name: 'Meal description' }).check({ force: true })
-  await page.locator('#catalog-search').fill('pizza and salad')
-  await page.getByRole('button', { name: 'Search foods' }).click()
-  await expect(page.getByRole('button', { name: /Fixture Pizza/ })).toBeVisible()
-})
-
 test('surfaces a food-search server error', async ({ page }) => {
   await fetch(`${fixtureApi}/__control?route=/v1.2/foods&status=500`)
   await openDemo(page, '/search')
