@@ -8,17 +8,23 @@ permissions:
   contents: read
   id-token: write
 
+concurrency:
+  group: npm-release-${{ github.event.release.tag_name }}
+  cancel-in-progress: false
+
 jobs:
   publish:
     name: Publish release to npm
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
 
     steps:
       - name: Check out release tag
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.0.0
         with:
           ref: ${{ github.event.release.tag_name }}
+          fetch-depth: 0
+          persist-credentials: false
 
       - name: Set up Node.js
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.0.0
@@ -26,6 +32,9 @@ jobs:
           node-version: 24
           registry-url: https://registry.npmjs.org
           cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            examples/react-demo/package-lock.json
 
       - name: Install npm with trusted-publishing support
         run: npm install --global npm@12.0.2
@@ -33,14 +42,28 @@ jobs:
       - name: Install pinned dependencies
         run: npm ci
 
-      - name: Verify package identity and release tag
+      - name: Verify package identity, release tag, and source commit
         env:
+          RELEASE_IS_PRERELEASE: ${{ github.event.release.prerelease }}
           RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
           package_name="$(node -p "require('./package.json').name")"
-          expected_tag="v$(node -p "require('./package.json').version")"
+          package_version="$(node -p "require('./package.json').version")"
+          expected_tag="v$package_version"
           test "$package_name" = "@januaryai/web-sdk"
           test "$RELEASE_TAG" = "$expected_tag"
+
+          git fetch --no-tags origin '+refs/heads/main:refs/remotes/origin/main'
+          git merge-base --is-ancestor HEAD origin/main
+
+          if [[ "$package_version" == *-* ]]; then
+            test "$RELEASE_IS_PRERELEASE" = "true"
+            echo "NPM_DIST_TAG=next" >> "$GITHUB_ENV"
+          else
+            test "$RELEASE_IS_PRERELEASE" = "false"
+            echo "NPM_DIST_TAG=latest" >> "$GITHUB_ENV"
+          fi
+          echo "PACKAGE_VERSION=$package_version" >> "$GITHUB_ENV"
 
       - name: Validate documentation
         run: node scripts/check-documentation.mjs
@@ -48,8 +71,39 @@ jobs:
       - name: Build and test
         run: npm test
 
+      - name: Install React demo dependencies and browser
+        run: |
+          npm --prefix examples/react-demo ci
+          npm --prefix examples/react-demo exec playwright install --with-deps chromium
+
+      - name: Run complete React demo UI suite
+        run: npm run demo:web:check
+
       - name: Verify package contents
         run: npm pack --dry-run
 
       - name: Publish public package
-        run: npm publish --access public
+        run: npm publish --access public --tag "$NPM_DIST_TAG"
+
+      - name: Verify exact version from the public registry
+        shell: bash
+        run: |
+          for attempt in {1..12}; do
+            published_version="$(npm view "@januaryai/web-sdk@$PACKAGE_VERSION" version 2>/dev/null || true)"
+            tagged_version="$(npm view "@januaryai/web-sdk" "dist-tags.$NPM_DIST_TAG" 2>/dev/null || true)"
+            if [[ "$published_version" == "$PACKAGE_VERSION" && "$tagged_version" == "$PACKAGE_VERSION" ]]; then
+              break
+            fi
+            if [[ "$attempt" == 12 ]]; then
+              echo "@januaryai/web-sdk@$PACKAGE_VERSION did not become available on npm"
+              exit 1
+            fi
+            sleep 10
+          done
+
+          smoke_dir="$(mktemp -d)"
+          cd "$smoke_dir"
+          npm init --yes >/dev/null
+          npm install "@januaryai/web-sdk@$PACKAGE_VERSION"
+          node --input-type=module -e \
+            "import { JanuaryClient } from '@januaryai/web-sdk'; if (typeof JanuaryClient !== 'function') process.exit(1)"
