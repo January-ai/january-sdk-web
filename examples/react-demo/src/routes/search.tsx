@@ -36,7 +36,7 @@ import { primaryServingLabel } from '~/lib/food-display'
 
 type CatalogKind = 'foods' | 'restaurants'
 type FoodMode = 'name' | 'description' | 'barcode'
-type FoodCategoryFilter = 'all' | 'general' | 'branded' | 'recipe'
+type FoodCategoryFilter = 'all' | 'generic' | 'branded' | 'recipe'
 interface SearchParams {
   q?: string
 }
@@ -74,7 +74,7 @@ function SearchPage() {
     queryFn: () => autocompleteFoods({ data: {
       query: debouncedDraft,
       limit: 8,
-      ...(category === 'general' || category === 'branded' ? { category } : {}),
+      ...(category === 'generic' || category === 'branded' ? { category } : {}),
     } }),
     enabled: kind === 'foods'
       && mode === 'name'
@@ -104,7 +104,7 @@ function SearchPage() {
     queryKey: ['restaurant-menu-items', { restaurant: selectedRestaurant?.id, coordinates }],
     queryFn: () => getRestaurantMenuItems({ data: {
       restaurantId: selectedRestaurant!.id,
-      restaurantName: selectedRestaurant!.name,
+      restaurantName: selectedRestaurant!.name ?? 'Unnamed restaurant',
       ...coordinates!,
     } }),
     enabled: selectedRestaurant !== null && coordinates !== null,
@@ -193,7 +193,7 @@ function SearchPage() {
             </div>
 
             {draft.trim() !== acceptedSuggestion && suggestions.data?.items.length ? (
-              <div className="mt-2"><FoodSuggestionList items={suggestions.data.items} onSelect={(suggestion) => chooseSuggestion(suggestion.name)} /></div>
+              <div className="mt-2"><FoodSuggestionList items={suggestions.data.items} onSelect={(suggestion) => chooseSuggestion(suggestion.name ?? '')} /></div>
             ) : null}
 
             {kind === 'foods' ? (
@@ -214,7 +214,7 @@ function SearchPage() {
                     label="Category"
                     name="food-category"
                     onChange={setCategory}
-                    options={[{ value: 'all', label: 'All' }, { value: 'general', label: 'General' }, { value: 'branded', label: 'Branded' }, { value: 'recipe', label: 'Recipe' }]}
+                    options={[{ value: 'all', label: 'All' }, { value: 'generic', label: 'Generic' }, { value: 'branded', label: 'Branded' }, { value: 'recipe', label: 'Recipe' }]}
                     value={category}
                   />
                 )}
@@ -267,9 +267,9 @@ function SearchPage() {
                       onClick={() => void navigate({
                         to: '/food/$foodId',
                         params: { foodId: String(food.id) },
-                        search: { q: food.name },
+                        search: { q: food.name ?? '' },
                       })}
-                      title={food.name}
+                      title={food.name ?? 'Unnamed food'}
                     />
                   ))}
                 </Card>
@@ -286,7 +286,7 @@ function SearchPage() {
                     media={<Building2 aria-hidden="true" className="size-6 text-stone-600" />}
                     meta={[restaurant.city, restaurant.distance != null ? `${formatNumber(restaurant.distance)} mi` : null].filter(Boolean).join(' · ')}
                     onClick={() => setSelectedRestaurant(restaurant)}
-                    title={restaurant.name}
+                    title={restaurant.name ?? 'Unnamed restaurant'}
                   />
                 ))}
               </Card>

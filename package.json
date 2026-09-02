@@ -47,7 +47,8 @@
     "smoke:all": "npm run build && node scripts/live-all.mjs",
     "pack:check": "npm pack --dry-run",
     "demo:web": "npm --prefix examples/react-demo run dev",
-    "demo:web:build": "npm --prefix examples/react-demo run build"
+    "demo:web:build": "npm --prefix examples/react-demo run build",
+    "demo:web:check": "npm --prefix examples/react-demo run check"
   },
   "devDependencies": {
     "typescript": "7.0.2"

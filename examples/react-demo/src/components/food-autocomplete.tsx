@@ -40,7 +40,7 @@ export function FoodSuggestionList({
   onSelect,
 }: {
   items: FoodSuggestion[]
-  busyFoodId?: number
+  busyFoodId?: string
   onSelect(suggestion: FoodSuggestion): void
 }) {
   if (!items.length) return null

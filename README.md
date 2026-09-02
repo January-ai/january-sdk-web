@@ -87,3 +87,7 @@ const page = await client.restaurants.getMenuItems({ restaurantId: restaurant.id
 The response contains `items` and `totalCount` (`total_count` on the wire). Request subsequent pages by advancing `offset` by the number of items received, until it reaches the total or a page is empty. An unknown restaurant returns 404; an existing restaurant with no menu returns an empty list.
 
 This operation requires the backend restaurant-ID menu endpoint; deployment is pending for this unreleased change.
+
+## License
+
+The Apache 2.0 license applies to the source code in this repository. It does not grant rights to nutrition data, food images, or other content returned by the January API, which are subject to the January API Developer Terms.

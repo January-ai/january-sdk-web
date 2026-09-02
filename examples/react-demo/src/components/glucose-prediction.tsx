@@ -8,8 +8,8 @@ export function GlucoseChart({ result }: { result: GlucosePrediction }) {
   const insetY = 38
   const minMinute = points[0]?.minutes ?? 0
   const maxMinute = points.at(-1)?.minutes ?? 120
-  const minValue = Math.min(result.chart.min, ...points.map((point) => point.value))
-  const maxValue = Math.max(result.chart.max, ...points.map((point) => point.value))
+  const minValue = Math.min(result.chart.min ?? Infinity, ...points.map((point) => point.value))
+  const maxValue = Math.max(result.chart.max ?? -Infinity, ...points.map((point) => point.value))
   const x = (minutes: number) => ((minutes - minMinute) / Math.max(1, maxMinute - minMinute)) * width
   const y = (value: number) => height - insetY - ((value - minValue) / Math.max(1, maxValue - minValue)) * (height - insetY * 2)
   const path = points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${x(point.minutes)} ${y(point.value)}`).join(' ')
@@ -43,12 +43,12 @@ export function GlucoseChart({ result }: { result: GlucosePrediction }) {
   )
 }
 
-export function friendlyImpact(value: string) {
-  return `${value.replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase())} impact`
+export function friendlyImpact(value: string | null) {
+  return `${(value ?? 'unknown').replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase())} impact`
 }
 
-export function impactClass(value: string) {
-  if (value.toLowerCase().includes('high')) return 'bg-red-100 text-red-900'
-  if (value.toLowerCase().includes('medium')) return 'bg-amber-100 text-amber-950'
+export function impactClass(value: string | null) {
+  if (value?.toLowerCase().includes('high')) return 'bg-red-100 text-red-900'
+  if (value?.toLowerCase().includes('medium')) return 'bg-amber-100 text-amber-950'
   return 'bg-emerald-100 text-emerald-950'
 }

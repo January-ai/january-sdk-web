@@ -29,14 +29,14 @@ function FoodDetailPage() {
   const { foodId } = Route.useParams()
   const { q, upc } = Route.useSearch()
   const configuration = Route.useLoaderData()
-  const id = Number(foodId)
+  const id = foodId.trim()
   const food = useQuery({
     queryKey: ['food-detail', id],
     queryFn: () => getFoodDetails({ data: {
       foodId: id,
       ...(configuration.defaultEndUserId ? { endUserId: configuration.defaultEndUserId } : {}),
     } }),
-    enabled: Number.isInteger(id) && id > 0,
+    enabled: id.length > 0,
   })
 
   return (
@@ -52,14 +52,14 @@ function FoodDetailPage() {
 }
 
 function FoodDetailContent({ food, configuration }: { food: FoodSearchItem; configuration: Awaited<ReturnType<typeof getDemoConfiguration>> }) {
-  const initialServing = food.servings.find((item) => item.isPrimary) ?? food.servings[0] ?? null
-  const [servingId, setServingId] = useState(initialServing?.id ?? 0)
+  const initialServing = food.servings.find((item) => item.id && item.isPrimary) ?? food.servings.find((item) => item.id) ?? null
+  const [servingId, setServingId] = useState(initialServing?.id ?? '')
   const [quantity, setQuantity] = useState(initialServing?.quantity ?? 1)
   const serving = food.servings.find((item) => item.id === servingId) ?? initialServing
-  const portion = serving ? FoodPortion.from(food, { servingId: serving.id, quantity }) : null
+  const portion = serving?.id ? FoodPortion.from(food, { servingId: serving.id, quantity }) : null
   const prediction = useMutation({
     mutationFn: () => {
-      if (!serving) throw new Error('Choose a serving before predicting glucose.')
+      if (!serving?.id) throw new Error('Choose a serving before predicting glucose.')
       return predictGlucose({ data: {
         age: 42,
         sex: Sex.female,
@@ -77,9 +77,9 @@ function FoodDetailContent({ food, configuration }: { food: FoodSearchItem; conf
     },
   })
 
-  function chooseServing(id: number) {
+  function chooseServing(id: string) {
     const next = food.servings.find((item) => item.id === id)
-    if (!next) return
+    if (!next?.id) return
     setServingId(next.id)
     setQuantity(next.quantity || 1)
     prediction.reset()
@@ -96,15 +96,15 @@ function FoodDetailContent({ food, configuration }: { food: FoodSearchItem; conf
         <NetworkImage alt="" className="aspect-[16/10] w-full rounded-3xl border border-stone-300" fallback={<Utensils aria-hidden="true" className="size-14 text-[var(--app-positive)]" />} src={food.photoUrl} />
         <div>
           <SectionLabel>Food details</SectionLabel>
-          <h1 className="mt-3 text-balance font-serif text-5xl leading-none sm:text-6xl">{food.name}</h1>
+          <h1 className="mt-3 text-balance font-serif text-5xl leading-none sm:text-6xl">{food.name ?? 'Unnamed food'}</h1>
           {food.brandName && <p className="mt-3 text-lg text-stone-500">{food.brandName}</p>}
         </div>
 
         <Card className="p-5 sm:p-6">
           <label className="block">
             <span className="mb-2 block text-sm font-bold text-stone-700">Serving</span>
-            <select className="min-h-14 w-full rounded-2xl border border-stone-300 bg-white px-4 font-bold outline-none transition-colors focus:bg-stone-50" disabled={!food.servings.length} onChange={(event) => chooseServing(Number(event.target.value))} value={servingId}>
-              {food.servings.map((option) => <option key={option.id} value={option.id}>{servingLabel(option)}</option>)}
+            <select className="min-h-14 w-full rounded-2xl border border-stone-300 bg-white px-4 font-bold outline-none transition-colors focus:bg-stone-50" disabled={!food.servings.some((option) => option.id)} onChange={(event) => chooseServing(event.target.value)} value={servingId}>
+              {food.servings.filter((option) => option.id).map((option) => <option key={option.id} value={option.id!}>{servingLabel(option)}</option>)}
             </select>
           </label>
           <div className="mt-5 flex items-center justify-between gap-4 border-t border-stone-200 pt-5">

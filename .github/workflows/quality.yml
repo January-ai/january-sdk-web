@@ -69,8 +69,11 @@ jobs:
           npm ci
           npm --prefix examples/react-demo ci
 
-      - name: Build the React example
-        run: npm run demo:web:build
+      - name: Install Playwright browser
+        run: npm --prefix examples/react-demo exec playwright install --with-deps chromium
+
+      - name: Typecheck, build, and run React example UAT
+        run: npm run demo:web:check
 
       - name: Install the packed SDK in a clean ESM project
         run: |
