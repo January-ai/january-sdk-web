@@ -32,6 +32,9 @@ jobs:
           node-version: 24
           registry-url: https://registry.npmjs.org
           cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            examples/react-demo/package-lock.json
 
       - name: Install npm with trusted-publishing support
         run: npm install --global npm@12.0.2
@@ -100,6 +103,6 @@ jobs:
           smoke_dir="$(mktemp -d)"
           cd "$smoke_dir"
           npm init --yes >/dev/null
-          npm install --ignore-scripts "@januaryai/web-sdk@$PACKAGE_VERSION"
+          npm install "@januaryai/web-sdk@$PACKAGE_VERSION"
           node --input-type=module -e \
             "import { JanuaryClient } from '@januaryai/web-sdk'; if (typeof JanuaryClient !== 'function') process.exit(1)"
