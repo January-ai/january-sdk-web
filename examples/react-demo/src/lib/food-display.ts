@@ -1,4 +1,4 @@
-import type { FoodSearchItem } from '@januaryai/sdk'
+import type { FoodSearchItem } from '@januaryai/web-sdk'
 import { formatNumber } from './utils'
 
 export function primaryServingLabel(food: FoodSearchItem) {

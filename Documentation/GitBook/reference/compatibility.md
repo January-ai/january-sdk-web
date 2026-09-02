@@ -6,7 +6,7 @@
 | Modules | ESM only |
 | TypeScript target | ES2022 |
 | Browser transport | Fetch-compatible modern browser **after January enables the exact origin** |
-| Registry distribution | npm (`@januaryai/sdk`) |
+| Registry distribution | npm (`@januaryai/web-sdk`) |
 | Package contents | ESM JavaScript, TypeScript declarations, source maps, README, and license |
 
 The package is licensed under Apache 2.0. Its `prepack` hook builds `dist`, so a

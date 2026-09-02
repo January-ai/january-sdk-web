@@ -1,5 +1,5 @@
 {
-  "name": "@januaryai/sdk-react-demo",
+  "name": "@januaryai/web-sdk-react-demo",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -16,7 +16,7 @@
     "test:ui": "playwright test"
   },
   "dependencies": {
-    "@januaryai/sdk": "file:../..",
+    "@januaryai/web-sdk": "file:../..",
     "@tanstack/react-query": "5.102.2",
     "@tanstack/react-router": "1.170.32",
     "@tanstack/react-start": "1.168.49",

@@ -2,7 +2,7 @@ import {
   JanuaryClient,
   JanuaryTokenProviderError,
   type JanuaryClientTokenResponse,
-} from '@januaryai/sdk'
+} from '@januaryai/web-sdk'
 import { existsSync } from 'node:fs'
 import { loadEnvFile } from 'node:process'
 import { resolve } from 'node:path'

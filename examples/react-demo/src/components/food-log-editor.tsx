@@ -1,4 +1,4 @@
-import type { FoodLog } from '@januaryai/sdk'
+import type { FoodLog } from '@januaryai/web-sdk'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Plus, Search, Trash2, Utensils } from 'lucide-react'
 import { useState } from 'react'

@@ -1,4 +1,4 @@
-import { ActivityLevel, Sex, type FoodSearchItem } from '@januaryai/sdk'
+import { ActivityLevel, Sex, type FoodSearchItem } from '@januaryai/web-sdk'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { Activity, Search, Utensils } from 'lucide-react'

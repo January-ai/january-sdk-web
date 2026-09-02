@@ -4,20 +4,10 @@ Official browser SDK for January food discovery, restaurants, food analysis,
 food logs, and glucose prediction in TypeScript web applications. This is the
 Web SDK; January's future Node.js server SDK is a separate product.
 
-## Install from source
+## Install
 
 ```bash
-git clone https://github.com/January-ai/january-sdk-web.git
-cd january-sdk-web
-npm ci
-npm test
-npm pack
-```
-
-Install the resulting tarball in your application and commit the lockfile:
-
-```bash
-npm install /path/to/januaryai-sdk-0.1.0.tgz
+npm install @januaryai/web-sdk
 ```
 
 See the [installation guide](https://docs.january.ai/web-sdk/getting-started/installation)
@@ -32,7 +22,7 @@ request, all resources, retries, cancellation, packaging, testing, and support.
 ## Quick start
 
 ```ts
-import { JanuaryClient } from '@januaryai/sdk';
+import { JanuaryClient } from '@januaryai/web-sdk';
 
 const january = new JanuaryClient({
   clientTokenProvider: async () => {
