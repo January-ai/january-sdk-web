@@ -1,5 +1,6 @@
 import type {
   RestaurantResultType,
+  GetRestaurantMenuItemsResponse,
   GetRestaurantMenuItemsRequest,
   SearchRestaurantMenuItemsResponse,
   SearchRestaurantsRequest,
@@ -12,25 +13,29 @@ export class RestaurantsResource {
   constructor(private readonly api: RestaurantsApi) {}
 
   /** Loads one page by restaurant ID, independently of text search or location. */
-  async getMenuItems(request: GetRestaurantMenuItemsRequest): Promise<SearchRestaurantMenuItemsResponse> {
+  async getMenuItems(request: GetRestaurantMenuItemsRequest): Promise<GetRestaurantMenuItemsResponse> {
     const limit = request.limit ?? 100;
     const offset = request.offset ?? 0;
     if (!/^[A-Za-z0-9_-]{1,256}$/.test(request.restaurantId) || !Number.isInteger(limit) || limit < 1 || limit > 100
       || !Number.isInteger(offset) || offset < 0 || offset > 2_147_483_647) {
       throw new TypeError('A restaurant id and valid menu pagination are required.');
     }
-    return mapMenu(await executeRequest(() => this.api.getRestaurantMenuItems({
+    const response = await executeRequest(() => this.api.getRestaurantMenuItems({
       restaurantId: request.restaurantId, limit, offset,
-      ...(request.endUserId !== undefined ? { xEndUserId: request.endUserId } : {}),
-    }, init(request.signal))));
+    }, init(request.signal)));
+    return { items: response.items.map(mapMenuEntry) };
   }
 
   async search(request: SearchRestaurantsRequest): Promise<SearchRestaurantsResponse> {
     validate(request);
     const response = await executeRequest(() => this.api.searchRestaurants(parameters(request), init(request.signal)));
     return {
-      totalCount: response.totalCount,
-      items: response.items.map((item) => ({ ...item, type: item.type as RestaurantResultType })),
+      totalCount: response.items.length,
+      items: response.items.map((item) => ({
+        ...item,
+        type: item.type as RestaurantResultType,
+        distance: item.distanceMeters,
+      })),
     };
   }
 
@@ -43,9 +48,8 @@ export class RestaurantsResource {
 function parameters(request: SearchRestaurantsRequest) {
   return {
     query: request.query.trim(), latitude: request.latitude, longitude: request.longitude,
-    ...(request.radius !== undefined ? { radius: request.radius } : {}),
+    ...(request.radius !== undefined ? { radiusMeters: request.radius } : {}),
     ...(request.limit !== undefined ? { limit: request.limit } : {}),
-    ...(request.endUserId !== undefined ? { xEndUserId: request.endUserId } : {}),
   };
 }
 
@@ -64,9 +68,9 @@ function validate(request: SearchRestaurantsRequest): void {
 function init(signal?: AbortSignal): RequestInit | undefined { return signal ? { signal } : undefined }
 
 function mapMenu(response: import('../internal/transport/models/SearchRestaurantMenuItemsResponse.js').SearchRestaurantMenuItemsResponse): SearchRestaurantMenuItemsResponse {
-  return { totalCount: response.totalCount, items: response.items.map(item => ({
+  return { totalCount: response.items.length, items: response.items.map(item => ({
     type: item.type, id: item.id, name: item.name, restaurantName: item.restaurantName,
-    isChain: item.isChain, distance: item.distance, photoUrl: item.imageUrl,
+    isChain: item.isChain, distance: item.distanceMeters, photoUrl: item.imageUrl,
     energy: item.nutrients?.calories?.value, protein: item.nutrients?.protein?.value,
     carbs: item.nutrients?.carbohydrates?.value, netCarbs: item.nutrients?.netCarbohydrates?.value,
     fat: item.nutrients?.totalFat?.value, fiber: item.nutrients?.fiber?.value,
@@ -74,4 +78,26 @@ function mapMenu(response: import('../internal/transport/models/SearchRestaurant
     gi: item.glycemicIndex, gl: item.glycemicLoad,
     servings: item.servings.map(serving => ({ ...serving, scalingFactor: serving.scalingFactor ?? 1, weightGrams: serving.weightGrams ?? null })),
   })) };
+}
+
+function mapMenuEntry(item: import('../internal/transport/models/RestaurantMenuItem.js').RestaurantMenuItem) {
+  return {
+    id: item.id,
+    name: item.name,
+    energy: item.nutrients?.calories?.value,
+    protein: item.nutrients?.protein?.value,
+    carbs: item.nutrients?.carbohydrates?.value,
+    netCarbs: item.nutrients?.netCarbohydrates?.value,
+    fat: item.nutrients?.totalFat?.value,
+    fiber: item.nutrients?.fiber?.value,
+    sugars: item.nutrients?.totalSugars?.value,
+    addedSugars: item.nutrients?.addedSugars?.value,
+    gi: item.glycemicIndex,
+    gl: item.glycemicLoad,
+    servings: item.servings.map((serving) => ({
+      ...serving,
+      scalingFactor: serving.scalingFactor ?? 1,
+      weightGrams: serving.weightGrams ?? null,
+    })),
+  };
 }

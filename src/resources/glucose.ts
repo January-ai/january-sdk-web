@@ -9,7 +9,12 @@ export class GlucoseResource {
     const response = await executeRequest(() => this.api.predictGlucose({
       predictGlucoseBody: {
         userProfile: request.userProfile,
-        foods: request.foods,
+        timezone: request.endUserTimezone ?? 'UTC',
+        foods: request.foods.map((food) => ({
+          foodId: food.id,
+          servingId: food.serving.id,
+          quantity: food.serving.quantity,
+        })),
         startTime: request.startTime,
         ...(request.cgmData !== undefined ? {
           cgmData: request.cgmData.map((reading) => ({
@@ -19,16 +24,16 @@ export class GlucoseResource {
         } : {}),
         ...(request.consumedFoods !== undefined ? {
           consumedFoods: request.consumedFoods.map((food) => ({
-            ...food,
             timestamp: parseTimestamp(food.timestamp),
+            foodId: food.id,
+            servingId: food.serving.id,
+            quantity: food.serving.quantity,
           })),
         } : {}),
       },
-      ...(request.endUserId !== undefined ? { xEndUserId: request.endUserId } : {}),
-      ...(request.endUserTimezone !== undefined ? { xEndUserTimezone: request.endUserTimezone } : {}),
     }, request.signal ? { signal: request.signal } : undefined));
     return {
-      prediction: response.prediction,
+      prediction: response.points,
       impact: response.impactScore,
       chart: response.chart,
     };

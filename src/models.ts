@@ -1,5 +1,7 @@
 export const FoodCategory = {
-  general: 'general',
+  generic: 'generic',
+  /** @deprecated Use generic. */
+  general: 'generic',
   branded: 'branded',
   recipe: 'recipe',
 } as const;
@@ -7,7 +9,9 @@ export const FoodCategory = {
 export type FoodCategory = typeof FoodCategory[keyof typeof FoodCategory];
 
 export const AutocompleteFoodCategory = {
-  general: 'general',
+  generic: 'generic',
+  /** @deprecated Use generic. */
+  general: 'generic',
   branded: 'branded',
 } as const;
 
@@ -22,8 +26,8 @@ export interface AutocompleteFoodsRequest {
 }
 
 export interface FoodSuggestion {
-  id: number;
-  name: string;
+  id: string;
+  name: string | null;
   brandName: string | null;
   photoUrl: string | null;
   nutrients: NutritionFacts | null;
@@ -32,7 +36,7 @@ export interface FoodSuggestion {
 export interface AutocompleteFoodsResponse { items: FoodSuggestion[] }
 
 export interface GetFoodRequest {
-  foodId: number;
+  foodId: string;
   endUserId?: string;
   signal?: AbortSignal;
 }
@@ -51,8 +55,9 @@ export interface FoodSearchResults {
 }
 
 export interface FoodSearchItem {
-  id: number;
-  name: string;
+  id: string;
+  type: FoodCategory;
+  name: string | null;
   brandName: string | null;
   calories: number | null;
   protein: number | null;
@@ -69,18 +74,18 @@ export interface FoodSearchItem {
   glycemicIndex: number | null;
   glycemicLoad: number | null;
   photoUrl: string | null;
-  upc: string | null;
+  barcode: string | null;
   servings: ServingOption[];
   nutrients: NutritionFacts | null;
 }
 
 export interface ServingOption {
-  id: number;
-  quantity: number;
-  unit: string;
+  id: string | null;
+  quantity: number | null;
+  unit: string | null;
   scalingFactor: number;
   weightGrams: number | null;
-  isPrimary: boolean;
+  isPrimary: boolean | null;
 }
 
 export interface NutrientAmount {
@@ -123,16 +128,16 @@ export interface SearchFoodsByNaturalLanguageRequest {
 }
 
 export interface NaturalLanguageServing {
-  id: number;
-  quantity?: number;
-  unit: string;
+  id: string | null;
+  quantity?: number | null;
+  unit: string | null;
   selectedQuantity?: number;
 }
 
 export interface NaturalLanguageFood {
-  id?: number;
-  name: string;
-  brandName?: string;
+  id?: string | null;
+  name: string | null;
+  brandName?: string | null;
   nutrients: CompleteScanNutritionFacts;
   servings?: NaturalLanguageServing[];
 }
@@ -159,7 +164,7 @@ export const DietPreference = {
 export type DietPreference = typeof DietPreference[keyof typeof DietPreference];
 
 export interface SuggestFoodAlternativesRequest {
-  foodId: number;
+  foodId: string;
   dietRestrictions: DietRestriction[];
   dietPreferences: DietPreference[];
   endUserId?: string;
@@ -167,20 +172,21 @@ export interface SuggestFoodAlternativesRequest {
 }
 
 export interface DetectedServing {
-  id: number;
-  quantity?: number;
-  unit: string;
+  id: string | null;
+  quantity?: number | null;
+  unit: string | null;
+  selectedQuantity?: number | null;
 }
 
 export interface DetectedFood {
-  id?: number;
-  name: string;
-  brandName?: string;
+  id?: string | null;
+  name: string | null;
+  brandName?: string | null;
   nutrients: CompleteScanNutritionFacts;
   servings?: DetectedServing[];
 }
 
-export interface FoodAlternative { food: DetectedFood }
+export type FoodAlternative = DetectedFood;
 export interface SuggestFoodAlternativesResponse { alternatives: FoodAlternative[] }
 
 export interface GetRestaurantMenuItemsRequest {
@@ -207,12 +213,12 @@ export type RestaurantResultType = typeof RestaurantResultType[keyof typeof Rest
 export interface Restaurant {
   type: RestaurantResultType;
   id: string;
-  name: string;
-  isChain?: boolean;
-  distance?: number;
-  city?: string;
-  address1?: string;
-  address2?: string;
+  name: string | null;
+  isChain?: boolean | null;
+  distance?: number | null;
+  city?: string | null;
+  address1?: string | null;
+  address2?: string | null;
 }
 
 export interface SearchRestaurantsResponse { totalCount: number; items: Restaurant[] }
@@ -220,9 +226,9 @@ export interface SearchRestaurantsResponse { totalCount: number; items: Restaura
 export interface RestaurantMenuItem {
   type: string;
   id: string;
-  name: string;
-  restaurantName: string;
-  isChain?: boolean;
+  name: string | null;
+  restaurantName: string | null;
+  isChain?: boolean | null;
   energy?: number | null;
   protein?: number | null;
   carbs?: number | null;
@@ -234,11 +240,28 @@ export interface RestaurantMenuItem {
   gi?: number | null;
   gl?: number | null;
   photoUrl?: string | null;
-  distance?: number;
+  distance?: number | null;
   servings: ServingOption[];
 }
 
 export interface SearchRestaurantMenuItemsResponse { totalCount: number; items: RestaurantMenuItem[] }
+
+export interface RestaurantMenuEntry {
+  id: string | null;
+  name: string | null;
+  energy?: number | null;
+  protein?: number | null;
+  carbs?: number | null;
+  netCarbs?: number | null;
+  fat?: number | null;
+  fiber?: number | null;
+  sugars?: number | null;
+  addedSugars?: number | null;
+  gi?: number | null;
+  gl?: number | null;
+  servings: ServingOption[];
+}
+export interface GetRestaurantMenuItemsResponse { items: RestaurantMenuEntry[] }
 
 export interface ScanFoodPhotoRequest {
   image: string;
@@ -250,10 +273,9 @@ export interface FoodDetection { confidenceScore?: string; food: DetectedFood }
 export interface GlucosePredictionPoint { minutes: number; value: number }
 export interface FoodScanGlucoseImpact { impactScore: string; prediction: GlucosePredictionPoint[] }
 export interface FoodScan {
-  mealName?: string;
-  totalNutrients?: CompleteScanNutritionFacts;
-  detections?: FoodDetection[];
-  glucoseImpact?: FoodScanGlucoseImpact;
+  mealName: string | null;
+  totalNutrients: CompleteScanNutritionFacts;
+  detections: FoodDetection[];
 }
 
 /** @deprecated Use FoodScan. */
@@ -262,15 +284,14 @@ export type PhotoScan = FoodScan;
 export type PhotoScanGlucoseImpact = FoodScanGlucoseImpact;
 
 export interface CorrectPhotoScanRequest {
-  mealName: string;
-  detections: FoodDetection[];
-  userInput: string;
+  analysis: FoodScan;
+  instruction: string;
   endUserId?: string;
   signal?: AbortSignal;
 }
 
-export interface ServingSelection { id: number; quantity: number }
-export interface FoodSelection { id: number; serving: ServingSelection }
+export interface ServingSelection { id: string; quantity: number }
+export interface FoodSelection { id: string; serving: ServingSelection }
 
 export interface PartnerUserContext {
   endUserId: string;
@@ -301,12 +322,13 @@ export interface UpdateFoodLogRequest extends PartnerUserContext {
   signal?: AbortSignal;
 }
 
+export interface GetFoodLogRequest extends PartnerUserContext { logId: string; signal?: AbortSignal }
 export interface DeleteFoodLogRequest extends PartnerUserContext { logId: string; signal?: AbortSignal }
-export interface ConsumedServing { id: number; quantity: number }
-export interface ServingDetails { id: number; quantity: number; unit: string; weightGrams?: number | null }
+export interface ConsumedServing { id: string | null; quantity: number | null }
+export interface ServingDetails { id: string | null; quantity: number | null; unit: string | null; weightGrams?: number | null }
 export interface LoggedFood {
-  id: number;
-  name: string;
+  id: string | null;
+  name: string | null;
   brandName?: string | null;
   imageUrl?: string | null;
   glycemicIndex?: number | null;
@@ -315,9 +337,9 @@ export interface LoggedFood {
   consumedServing: ConsumedServing;
   servingDetails: ServingDetails;
 }
-export interface FoodLog { id: string; foods: LoggedFood[]; timestampUtc: string; name?: string | null }
+export interface FoodLog { id: string | null; foods: LoggedFood[]; timestampUtc: string; name?: string | null }
 export interface ListFoodLogsResponse { totalCount: number; items: FoodLog[] }
-export interface DeleteFoodLogResponse { status: string }
+export type DeleteFoodLogResponse = void;
 
 export const Sex = { male: 'male', female: 'female' } as const;
 export type Sex = typeof Sex[keyof typeof Sex];
@@ -347,8 +369,8 @@ export interface GlucosePredictionProfile {
   healthConditions?: MedicalCondition[];
 }
 export interface CgmReading { timestamp: string; value: number }
-export interface ConsumedHistoricalServing { id: number; quantity: number }
-export interface ConsumedHistoricalFood { timestamp: string; id: number; serving: ConsumedHistoricalServing }
+export interface ConsumedHistoricalServing { id: string; quantity: number }
+export interface ConsumedHistoricalFood { timestamp: string; id: string; serving: ConsumedHistoricalServing }
 export interface PredictGlucoseRequest {
   userProfile: GlucosePredictionProfile;
   foods: FoodSelection[];
@@ -359,9 +381,9 @@ export interface PredictGlucoseRequest {
   endUserTimezone?: string;
   signal?: AbortSignal;
 }
-export interface GlucoseChart { min: number; max: number }
+export interface GlucoseChart { min: number | null; max: number | null }
 export interface GlucosePrediction {
   prediction: GlucosePredictionPoint[];
-  impact: string;
+  impact: string | null;
   chart: GlucoseChart;
 }

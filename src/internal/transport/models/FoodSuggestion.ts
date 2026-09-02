@@ -2,7 +2,7 @@
 /* eslint-disable */
 /**
  * January AI - Nutrition Intelligence APIs
- * Build food and metabolic intelligence into your product — one API for understanding what people eat and how food may affect them.  **Clinical-grade precision, consumer-grade experiences.** January builds the infrastructure underneath the product: turning messy health and nutrition data into reliable intelligence, so your team spends its time on the experience instead of the foundation.  **Security & compliance** — **SOC 2 Type II** · **HIPAA-aligned practices** · **BAA** and **Zero Data Retention (ZDR)** available  **What you can build** - **Scan food** — photo and text food recognition: detect foods and nutrition, then correct results conversationally - **Search the food database** — by name or barcode — and get healthier alternatives for any food - **Log food** — a per-user diary with day-range queries - **Predict glucose response** to any meal — no sensor required  **Getting started** 1. Create an API key in the [Developer Dashboard](https://dashboard.january.ai) — the full key is shown once, at creation. 2. Send it as `Authorization: Bearer <your key>` — click **Authorize** here to make every example below a live request. 3. Identify your end user with the `x-end-user-id` header wherever a request acts on their data.  **Support** — [support@january.ai](mailto:support@january.ai) · [Discord community](https://discord.gg/cYQeh3UnC) · [docs.january.ai](https://docs.january.ai)
+ * Build food and metabolic intelligence into your product — one API for understanding what people eat and how food may affect them.  **Clinical-grade precision, consumer-grade experiences.** January builds the infrastructure underneath the product: turning messy health and nutrition data into reliable intelligence, so your team spends its time on the experience instead of the foundation.  **Security & compliance** — **SOC 2 Type II** · **HIPAA-aligned practices** · **BAA** and **Zero Data Retention (ZDR)** available  **What you can build** - **Scan food** — photo and text food recognition: detect foods and nutrition, then correct results conversationally - **Search the food database** — by name or barcode — and get healthier alternatives for any food - **Log food** — a per-user diary with day-range queries - **Predict glucose response** to any meal — no sensor required  **Getting started** 1. Create an API key in the [Developer Dashboard](https://dashboard.january.ai) — the full key is shown once, at creation. 2. Send it as `Authorization: Bearer sk-…` — click **Authorize** here to make every example below a live request. 3. On the **food-logs** endpoints, say whose diary you are reading or writing with the `January-End-User-ID` header. No other endpoint takes it: everything else either asks the shared food database a question or works on the body you send, and neither depends on who the food is for.  **Calling from a mobile app** — your `sk-` key must never ship inside an app. Instead, exchange it on your backend for a *client token*: a credential that lasts up to two hours, acts as exactly one of your end users, and carries only the scopes you grant it (see the **authentication** section). Your app then calls these endpoints directly, with no proxy of your own in the request path. Both credentials travel in the same `Authorization: Bearer` header, and every endpoint below opens by saying which it accepts — **API key or client token**, or **API key only**.  **Support** — [support@january.ai](mailto:support@january.ai) · [Discord community](https://discord.gg/cYQeh3UnC) · [docs.january.ai](https://docs.january.ai)
  *
  * The version of the OpenAPI document: 1.2
  * Contact: support@january.ai
@@ -28,43 +28,65 @@ import {
  */
 export interface FoodSuggestion {
     /**
-     * Stable food identifier, provisionally narrowed to JavaScript's safe integer range.
-     * @type {number}
-     * @memberof FoodSuggestion
-     */
-    id: number;
-    /**
-     * Generic foods are lowercase; branded foods keep their product name.
+     * Opaque id — the same id `GET /v1.2/foods/{food_id}` takes.
      * @type {string}
      * @memberof FoodSuggestion
      */
-    name: string;
+    id: string;
     /**
-     * Absent for generic (non-branded) foods.
+     * What kind of food this is: `generic` for a database staple ("banana"), `branded` for a packaged product, `recipe` for a multi-ingredient dish.
+     * @type {FoodSuggestionTypeEnum}
+     * @memberof FoodSuggestion
+     */
+    type: FoodSuggestionTypeEnum;
+    /**
+     * Generic foods are lowercase; branded foods keep their product name. Null only when the index has no name for the row.
      * @type {string}
      * @memberof FoodSuggestion
      */
-    brandName?: string;
+    name: string | null;
     /**
-     * Thumbnail of the food, when the database has one.
+     * null for generic (non-branded) foods.
      * @type {string}
      * @memberof FoodSuggestion
      */
-    imageUrl?: string;
+    brandName: string | null;
+    /**
+     * Thumbnail of the food; null when the database has none.
+     * @type {string}
+     * @memberof FoodSuggestion
+     */
+    imageUrl: string | null;
     /**
      *
      * @type {NutritionFacts}
      * @memberof FoodSuggestion
      */
-    nutrients?: NutritionFacts;
+    nutrients: NutritionFacts;
 }
+
+
+/**
+ * @export
+ */
+export const FoodSuggestionTypeEnum = {
+    generic: 'generic',
+    branded: 'branded',
+    unknownDefaultOpenApi: '11184809'
+} as const;
+export type FoodSuggestionTypeEnum = typeof FoodSuggestionTypeEnum[keyof typeof FoodSuggestionTypeEnum];
+
 
 /**
  * Check if a given object implements the FoodSuggestion interface.
  */
 export function instanceOfFoodSuggestion(value: object): value is FoodSuggestion {
     if (!('id' in value) || value['id'] === undefined) return false;
+    if (!('type' in value) || value['type'] === undefined) return false;
     if (!('name' in value) || value['name'] === undefined) return false;
+    if ((!('brandName' in (value as Record<string, any>)) && !('brand_name' in (value as Record<string, any>))) || ((value as Record<string, any>)['brandName'] === undefined && (value as Record<string, any>)['brand_name'] === undefined)) return false;
+    if ((!('imageUrl' in (value as Record<string, any>)) && !('image_url' in (value as Record<string, any>))) || ((value as Record<string, any>)['imageUrl'] === undefined && (value as Record<string, any>)['image_url'] === undefined)) return false;
+    if (!('nutrients' in value) || value['nutrients'] === undefined) return false;
     return true;
 }
 
@@ -79,10 +101,11 @@ export function FoodSuggestionFromJSONTyped(json: any, ignoreDiscriminator: bool
     return {
 
         'id': json['id'],
+        'type': json['type'],
         'name': json['name'],
-        'brandName': json['brand_name'] == null ? undefined : json['brand_name'],
-        'imageUrl': json['image_url'] == null ? undefined : json['image_url'],
-        'nutrients': json['nutrients'] == null ? undefined : NutritionFactsFromJSON(json['nutrients']),
+        'brandName': json['brand_name'],
+        'imageUrl': json['image_url'],
+        'nutrients': NutritionFactsFromJSON(json['nutrients']),
     };
 }
 
@@ -98,6 +121,7 @@ export function FoodSuggestionToJSONTyped(value?: FoodSuggestion | null, ignoreD
     return {
 
         'id': value['id'],
+        'type': value['type'],
         'name': value['name'],
         'brand_name': value['brandName'],
         'image_url': value['imageUrl'],

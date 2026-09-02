@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { JanuaryPartnerClient } from '../dist/index.js';
 
-test('food search sends authentication, user context, and SDK identity', async () => {
+test('food search sends authentication and SDK identity without a diary header', async () => {
   let captured;
   const fetch = async (input, init) => {
     captured = { url: String(input), init };
@@ -28,6 +28,6 @@ test('food search sends authentication, user context, and SDK identity', async (
   assert.match(captured.url, /limit=5/);
   const headers = new Headers(captured.init.headers);
   assert.equal(headers.get('authorization'), 'Bearer test-key');
-  assert.equal(headers.get('x-end-user-id'), 'partner-user-1');
+  assert.equal(headers.get('january-end-user-id'), null);
   assert.match(headers.get('user-agent'), /^JanuaryPartnerSDK-Node\/0\.1\.0/);
 });

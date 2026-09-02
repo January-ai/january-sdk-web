@@ -2,7 +2,7 @@
 /* eslint-disable */
 /**
  * January AI - Nutrition Intelligence APIs
- * Build food and metabolic intelligence into your product — one API for understanding what people eat and how food may affect them.  **Clinical-grade precision, consumer-grade experiences.** January builds the infrastructure underneath the product: turning messy health and nutrition data into reliable intelligence, so your team spends its time on the experience instead of the foundation.  **Security & compliance** — **SOC 2 Type II** · **HIPAA-aligned practices** · **BAA** and **Zero Data Retention (ZDR)** available  **What you can build** - **Scan food** — photo and text food recognition: detect foods and nutrition, then correct results conversationally - **Search the food database** — by name or barcode — and get healthier alternatives for any food - **Log food** — a per-user diary with day-range queries - **Predict glucose response** to any meal — no sensor required  **Getting started** 1. Create an API key in the [Developer Dashboard](https://dashboard.january.ai) — the full key is shown once, at creation. 2. Send it as `Authorization: Bearer <your key>` — click **Authorize** here to make every example below a live request. 3. Identify your end user with the `x-end-user-id` header wherever a request acts on their data.  **Support** — [support@january.ai](mailto:support@january.ai) · [Discord community](https://discord.gg/cYQeh3UnC) · [docs.january.ai](https://docs.january.ai)
+ * Build food and metabolic intelligence into your product — one API for understanding what people eat and how food may affect them.  **Clinical-grade precision, consumer-grade experiences.** January builds the infrastructure underneath the product: turning messy health and nutrition data into reliable intelligence, so your team spends its time on the experience instead of the foundation.  **Security & compliance** — **SOC 2 Type II** · **HIPAA-aligned practices** · **BAA** and **Zero Data Retention (ZDR)** available  **What you can build** - **Scan food** — photo and text food recognition: detect foods and nutrition, then correct results conversationally - **Search the food database** — by name or barcode — and get healthier alternatives for any food - **Log food** — a per-user diary with day-range queries - **Predict glucose response** to any meal — no sensor required  **Getting started** 1. Create an API key in the [Developer Dashboard](https://dashboard.january.ai) — the full key is shown once, at creation. 2. Send it as `Authorization: Bearer sk-…` — click **Authorize** here to make every example below a live request. 3. On the **food-logs** endpoints, say whose diary you are reading or writing with the `January-End-User-ID` header. No other endpoint takes it: everything else either asks the shared food database a question or works on the body you send, and neither depends on who the food is for.  **Calling from a mobile app** — your `sk-` key must never ship inside an app. Instead, exchange it on your backend for a *client token*: a credential that lasts up to two hours, acts as exactly one of your end users, and carries only the scopes you grant it (see the **authentication** section). Your app then calls these endpoints directly, with no proxy of your own in the request path. Both credentials travel in the same `Authorization: Bearer` header, and every endpoint below opens by saying which it accepts — **API key or client token**, or **API key only**.  **Support** — [support@january.ai](mailto:support@january.ai) · [Discord community](https://discord.gg/cYQeh3UnC) · [docs.january.ai](https://docs.january.ai)
  *
  * The version of the OpenAPI document: 1.2
  * Contact: support@january.ai
@@ -13,14 +13,6 @@
  */
 
 import { mapValues } from '../runtime.js';
-import type { FoodLogInputServing } from './FoodLogInputServing.js';
-import {
-    FoodLogInputServingFromJSON,
-    FoodLogInputServingFromJSONTyped,
-    FoodLogInputServingToJSON,
-    FoodLogInputServingToJSONTyped,
-} from './FoodLogInputServing.js';
-
 /**
  *
  * @export
@@ -28,23 +20,29 @@ import {
  */
 export interface ConsumedHistoricalFood {
     /**
-     *
+     * When the food was eaten. Must carry a timezone designator.
      * @type {Date}
      * @memberof ConsumedHistoricalFood
      */
     timestamp: Date;
     /**
-     * Stable food identifier, provisionally narrowed to JavaScript's safe integer range.
+     * Food id from a search or food-analysis result.
+     * @type {string}
+     * @memberof ConsumedHistoricalFood
+     */
+    foodId: string;
+    /**
+     * One of the food's serving ids.
+     * @type {string}
+     * @memberof ConsumedHistoricalFood
+     */
+    servingId: string;
+    /**
+     * How many of that serving were consumed.
      * @type {number}
      * @memberof ConsumedHistoricalFood
      */
-    id: number;
-    /**
-     *
-     * @type {FoodLogInputServing}
-     * @memberof ConsumedHistoricalFood
-     */
-    serving: FoodLogInputServing;
+    quantity: number;
 }
 
 /**
@@ -52,8 +50,9 @@ export interface ConsumedHistoricalFood {
  */
 export function instanceOfConsumedHistoricalFood(value: object): value is ConsumedHistoricalFood {
     if (!('timestamp' in value) || value['timestamp'] === undefined) return false;
-    if (!('id' in value) || value['id'] === undefined) return false;
-    if (!('serving' in value) || value['serving'] === undefined) return false;
+    if ((!('foodId' in (value as Record<string, any>)) && !('food_id' in (value as Record<string, any>))) || ((value as Record<string, any>)['foodId'] === undefined && (value as Record<string, any>)['food_id'] === undefined)) return false;
+    if ((!('servingId' in (value as Record<string, any>)) && !('serving_id' in (value as Record<string, any>))) || ((value as Record<string, any>)['servingId'] === undefined && (value as Record<string, any>)['serving_id'] === undefined)) return false;
+    if (!('quantity' in value) || value['quantity'] === undefined) return false;
     return true;
 }
 
@@ -68,8 +67,9 @@ export function ConsumedHistoricalFoodFromJSONTyped(json: any, ignoreDiscriminat
     return {
 
         'timestamp': (new Date(json['timestamp'])),
-        'id': json['id'],
-        'serving': FoodLogInputServingFromJSON(json['serving']),
+        'foodId': json['food_id'],
+        'servingId': json['serving_id'],
+        'quantity': json['quantity'],
     };
 }
 
@@ -85,7 +85,8 @@ export function ConsumedHistoricalFoodToJSONTyped(value?: ConsumedHistoricalFood
     return {
 
         'timestamp': value['timestamp'].toISOString(),
-        'id': value['id'],
-        'serving': FoodLogInputServingToJSON(value['serving']),
+        'food_id': value['foodId'],
+        'serving_id': value['servingId'],
+        'quantity': value['quantity'],
     };
 }

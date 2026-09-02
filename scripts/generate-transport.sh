@@ -34,14 +34,18 @@ import fs from 'node:fs';
 const path = process.argv[2];
 const source = fs.readFileSync(path, 'utf8');
 const start = source.indexOf('    CompleteScanNutritionFacts:\n');
-const remainder = source.slice(start + 1);
-const nextSchema = remainder.search(/^    [A-Za-z0-9_]+:\n/m);
-const end = nextSchema < 0 ? -1 : start + 1 + nextSchema;
-const schema = source.slice(start, end);
-const required = schema.indexOf('\n      required:\n');
-const metadata = schema.indexOf('\n      x-january-upstream-schema:', required);
-if (start < 0 || end < 0 || required < 0 || metadata < 0) throw new Error('Compatibility schema block was not found.');
-fs.writeFileSync(path, source.slice(0, start) + schema.slice(0, required) + schema.slice(metadata) + source.slice(end));
+if (start < 0) {
+  if (!source.includes('    NutritionFacts:\n')) throw new Error('Nutrition response schema was not found.');
+} else {
+  const remainder = source.slice(start + 1);
+  const nextSchema = remainder.search(/^    [A-Za-z0-9_]+:\n/m);
+  const end = nextSchema < 0 ? -1 : start + 1 + nextSchema;
+  const schema = source.slice(start, end);
+  const required = schema.indexOf('\n      required:\n');
+  const metadata = schema.indexOf('\n      x-january-upstream-schema:', required);
+  if (end < 0 || required < 0 || metadata < 0) throw new Error('Compatibility schema block was not found.');
+  fs.writeFileSync(path, source.slice(0, start) + schema.slice(0, required) + schema.slice(metadata) + source.slice(end));
+}
 NODE
 
 jar="${JANUARY_OPENAPI_GENERATOR_JAR:-$root/../partner-api-contract/node_modules/.cache/january-generators/openapi-generator-cli-7.24.0.jar}"

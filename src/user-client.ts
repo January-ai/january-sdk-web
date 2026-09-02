@@ -10,6 +10,8 @@ import type {
   FoodSearchItem,
   FoodSearchResults,
   GetFoodRequest,
+  GetFoodLogRequest,
+  GetRestaurantMenuItemsResponse,
   GetRestaurantMenuItemsRequest,
   GlucosePrediction,
   ListFoodLogsRequest,
@@ -48,6 +50,7 @@ export type UserScanFoodPhotoRequest = WithoutUserId<ScanFoodPhotoRequest>;
 export type UserCorrectPhotoScanRequest = WithoutUserId<CorrectPhotoScanRequest>;
 export type UserCreateFoodLogRequest = WithoutUserContext<CreateFoodLogRequest>;
 export type UserListFoodLogsRequest = WithoutUserContext<ListFoodLogsRequest>;
+export type UserGetFoodLogRequest = WithoutUserContext<GetFoodLogRequest>;
 export type UserUpdateFoodLogRequest = WithoutUserContext<UpdateFoodLogRequest>;
 export type UserDeleteFoodLogRequest = WithoutUserContext<DeleteFoodLogRequest>;
 export type UserPredictGlucoseRequest = WithoutUserContext<PredictGlucoseRequest>;
@@ -97,7 +100,7 @@ class DefaultUserFoodsResource implements UserFoodsResource {
 
 /** Restaurant operations bound to one partner-owned end-user identity. */
 export interface UserRestaurantsResource {
-  getMenuItems(request: UserGetRestaurantMenuItemsRequest): Promise<SearchRestaurantMenuItemsResponse>;
+  getMenuItems(request: UserGetRestaurantMenuItemsRequest): Promise<GetRestaurantMenuItemsResponse>;
   /** Searches restaurants near a location. */
   search(request: UserSearchRestaurantsRequest): Promise<SearchRestaurantsResponse>;
   /** Searches restaurant menu items near a location. */
@@ -158,6 +161,8 @@ export interface UserFoodLogsResource {
   create(request: UserCreateFoodLogRequest): Promise<FoodLog>;
   /** Lists food logs in an inclusive calendar-date range. */
   list(request: UserListFoodLogsRequest): Promise<ListFoodLogsResponse>;
+  /** Gets one food log by id. */
+  get(request: UserGetFoodLogRequest): Promise<FoodLog>;
   /** Updates an existing food log. */
   update(request: UserUpdateFoodLogRequest): Promise<FoodLog>;
   /** Deletes a food log. */
@@ -176,6 +181,10 @@ class DefaultUserFoodLogsResource implements UserFoodLogsResource {
 
   list(request: UserListFoodLogsRequest) {
     return this.resource.list({ ...request, ...this.context });
+  }
+
+  get(request: UserGetFoodLogRequest) {
+    return this.resource.get({ ...request, ...this.context });
   }
 
   update(request: UserUpdateFoodLogRequest) {

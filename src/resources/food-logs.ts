@@ -3,6 +3,7 @@ import type {
   DeleteFoodLogRequest,
   DeleteFoodLogResponse,
   FoodLog,
+  GetFoodLogRequest,
   ListFoodLogsRequest,
   ListFoodLogsResponse,
   UpdateFoodLogRequest,
@@ -14,44 +15,80 @@ export class FoodLogsResource {
   constructor(private readonly api: FoodLogsApi) {}
 
   async create(request: CreateFoodLogRequest): Promise<FoodLog> {
-    return executeRequest(() => this.api.createFoodLog({
-      xEndUserId: request.endUserId,
-      ...(request.endUserTimezone !== undefined ? { xEndUserTimezone: request.endUserTimezone } : {}),
+    const response = await executeRequest(() => this.api.createFoodLog({
+      januaryEndUserID: request.endUserId,
       createFoodLogBody: {
-        foods: request.foods,
-        ...(request.timestampUtc !== undefined ? { timestampUtc: parseDateTime(request.timestampUtc, 'timestampUtc') } : {}),
+        foods: request.foods.map(mapSelection),
+        ...(request.timestampUtc !== undefined ? { eatenAt: parseDateTime(request.timestampUtc, 'timestampUtc') } : {}),
         ...(request.name !== undefined ? { name: request.name } : {}),
       },
     }, init(request.signal)));
+    return mapFoodLog(response);
   }
 
   async list(request: ListFoodLogsRequest): Promise<ListFoodLogsResponse> {
-    return executeRequest(() => this.api.listFoodLogs({
-      xEndUserId: request.endUserId,
-      start: parseDate(request.start, 'start'),
-      end: parseDate(request.end, 'end'),
-      ...(request.endUserTimezone !== undefined ? { xEndUserTimezone: request.endUserTimezone } : {}),
+    const response = await executeRequest(() => this.api.listFoodLogs({
+      januaryEndUserID: request.endUserId,
+      startDate: parseDate(request.start, 'start'),
+      endDate: parseDate(request.end, 'end'),
+      timezone: request.endUserTimezone ?? 'UTC',
     }, init(request.signal)));
+    return { totalCount: response.items.length, items: response.items.map(mapFoodLog) };
+  }
+
+  async get(request: GetFoodLogRequest): Promise<FoodLog> {
+    const response = await executeRequest(() => this.api.getFoodLog({
+      januaryEndUserID: request.endUserId,
+      logId: request.logId,
+    }, init(request.signal)));
+    return mapFoodLog(response);
   }
 
   async update(request: UpdateFoodLogRequest): Promise<FoodLog> {
-    return executeRequest(() => this.api.updateFoodLog({
-      xEndUserId: request.endUserId, logId: request.logId,
-      ...(request.endUserTimezone !== undefined ? { xEndUserTimezone: request.endUserTimezone } : {}),
+    const response = await executeRequest(() => this.api.updateFoodLog({
+      januaryEndUserID: request.endUserId, logId: request.logId,
       updateFoodLogBody: {
-        ...(request.foods !== undefined ? { foods: request.foods } : {}),
-        ...(request.timestampUtc !== undefined ? { timestampUtc: normalizeDateTime(request.timestampUtc, 'timestampUtc') } : {}),
+        ...(request.foods !== undefined ? { foods: request.foods.map(mapSelection) } : {}),
+        ...(request.timestampUtc !== undefined ? { eatenAt: parseDateTime(request.timestampUtc, 'timestampUtc') } : {}),
         ...(request.name !== undefined ? { name: request.name } : {}),
       },
     }, init(request.signal)));
+    return mapFoodLog(response);
   }
 
   async delete(request: DeleteFoodLogRequest): Promise<DeleteFoodLogResponse> {
     return executeRequest(() => this.api.deleteFoodLog({
-      xEndUserId: request.endUserId, logId: request.logId,
-      ...(request.endUserTimezone !== undefined ? { xEndUserTimezone: request.endUserTimezone } : {}),
+      januaryEndUserID: request.endUserId, logId: request.logId,
     }, init(request.signal)));
   }
+}
+
+function mapSelection(selection: import('../models.js').FoodSelection) {
+  return { foodId: selection.id, servingId: selection.serving.id, quantity: selection.serving.quantity };
+}
+
+function mapFoodLog(value: import('../internal/transport/models/FoodLog.js').FoodLog): FoodLog {
+  return {
+    id: value.id,
+    timestampUtc: value.eatenAt.toISOString(),
+    name: value.name,
+    foods: value.foods.map((food) => ({
+      id: food.foodId,
+      name: food.name,
+      brandName: food.brandName,
+      imageUrl: food.imageUrl,
+      glycemicIndex: food.glycemicIndex,
+      glycemicLoad: food.glycemicLoad,
+      nutrients: food.nutrients,
+      consumedServing: { id: food.serving.id, quantity: food.quantity },
+      servingDetails: {
+        id: food.serving.id,
+        quantity: food.serving.quantity,
+        unit: food.serving.unit,
+        weightGrams: food.serving.weightGrams,
+      },
+    })),
+  };
 }
 
 function init(signal?: AbortSignal): RequestInit | undefined { return signal ? { signal } : undefined }
@@ -67,8 +104,4 @@ function parseDateTime(value: string, name: string): Date {
   const result = new Date(value);
   if (Number.isNaN(result.getTime())) throw new TypeError(`${name} must be an ISO-8601 date-time.`);
   return result;
-}
-
-function normalizeDateTime(value: string, name: string): string {
-  return parseDateTime(value, name).toISOString();
 }

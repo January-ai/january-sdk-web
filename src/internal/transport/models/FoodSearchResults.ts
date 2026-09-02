@@ -2,7 +2,7 @@
 /* eslint-disable */
 /**
  * January AI - Nutrition Intelligence APIs
- * Build food and metabolic intelligence into your product — one API for understanding what people eat and how food may affect them.  **Clinical-grade precision, consumer-grade experiences.** January builds the infrastructure underneath the product: turning messy health and nutrition data into reliable intelligence, so your team spends its time on the experience instead of the foundation.  **Security & compliance** — **SOC 2 Type II** · **HIPAA-aligned practices** · **BAA** and **Zero Data Retention (ZDR)** available  **What you can build** - **Scan food** — photo and text food recognition: detect foods and nutrition, then correct results conversationally - **Search the food database** — by name or barcode — and get healthier alternatives for any food - **Log food** — a per-user diary with day-range queries - **Predict glucose response** to any meal — no sensor required  **Getting started** 1. Create an API key in the [Developer Dashboard](https://dashboard.january.ai) — the full key is shown once, at creation. 2. Send it as `Authorization: Bearer <your key>` — click **Authorize** here to make every example below a live request. 3. Identify your end user with the `x-end-user-id` header wherever a request acts on their data.  **Support** — [support@january.ai](mailto:support@january.ai) · [Discord community](https://discord.gg/cYQeh3UnC) · [docs.january.ai](https://docs.january.ai)
+ * Build food and metabolic intelligence into your product — one API for understanding what people eat and how food may affect them.  **Clinical-grade precision, consumer-grade experiences.** January builds the infrastructure underneath the product: turning messy health and nutrition data into reliable intelligence, so your team spends its time on the experience instead of the foundation.  **Security & compliance** — **SOC 2 Type II** · **HIPAA-aligned practices** · **BAA** and **Zero Data Retention (ZDR)** available  **What you can build** - **Scan food** — photo and text food recognition: detect foods and nutrition, then correct results conversationally - **Search the food database** — by name or barcode — and get healthier alternatives for any food - **Log food** — a per-user diary with day-range queries - **Predict glucose response** to any meal — no sensor required  **Getting started** 1. Create an API key in the [Developer Dashboard](https://dashboard.january.ai) — the full key is shown once, at creation. 2. Send it as `Authorization: Bearer sk-…` — click **Authorize** here to make every example below a live request. 3. On the **food-logs** endpoints, say whose diary you are reading or writing with the `January-End-User-ID` header. No other endpoint takes it: everything else either asks the shared food database a question or works on the body you send, and neither depends on who the food is for.  **Calling from a mobile app** — your `sk-` key must never ship inside an app. Instead, exchange it on your backend for a *client token*: a credential that lasts up to two hours, acts as exactly one of your end users, and carries only the scopes you grant it (see the **authentication** section). Your app then calls these endpoints directly, with no proxy of your own in the request path. Both credentials travel in the same `Authorization: Bearer` header, and every endpoint below opens by saying which it accepts — **API key or client token**, or **API key only**.  **Support** — [support@january.ai](mailto:support@january.ai) · [Discord community](https://discord.gg/cYQeh3UnC) · [docs.january.ai](https://docs.january.ai)
  *
  * The version of the OpenAPI document: 1.2
  * Contact: support@january.ai
@@ -28,13 +28,7 @@ import {
  */
 export interface FoodSearchResults {
     /**
-     * Total number of matches in the database; may exceed the number of items returned.
-     * @type {number}
-     * @memberof FoodSearchResults
-     */
-    totalCount: number;
-    /**
-     *
+     * Ranked matches, best first. Empty when nothing matches — not an error.
      * @type {Array<FoodSearchItem>}
      * @memberof FoodSearchResults
      */
@@ -45,7 +39,6 @@ export interface FoodSearchResults {
  * Check if a given object implements the FoodSearchResults interface.
  */
 export function instanceOfFoodSearchResults(value: object): value is FoodSearchResults {
-    if ((!('totalCount' in (value as Record<string, any>)) && !('total_count' in (value as Record<string, any>))) || ((value as Record<string, any>)['totalCount'] === undefined && (value as Record<string, any>)['total_count'] === undefined)) return false;
     if (!('items' in value) || value['items'] === undefined) return false;
     return true;
 }
@@ -60,7 +53,6 @@ export function FoodSearchResultsFromJSONTyped(json: any, ignoreDiscriminator: b
     }
     return {
 
-        'totalCount': json['total_count'],
         'items': ((json['items'] as Array<any>).map(FoodSearchItemFromJSON)),
     };
 }
@@ -76,7 +68,6 @@ export function FoodSearchResultsToJSONTyped(value?: FoodSearchResults | null, i
 
     return {
 
-        'total_count': value['totalCount'],
         'items': ((value['items'] as Array<any>).map(FoodSearchItemToJSON)),
     };
 }

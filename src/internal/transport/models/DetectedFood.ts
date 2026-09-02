@@ -2,7 +2,7 @@
 /* eslint-disable */
 /**
  * January AI - Nutrition Intelligence APIs
- * Build food and metabolic intelligence into your product — one API for understanding what people eat and how food may affect them.  **Clinical-grade precision, consumer-grade experiences.** January builds the infrastructure underneath the product: turning messy health and nutrition data into reliable intelligence, so your team spends its time on the experience instead of the foundation.  **Security & compliance** — **SOC 2 Type II** · **HIPAA-aligned practices** · **BAA** and **Zero Data Retention (ZDR)** available  **What you can build** - **Scan food** — photo and text food recognition: detect foods and nutrition, then correct results conversationally - **Search the food database** — by name or barcode — and get healthier alternatives for any food - **Log food** — a per-user diary with day-range queries - **Predict glucose response** to any meal — no sensor required  **Getting started** 1. Create an API key in the [Developer Dashboard](https://dashboard.january.ai) — the full key is shown once, at creation. 2. Send it as `Authorization: Bearer <your key>` — click **Authorize** here to make every example below a live request. 3. Identify your end user with the `x-end-user-id` header wherever a request acts on their data.  **Support** — [support@january.ai](mailto:support@january.ai) · [Discord community](https://discord.gg/cYQeh3UnC) · [docs.january.ai](https://docs.january.ai)
+ * Build food and metabolic intelligence into your product — one API for understanding what people eat and how food may affect them.  **Clinical-grade precision, consumer-grade experiences.** January builds the infrastructure underneath the product: turning messy health and nutrition data into reliable intelligence, so your team spends its time on the experience instead of the foundation.  **Security & compliance** — **SOC 2 Type II** · **HIPAA-aligned practices** · **BAA** and **Zero Data Retention (ZDR)** available  **What you can build** - **Scan food** — photo and text food recognition: detect foods and nutrition, then correct results conversationally - **Search the food database** — by name or barcode — and get healthier alternatives for any food - **Log food** — a per-user diary with day-range queries - **Predict glucose response** to any meal — no sensor required  **Getting started** 1. Create an API key in the [Developer Dashboard](https://dashboard.january.ai) — the full key is shown once, at creation. 2. Send it as `Authorization: Bearer sk-…` — click **Authorize** here to make every example below a live request. 3. On the **food-logs** endpoints, say whose diary you are reading or writing with the `January-End-User-ID` header. No other endpoint takes it: everything else either asks the shared food database a question or works on the body you send, and neither depends on who the food is for.  **Calling from a mobile app** — your `sk-` key must never ship inside an app. Instead, exchange it on your backend for a *client token*: a credential that lasts up to two hours, acts as exactly one of your end users, and carries only the scopes you grant it (see the **authentication** section). Your app then calls these endpoints directly, with no proxy of your own in the request path. Both credentials travel in the same `Authorization: Bearer` header, and every endpoint below opens by saying which it accepts — **API key or client token**, or **API key only**.  **Support** — [support@january.ai](mailto:support@january.ai) · [Discord community](https://discord.gg/cYQeh3UnC) · [docs.january.ai](https://docs.january.ai)
  *
  * The version of the OpenAPI document: 1.2
  * Contact: support@january.ai
@@ -13,13 +13,6 @@
  */
 
 import { mapValues } from '../runtime.js';
-import type { CompleteScanNutritionFacts } from './CompleteScanNutritionFacts.js';
-import {
-    CompleteScanNutritionFactsFromJSON,
-    CompleteScanNutritionFactsFromJSONTyped,
-    CompleteScanNutritionFactsToJSON,
-    CompleteScanNutritionFactsToJSONTyped,
-} from './CompleteScanNutritionFacts.js';
 import type { DetectedServing } from './DetectedServing.js';
 import {
     DetectedServingFromJSON,
@@ -27,6 +20,13 @@ import {
     DetectedServingToJSON,
     DetectedServingToJSONTyped,
 } from './DetectedServing.js';
+import type { NutritionFacts } from './NutritionFacts.js';
+import {
+    NutritionFactsFromJSON,
+    NutritionFactsFromJSONTyped,
+    NutritionFactsToJSON,
+    NutritionFactsToJSONTyped,
+} from './NutritionFacts.js';
 
 /**
  *
@@ -35,29 +35,29 @@ import {
  */
 export interface DetectedFood {
     /**
-     * Stable food identifier, provisionally narrowed to JavaScript's safe integer range.
-     * @type {number}
-     * @memberof DetectedFood
-     */
-    id?: number;
-    /**
-     *
+     * Catalog food id, or null when the producer matched none.
      * @type {string}
      * @memberof DetectedFood
      */
-    name: string;
+    id: string | null;
     /**
-     * Empty for generic (non-branded) foods.
+     * Null only when the producer sent a food with no name.
      * @type {string}
      * @memberof DetectedFood
      */
-    brandName?: string;
+    name: string | null;
     /**
-     *
-     * @type {CompleteScanNutritionFacts}
+     * Null for generic (non-branded) foods.
+     * @type {string}
      * @memberof DetectedFood
      */
-    nutrients: CompleteScanNutritionFacts;
+    brandName: string | null;
+    /**
+     *
+     * @type {NutritionFacts}
+     * @memberof DetectedFood
+     */
+    nutrients: NutritionFacts;
     /**
      * Never empty: every detection producer guarantees at least one serving.
      * @type {Array<DetectedServing>}
@@ -70,7 +70,9 @@ export interface DetectedFood {
  * Check if a given object implements the DetectedFood interface.
  */
 export function instanceOfDetectedFood(value: object): value is DetectedFood {
+    if (!('id' in value) || value['id'] === undefined) return false;
     if (!('name' in value) || value['name'] === undefined) return false;
+    if ((!('brandName' in (value as Record<string, any>)) && !('brand_name' in (value as Record<string, any>))) || ((value as Record<string, any>)['brandName'] === undefined && (value as Record<string, any>)['brand_name'] === undefined)) return false;
     if (!('nutrients' in value) || value['nutrients'] === undefined) return false;
     if (!('servings' in value) || value['servings'] === undefined) return false;
     return true;
@@ -86,10 +88,10 @@ export function DetectedFoodFromJSONTyped(json: any, ignoreDiscriminator: boolea
     }
     return {
 
-        'id': json['id'] == null ? undefined : json['id'],
+        'id': json['id'],
         'name': json['name'],
-        'brandName': json['brand_name'] == null ? undefined : json['brand_name'],
-        'nutrients': CompleteScanNutritionFactsFromJSON(json['nutrients']),
+        'brandName': json['brand_name'],
+        'nutrients': NutritionFactsFromJSON(json['nutrients']),
         'servings': ((json['servings'] as Array<any>).map(DetectedServingFromJSON)),
     };
 }
@@ -108,7 +110,7 @@ export function DetectedFoodToJSONTyped(value?: DetectedFood | null, ignoreDiscr
         'id': value['id'],
         'name': value['name'],
         'brand_name': value['brandName'],
-        'nutrients': CompleteScanNutritionFactsToJSON(value['nutrients']),
+        'nutrients': NutritionFactsToJSON(value['nutrients']),
         'servings': ((value['servings'] as Array<any>).map(DetectedServingToJSON)),
     };
 }

@@ -2,7 +2,7 @@
 /* eslint-disable */
 /**
  * January AI - Nutrition Intelligence APIs
- * Build food and metabolic intelligence into your product — one API for understanding what people eat and how food may affect them.  **Clinical-grade precision, consumer-grade experiences.** January builds the infrastructure underneath the product: turning messy health and nutrition data into reliable intelligence, so your team spends its time on the experience instead of the foundation.  **Security & compliance** — **SOC 2 Type II** · **HIPAA-aligned practices** · **BAA** and **Zero Data Retention (ZDR)** available  **What you can build** - **Scan food** — photo and text food recognition: detect foods and nutrition, then correct results conversationally - **Search the food database** — by name or barcode — and get healthier alternatives for any food - **Log food** — a per-user diary with day-range queries - **Predict glucose response** to any meal — no sensor required  **Getting started** 1. Create an API key in the [Developer Dashboard](https://dashboard.january.ai) — the full key is shown once, at creation. 2. Send it as `Authorization: Bearer <your key>` — click **Authorize** here to make every example below a live request. 3. Identify your end user with the `x-end-user-id` header wherever a request acts on their data.  **Support** — [support@january.ai](mailto:support@january.ai) · [Discord community](https://discord.gg/cYQeh3UnC) · [docs.january.ai](https://docs.january.ai)
+ * Build food and metabolic intelligence into your product — one API for understanding what people eat and how food may affect them.  **Clinical-grade precision, consumer-grade experiences.** January builds the infrastructure underneath the product: turning messy health and nutrition data into reliable intelligence, so your team spends its time on the experience instead of the foundation.  **Security & compliance** — **SOC 2 Type II** · **HIPAA-aligned practices** · **BAA** and **Zero Data Retention (ZDR)** available  **What you can build** - **Scan food** — photo and text food recognition: detect foods and nutrition, then correct results conversationally - **Search the food database** — by name or barcode — and get healthier alternatives for any food - **Log food** — a per-user diary with day-range queries - **Predict glucose response** to any meal — no sensor required  **Getting started** 1. Create an API key in the [Developer Dashboard](https://dashboard.january.ai) — the full key is shown once, at creation. 2. Send it as `Authorization: Bearer sk-…` — click **Authorize** here to make every example below a live request. 3. On the **food-logs** endpoints, say whose diary you are reading or writing with the `January-End-User-ID` header. No other endpoint takes it: everything else either asks the shared food database a question or works on the body you send, and neither depends on who the food is for.  **Calling from a mobile app** — your `sk-` key must never ship inside an app. Instead, exchange it on your backend for a *client token*: a credential that lasts up to two hours, acts as exactly one of your end users, and carries only the scopes you grant it (see the **authentication** section). Your app then calls these endpoints directly, with no proxy of your own in the request path. Both credentials travel in the same `Authorization: Bearer` header, and every endpoint below opens by saying which it accepts — **API key or client token**, or **API key only**.  **Support** — [support@january.ai](mailto:support@january.ai) · [Discord community](https://discord.gg/cYQeh3UnC) · [docs.january.ai](https://docs.january.ai)
  *
  * The version of the OpenAPI document: 1.2
  * Contact: support@january.ai
@@ -35,23 +35,29 @@ import {
  */
 export interface FoodSearchItem {
     /**
-     * Stable food identifier, provisionally narrowed to JavaScript's safe integer range.
-     * @type {number}
-     * @memberof FoodSearchItem
-     */
-    id: number;
-    /**
-     *
+     * Opaque id — pass it back verbatim to log, predict, or fetch this food.
      * @type {string}
      * @memberof FoodSearchItem
      */
-    name: string;
+    id: string;
     /**
-     * Absent for generic (non-branded) foods.
+     * What kind of food this is: `generic` for a database staple ("banana"), `branded` for a packaged product, `recipe` for a multi-ingredient dish.
+     * @type {FoodSearchItemTypeEnum}
+     * @memberof FoodSearchItem
+     */
+    type: FoodSearchItemTypeEnum;
+    /**
+     * Null only when the database has no name for the row.
      * @type {string}
      * @memberof FoodSearchItem
      */
-    brandName?: string;
+    name: string | null;
+    /**
+     * null for generic foods and recipes, which have no brand.
+     * @type {string}
+     * @memberof FoodSearchItem
+     */
+    brandName: string | null;
     /**
      *
      * @type {NutritionFacts}
@@ -59,44 +65,63 @@ export interface FoodSearchItem {
      */
     nutrients: NutritionFacts;
     /**
-     * Glycemic index.
+     * Glycemic index; null when the database has none for this food.
      * @type {number}
      * @memberof FoodSearchItem
      */
-    glycemicIndex?: number;
+    glycemicIndex: number | null;
     /**
-     * Glycemic load.
+     * Glycemic load; null when the database has none for this food.
      * @type {number}
      * @memberof FoodSearchItem
      */
-    glycemicLoad?: number;
+    glycemicLoad: number | null;
     /**
-     * URL of a picture of the food, when the database has one.
+     * URL of a picture of the food; null when the database has none.
      * @type {string}
      * @memberof FoodSearchItem
      */
-    imageUrl?: string;
+    imageUrl: string | null;
     /**
-     * The product's barcode, for branded foods that have one.
+     * The product's barcode; null for foods that have none. Named for the code rather than one of its encodings — the same field carries a UPC, an EAN or a GTIN. It is the database's normalized form, so it may differ from the digits you scanned in leading zeros: display it, do not string-compare it.
      * @type {string}
      * @memberof FoodSearchItem
      */
-    upc?: string;
+    barcode: string | null;
     /**
-     *
+     * Search and barcode results carry the default serving only; `GET /v1.2/foods/{food_id}` returns the complete list to choose from.
      * @type {Array<ServingOption>}
      * @memberof FoodSearchItem
      */
     servings: Array<ServingOption>;
 }
 
+
+/**
+ * @export
+ */
+export const FoodSearchItemTypeEnum = {
+    generic: 'generic',
+    branded: 'branded',
+    recipe: 'recipe',
+    unknownDefaultOpenApi: '11184809'
+} as const;
+export type FoodSearchItemTypeEnum = typeof FoodSearchItemTypeEnum[keyof typeof FoodSearchItemTypeEnum];
+
+
 /**
  * Check if a given object implements the FoodSearchItem interface.
  */
 export function instanceOfFoodSearchItem(value: object): value is FoodSearchItem {
     if (!('id' in value) || value['id'] === undefined) return false;
+    if (!('type' in value) || value['type'] === undefined) return false;
     if (!('name' in value) || value['name'] === undefined) return false;
+    if ((!('brandName' in (value as Record<string, any>)) && !('brand_name' in (value as Record<string, any>))) || ((value as Record<string, any>)['brandName'] === undefined && (value as Record<string, any>)['brand_name'] === undefined)) return false;
     if (!('nutrients' in value) || value['nutrients'] === undefined) return false;
+    if ((!('glycemicIndex' in (value as Record<string, any>)) && !('glycemic_index' in (value as Record<string, any>))) || ((value as Record<string, any>)['glycemicIndex'] === undefined && (value as Record<string, any>)['glycemic_index'] === undefined)) return false;
+    if ((!('glycemicLoad' in (value as Record<string, any>)) && !('glycemic_load' in (value as Record<string, any>))) || ((value as Record<string, any>)['glycemicLoad'] === undefined && (value as Record<string, any>)['glycemic_load'] === undefined)) return false;
+    if ((!('imageUrl' in (value as Record<string, any>)) && !('image_url' in (value as Record<string, any>))) || ((value as Record<string, any>)['imageUrl'] === undefined && (value as Record<string, any>)['image_url'] === undefined)) return false;
+    if (!('barcode' in value) || value['barcode'] === undefined) return false;
     if (!('servings' in value) || value['servings'] === undefined) return false;
     return true;
 }
@@ -112,13 +137,14 @@ export function FoodSearchItemFromJSONTyped(json: any, ignoreDiscriminator: bool
     return {
 
         'id': json['id'],
+        'type': json['type'],
         'name': json['name'],
-        'brandName': json['brand_name'] == null ? undefined : json['brand_name'],
+        'brandName': json['brand_name'],
         'nutrients': NutritionFactsFromJSON(json['nutrients']),
-        'glycemicIndex': json['glycemic_index'] == null ? undefined : json['glycemic_index'],
-        'glycemicLoad': json['glycemic_load'] == null ? undefined : json['glycemic_load'],
-        'imageUrl': json['image_url'] == null ? undefined : json['image_url'],
-        'upc': json['upc'] == null ? undefined : json['upc'],
+        'glycemicIndex': json['glycemic_index'],
+        'glycemicLoad': json['glycemic_load'],
+        'imageUrl': json['image_url'],
+        'barcode': json['barcode'],
         'servings': ((json['servings'] as Array<any>).map(ServingOptionFromJSON)),
     };
 }
@@ -135,13 +161,14 @@ export function FoodSearchItemToJSONTyped(value?: FoodSearchItem | null, ignoreD
     return {
 
         'id': value['id'],
+        'type': value['type'],
         'name': value['name'],
         'brand_name': value['brandName'],
         'nutrients': NutritionFactsToJSON(value['nutrients']),
         'glycemic_index': value['glycemicIndex'],
         'glycemic_load': value['glycemicLoad'],
         'image_url': value['imageUrl'],
-        'upc': value['upc'],
+        'barcode': value['barcode'],
         'servings': ((value['servings'] as Array<any>).map(ServingOptionToJSON)),
     };
 }

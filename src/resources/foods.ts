@@ -27,8 +27,7 @@ export class FoodsResource {
 
     const response = await executeRequest(() => this.api.autocompleteFoods({
       query,
-      ...(request.endUserId !== undefined ? { xEndUserId: request.endUserId } : {}),
-      ...(request.category !== undefined ? { category: request.category } : {}),
+      ...(request.category !== undefined ? { type: request.category } : {}),
       limit,
     }, request.signal ? { signal: request.signal } : undefined));
 
@@ -44,12 +43,11 @@ export class FoodsResource {
   }
 
   async get(request: GetFoodRequest): Promise<FoodSearchItem> {
-    if (!Number.isSafeInteger(request.foodId) || request.foodId <= 0) {
-      throw new TypeError('Food ID must be a positive safe integer.');
+    if (!request.foodId.trim()) {
+      throw new TypeError('Food ID is required.');
     }
     const response = await executeRequest(() => this.api.getFood({
       foodId: request.foodId,
-      ...(request.endUserId !== undefined ? { xEndUserId: request.endUserId } : {}),
     }, request.signal ? { signal: request.signal } : undefined));
     return mapFoodSearchItem(response);
   }
@@ -66,8 +64,7 @@ export class FoodsResource {
 
     const response = await executeRequest(() => this.api.searchFoods({
       query,
-      ...(request.endUserId !== undefined ? { xEndUserId: request.endUserId } : {}),
-      ...(request.category !== undefined ? { category: request.category } : {}),
+      ...(request.category !== undefined ? { type: request.category } : {}),
       limit,
     }, request.signal ? { signal: request.signal } : undefined));
 
@@ -78,29 +75,38 @@ export class FoodsResource {
     const upc = request.upc.trim();
     if (upc.length === 0) throw new TypeError('A barcode is required.');
     const response = await executeRequest(() => this.api.lookupFoodByBarcode({
-      upc,
-      ...(request.endUserId !== undefined ? { xEndUserId: request.endUserId } : {}),
+      barcode: upc,
     }, request.signal ? { signal: request.signal } : undefined));
-    return mapFoodSearchResults(response);
+    return { totalCount: 1, items: [mapFoodSearchItem(response)] };
   }
 
   async suggestAlternatives(
     request: SuggestFoodAlternativesRequest,
   ): Promise<SuggestFoodAlternativesResponse> {
-    return executeRequest(() => this.api.suggestFoodAlternatives({
+    const response = await executeRequest(() => this.api.suggestFoodAlternatives({
       foodId: request.foodId,
       suggestFoodAlternativesBody: {
         dietRestrictions: request.dietRestrictions,
         dietPreferences: request.dietPreferences,
       },
-      ...(request.endUserId !== undefined ? { xEndUserId: request.endUserId } : {}),
     }, request.signal ? { signal: request.signal } : undefined));
+    return { alternatives: response.alternatives.map((food) => ({
+      id: food.id,
+      name: food.name,
+      brandName: food.brandName,
+      nutrients: food.nutrients,
+      servings: food.servings.map((serving) => ({
+        id: serving.id,
+        quantity: serving.quantity,
+        unit: serving.unit,
+      })),
+    })) };
   }
 }
 
 function mapFoodSearchResults(response: import('../internal/transport/models/FoodSearchResults.js').FoodSearchResults): FoodSearchResults {
   return {
-    totalCount: response.totalCount,
+    totalCount: response.items.length,
     items: response.items.map(mapFoodSearchItem),
   };
 }
@@ -108,6 +114,7 @@ function mapFoodSearchResults(response: import('../internal/transport/models/Foo
 function mapFoodSearchItem(item: import('../internal/transport/models/FoodSearchItem.js').FoodSearchItem): FoodSearchItem {
   return {
     id: item.id,
+    type: item.type as import('../models.js').FoodCategory,
     name: item.name,
     brandName: item.brandName ?? null,
     calories: item.nutrients.calories?.value ?? null,
@@ -125,7 +132,7 @@ function mapFoodSearchItem(item: import('../internal/transport/models/FoodSearch
     glycemicIndex: item.glycemicIndex ?? null,
     glycemicLoad: item.glycemicLoad ?? null,
     photoUrl: item.imageUrl ?? null,
-    upc: item.upc ?? null,
+    barcode: item.barcode ?? null,
     servings: item.servings.map((serving) => ({
       id: serving.id,
       quantity: serving.quantity,

@@ -17,41 +17,58 @@ const client = new JanuaryPartnerClient({
   ...(process.env.JANUARY_BASE_URL ? { baseUrl: process.env.JANUARY_BASE_URL } : {}),
 });
 
-const search = await client.foods.search({ query: 'banana', endUserId, limit: 3 });
+const autocomplete = await client.foods.autocomplete({ query: 'ban', limit: 3 });
+if (!autocomplete.items.length) throw new Error('foods.autocomplete returned no items.');
+pass('foods.autocomplete', `${autocomplete.items.length} items`);
+
+const search = await client.foods.search({ query: 'banana', limit: 3 });
 const food = search.items[0];
 const serving = food?.servings[0];
-if (!food || !serving) throw new Error('foods.search returned no usable food.');
+if (!food || !serving?.id) throw new Error('foods.search returned no usable food.');
 pass('foods.search', `${search.items.length} items`);
 
+const hydratedFood = await client.foods.get({ foodId: food.id });
+pass('foods.get', hydratedFood.id);
+
 const natural = await client.foodAnalysis.analyzeDescription({
-  query: 'one banana and a bowl of oatmeal', endUserId,
+  query: 'one banana and a bowl of oatmeal',
 });
 pass('foodAnalysis.analyzeDescription', `${natural.detections.length} detections`);
 
 const alternatives = await client.foods.suggestAlternatives({
   foodId: food.id,
-  endUserId,
   dietRestrictions: [],
   dietPreferences: [],
 });
 pass('foods.suggestAlternatives', `${alternatives.alternatives.length} alternatives`);
 
-const barcode = await client.foods.lookupBarcode({ upc: '049000006346', endUserId });
+const barcode = await client.foods.lookupBarcode({ upc: '049000006346' });
 pass('foods.lookupBarcode', `${barcode.items.length} items`);
 
 const restaurants = await client.restaurants.search({
-  query: 'mcdonalds', latitude: 37.7749, longitude: -122.4194, endUserId, limit: 3,
+  query: 'mcdonalds', latitude: 37.7749, longitude: -122.4194, limit: 3,
 });
 pass('restaurants.search', `${restaurants.items.length} items`);
 
 const menuItems = await client.restaurants.searchMenuItems({
-  query: 'burger', latitude: 37.7749, longitude: -122.4194, endUserId, limit: 3,
+  query: 'burger', latitude: 37.7749, longitude: -122.4194, limit: 3,
 });
 pass('restaurants.searchMenuItems', `${menuItems.items.length} items`);
 
+let restaurantMenu;
+for (const restaurant of restaurants.items) {
+  try {
+    restaurantMenu = await client.restaurants.getMenuItems({ restaurantId: restaurant.id, limit: 3 });
+    break;
+  } catch (error) {
+    if (error?.status !== 404) throw error;
+  }
+}
+if (!restaurantMenu) throw new Error('No restaurant search result supported menu lookup.');
+pass('restaurants.getMenuItems', `${restaurantMenu.items.length} items`);
+
 const scan = await client.foodAnalysis.analyzePhoto({
   image: 'https://friendlysrestaurants.com/assets/live/img/production/detail/menu/lunch-dinner_999-combohs_all-american-burger-fries.jpg',
-  endUserId,
 });
 if (!scan.mealName || !scan.detections?.length) {
   throw new Error('foodAnalysis.analyzePhoto returned no correctable detections.');
@@ -63,7 +80,6 @@ const photoFixture = await readFile(
 );
 const base64Scan = await client.foodAnalysis.analyzePhoto({
   image: `data:image/png;base64,${photoFixture.toString('base64')}`,
-  endUserId,
 });
 if (!base64Scan.mealName || !base64Scan.detections?.length) {
   throw new Error('foodAnalysis.analyzePhoto returned no detections for the base64 fixture.');
@@ -71,10 +87,8 @@ if (!base64Scan.mealName || !base64Scan.detections?.length) {
 pass('foodAnalysis.analyzePhoto base64', `${base64Scan.detections.length} detections`);
 
 await client.foodAnalysis.correct({
-  mealName: scan.mealName,
-  detections: scan.detections,
-  userInput: 'Rename the meal to January Web SDK smoke test meal.',
-  endUserId,
+  analysis: scan,
+  instruction: 'Rename the meal to January Web SDK smoke test meal.',
 });
 pass('foodAnalysis.correct');
 
@@ -101,6 +115,10 @@ try {
   }
   pass('foodLogs.list');
 
+  const fetched = await client.foodLogs.get({ endUserId, endUserTimezone: timezone, logId: created.id });
+  if (fetched.id !== created.id) throw new Error('foodLogs.get returned the wrong log.');
+  pass('foodLogs.get');
+
   const updated = await client.foodLogs.update({
     endUserId, endUserTimezone: timezone, logId: created.id, name: 'January Web SDK smoke updated',
   });
@@ -109,10 +127,9 @@ try {
   }
   pass('foodLogs.update');
 
-  const deleted = await client.foodLogs.delete({
+  await client.foodLogs.delete({
     endUserId, endUserTimezone: timezone, logId: created.id,
   });
-  if (deleted.status !== 'deleted') throw new Error(`foodLogs.delete returned ${deleted.status}.`);
   createdLogId = undefined;
   pass('foodLogs.delete');
 } finally {
@@ -138,7 +155,7 @@ const prediction = await client.glucose.predict({
 if (!prediction.prediction.length) throw new Error('glucose.predict returned no points.');
 pass('glucose.predict', `${prediction.prediction.length} points`);
 
-console.log('PASS all 13 Partner API v1.2 operations through the public Web SDK');
+console.log('PASS all 17 client Partner API v1.2 operations through the public Web SDK');
 
 function pass(operation, detail) {
   console.log(`PASS ${operation}${detail ? ` (${detail})` : ''}`);

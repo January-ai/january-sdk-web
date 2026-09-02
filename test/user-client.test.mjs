@@ -10,17 +10,17 @@ test('scoped client applies immutable identity and preserves multi-food and date
     const isList = url.pathname === '/v1.2/food-logs' && init.method === 'GET';
     const isGlucose = url.pathname === '/v1.2/glucose/predictions';
     const response = isList
-      ? { total_count: 0, items: [] }
+      ? { items: [] }
       : isGlucose
-        ? { prediction: [], impact_score: 'low', chart: { min: 70, max: 140 } }
-        : { id: '00000000-0000-0000-0000-000000000001', foods: [], timestamp_utc: '2026-08-25T16:30:00Z' };
+        ? { points: [], impact_score: 'low', chart: { min: 70, max: 140 } }
+        : { id: '00000000-0000-0000-0000-000000000001', foods: [], eaten_at: '2026-08-25T16:30:00Z' };
     return new Response(JSON.stringify(response), { status: 200, headers: { 'content-type': 'application/json' } });
   };
   const client = new JanuaryPartnerClient({ apiKey: 'fixture', fetch });
   const scoped = client.forUser({ endUserId: ' user-42 ', endUserTimezone: ' America/New_York ' });
   const foods = [
-    { id: 1, serving: { id: 11, quantity: 1 } },
-    { id: 2, serving: { id: 22, quantity: 1.5 } },
+    { id: '1', serving: { id: '11', quantity: 1 } },
+    { id: '2', serving: { id: '22', quantity: 1.5 } },
   ];
 
   await scoped.foodLogs.create({ foods, timestampUtc: '2026-08-25T12:30:00-04:00', name: 'Lunch' });
@@ -39,14 +39,15 @@ test('scoped client applies immutable identity and preserves multi-food and date
 
   assert.deepEqual(scoped.context, { endUserId: 'user-42', endUserTimezone: 'America/New_York' });
   assert.ok(Object.isFrozen(scoped.context));
-  assert.ok(requests.every(({ init }) => new Headers(init.headers).get('x-end-user-id') === 'user-42'));
-  assert.ok(requests.every(({ init }) => new Headers(init.headers).get('x-end-user-timezone') === 'America/New_York'));
-  assert.deepEqual(requests[0].body.foods, foods);
-  assert.equal(requests[0].body.timestamp_utc, '2026-08-25T16:30:00.000Z');
-  assert.equal(requests[1].url.searchParams.get('start'), '2026-08-23');
-  assert.equal(requests[1].url.searchParams.get('end'), '2026-08-29');
-  assert.deepEqual(requests[2].body.foods, foods);
-  assert.equal(requests[2].body.timestamp_utc, '2026-08-25T17:00:00.000Z');
+  assert.ok(requests.slice(0, 3).every(({ init }) => new Headers(init.headers).get('january-end-user-id') === 'user-42'));
+  assert.equal(new Headers(requests[3].init.headers).get('january-end-user-id'), null);
+  assert.deepEqual(requests[0].body.foods, [{ food_id: '1', serving_id: '11', quantity: 1 }, { food_id: '2', serving_id: '22', quantity: 1.5 }]);
+  assert.equal(requests[0].body.eaten_at, '2026-08-25T16:30:00.000Z');
+  assert.equal(requests[1].url.searchParams.get('start_date'), '2026-08-23');
+  assert.equal(requests[1].url.searchParams.get('end_date'), '2026-08-29');
+  assert.equal(requests[1].url.searchParams.get('timezone'), 'America/New_York');
+  assert.equal(requests[2].body.eaten_at, '2026-08-25T17:00:00.000Z');
+  assert.equal(requests[3].body.timezone, 'America/New_York');
 });
 
 test('scoped client rejects an empty partner user ID', () => {
@@ -59,24 +60,29 @@ test('scoped client applies one identity and cancellation signal across every di
   const fetch = async (input, init) => {
     const url = new URL(String(input));
     requests.push({ url, init });
-    const response = /^\/v1\.2\/foods\/\d+$/.test(url.pathname)
+    const response = url.pathname.endsWith('/alternatives')
+      ? { alternatives: [] }
+      : /^\/v1\.2\/foods\/(?:\d+$|barcode\/)/.test(url.pathname)
       ? {
-          id: 1,
+          id: '1', type: 'generic',
           name: 'banana',
+          brand_name: null,
           nutrients: {},
+          glycemic_index: null,
+          glycemic_load: null,
+          image_url: null,
+          barcode: null,
           servings: [],
         }
       : url.pathname === '/v1.2/foods/autocomplete'
         ? { items: [] }
-        : url.pathname.endsWith('/alternatives')
-          ? { alternatives: [] }
-          : url.pathname === '/v1.2/food-scans/text'
-            ? { detections: [] }
+        : url.pathname === '/v1.2/food-analysis/text'
+            ? { meal_name: null, total_nutrients: {}, detections: [] }
             : url.pathname.startsWith('/v1.2/restaurants')
-              ? { total_count: 0, items: [] }
-              : url.pathname.startsWith('/v1.2/food-scans/')
-                ? { detections: [] }
-                : { total_count: 0, items: [] };
+              ? { items: [] }
+              : url.pathname.startsWith('/v1.2/food-analysis/')
+                ? { meal_name: null, total_nutrients: {}, detections: [] }
+                : { items: [] };
     return new Response(JSON.stringify(response), {
       status: 200,
       headers: { 'content-type': 'application/json' },
@@ -87,23 +93,22 @@ test('scoped client applies one identity and cancellation signal across every di
   const controller = new AbortController();
 
   await scoped.foods.autocomplete({ query: 'ban', signal: controller.signal });
-  await scoped.foods.get({ foodId: 1, signal: controller.signal });
+  await scoped.foods.get({ foodId: '1', signal: controller.signal });
   await scoped.foods.search({ query: 'banana', signal: controller.signal });
   await scoped.foods.lookupBarcode({ upc: '012345678905', signal: controller.signal });
   await scoped.foodAnalysis.analyzeDescription({ query: 'banana and oats', signal: controller.signal });
-  await scoped.foods.suggestAlternatives({ foodId: 1, signal: controller.signal });
+  await scoped.foods.suggestAlternatives({ foodId: '1', signal: controller.signal });
   await scoped.restaurants.search({ query: 'cafe', latitude: 40, longitude: -74, signal: controller.signal });
   await scoped.restaurants.searchMenuItems({ query: 'salad', latitude: 40, longitude: -74, signal: controller.signal });
   await scoped.foodAnalysis.analyzePhoto({ image: 'https://example.com/meal.jpg', signal: controller.signal });
   await scoped.foodAnalysis.correct({
-    mealName: 'Lunch',
-    detections: [],
-    userInput: 'add avocado',
+    analysis: { mealName: 'Lunch', totalNutrients: {}, detections: [] },
+    instruction: 'add avocado',
     signal: controller.signal,
   });
 
   assert.equal(requests.length, 10);
-  assert.ok(requests.every(({ init }) => new Headers(init.headers).get('x-end-user-id') === 'user-42'));
+  assert.ok(requests.every(({ init }) => new Headers(init.headers).get('january-end-user-id') === null));
   assert.ok(requests.every(({ init }) => init.signal === controller.signal));
 });
 

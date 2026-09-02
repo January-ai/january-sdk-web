@@ -2,7 +2,7 @@
 /* eslint-disable */
 /**
  * January AI - Nutrition Intelligence APIs
- * Build food and metabolic intelligence into your product — one API for understanding what people eat and how food may affect them.  **Clinical-grade precision, consumer-grade experiences.** January builds the infrastructure underneath the product: turning messy health and nutrition data into reliable intelligence, so your team spends its time on the experience instead of the foundation.  **Security & compliance** — **SOC 2 Type II** · **HIPAA-aligned practices** · **BAA** and **Zero Data Retention (ZDR)** available  **What you can build** - **Scan food** — photo and text food recognition: detect foods and nutrition, then correct results conversationally - **Search the food database** — by name or barcode — and get healthier alternatives for any food - **Log food** — a per-user diary with day-range queries - **Predict glucose response** to any meal — no sensor required  **Getting started** 1. Create an API key in the [Developer Dashboard](https://dashboard.january.ai) — the full key is shown once, at creation. 2. Send it as `Authorization: Bearer <your key>` — click **Authorize** here to make every example below a live request. 3. Identify your end user with the `x-end-user-id` header wherever a request acts on their data.  **Support** — [support@january.ai](mailto:support@january.ai) · [Discord community](https://discord.gg/cYQeh3UnC) · [docs.january.ai](https://docs.january.ai)
+ * Build food and metabolic intelligence into your product — one API for understanding what people eat and how food may affect them.  **Clinical-grade precision, consumer-grade experiences.** January builds the infrastructure underneath the product: turning messy health and nutrition data into reliable intelligence, so your team spends its time on the experience instead of the foundation.  **Security & compliance** — **SOC 2 Type II** · **HIPAA-aligned practices** · **BAA** and **Zero Data Retention (ZDR)** available  **What you can build** - **Scan food** — photo and text food recognition: detect foods and nutrition, then correct results conversationally - **Search the food database** — by name or barcode — and get healthier alternatives for any food - **Log food** — a per-user diary with day-range queries - **Predict glucose response** to any meal — no sensor required  **Getting started** 1. Create an API key in the [Developer Dashboard](https://dashboard.january.ai) — the full key is shown once, at creation. 2. Send it as `Authorization: Bearer sk-…` — click **Authorize** here to make every example below a live request. 3. On the **food-logs** endpoints, say whose diary you are reading or writing with the `January-End-User-ID` header. No other endpoint takes it: everything else either asks the shared food database a question or works on the body you send, and neither depends on who the food is for.  **Calling from a mobile app** — your `sk-` key must never ship inside an app. Instead, exchange it on your backend for a *client token*: a credential that lasts up to two hours, acts as exactly one of your end users, and carries only the scopes you grant it (see the **authentication** section). Your app then calls these endpoints directly, with no proxy of your own in the request path. Both credentials travel in the same `Authorization: Bearer` header, and every endpoint below opens by saying which it accepts — **API key or client token**, or **API key only**.  **Support** — [support@january.ai](mailto:support@january.ai) · [Discord community](https://discord.gg/cYQeh3UnC) · [docs.january.ai](https://docs.january.ai)
  *
  * The version of the OpenAPI document: 1.2
  * Contact: support@january.ai
@@ -20,7 +20,7 @@ import { mapValues } from '../runtime.js';
  */
 export interface Restaurant {
     /**
-     * When coordinates are provided and the name matches no restaurant, results may be menu items instead.
+     * Always `restaurant`: this endpoint answers places only. For dishes, use `GET /v1.2/menu-items`.
      * @type {RestaurantTypeEnum}
      * @memberof Restaurant
      */
@@ -32,41 +32,41 @@ export interface Restaurant {
      */
     id: string;
     /**
-     *
+     * Null only when the source has no name for the place.
      * @type {string}
      * @memberof Restaurant
      */
-    name: string;
+    name: string | null;
     /**
-     *
+     * Whether this location belongs to a chain; null when unknown.
      * @type {boolean}
      * @memberof Restaurant
      */
-    isChain?: boolean;
+    isChain: boolean | null;
     /**
-     * Distance from (latitude, longitude) in meters; present only when coordinates were provided.
+     * Distance from (latitude, longitude) in meters; null when the source cannot place this result.
      * @type {number}
      * @memberof Restaurant
      */
-    distance?: number;
+    distanceMeters: number | null;
     /**
      *
      * @type {string}
      * @memberof Restaurant
      */
-    city?: string;
+    city: string | null;
     /**
      *
      * @type {string}
      * @memberof Restaurant
      */
-    address1?: string;
+    address1: string | null;
     /**
-     *
+     * Second address line; null when there is none.
      * @type {string}
      * @memberof Restaurant
      */
-    address2?: string;
+    address2: string | null;
 }
 
 
@@ -75,7 +75,6 @@ export interface Restaurant {
  */
 export const RestaurantTypeEnum = {
     restaurant: 'restaurant',
-    menuItem: 'menu_item',
     unknownDefaultOpenApi: '11184809'
 } as const;
 export type RestaurantTypeEnum = typeof RestaurantTypeEnum[keyof typeof RestaurantTypeEnum];
@@ -86,8 +85,15 @@ export type RestaurantTypeEnum = typeof RestaurantTypeEnum[keyof typeof Restaura
  */
 export function instanceOfRestaurant(value: object): value is Restaurant {
     if (!('type' in value) || value['type'] === undefined) return false;
+    if (value['type'] !== 'restaurant') return false;
+
     if (!('id' in value) || value['id'] === undefined) return false;
     if (!('name' in value) || value['name'] === undefined) return false;
+    if ((!('isChain' in (value as Record<string, any>)) && !('is_chain' in (value as Record<string, any>))) || ((value as Record<string, any>)['isChain'] === undefined && (value as Record<string, any>)['is_chain'] === undefined)) return false;
+    if ((!('distanceMeters' in (value as Record<string, any>)) && !('distance_meters' in (value as Record<string, any>))) || ((value as Record<string, any>)['distanceMeters'] === undefined && (value as Record<string, any>)['distance_meters'] === undefined)) return false;
+    if (!('city' in value) || value['city'] === undefined) return false;
+    if (!('address1' in value) || value['address1'] === undefined) return false;
+    if (!('address2' in value) || value['address2'] === undefined) return false;
     return true;
 }
 
@@ -104,11 +110,11 @@ export function RestaurantFromJSONTyped(json: any, ignoreDiscriminator: boolean)
         'type': json['type'],
         'id': json['id'],
         'name': json['name'],
-        'isChain': json['is_chain'] == null ? undefined : json['is_chain'],
-        'distance': json['distance'] == null ? undefined : json['distance'],
-        'city': json['city'] == null ? undefined : json['city'],
-        'address1': json['address1'] == null ? undefined : json['address1'],
-        'address2': json['address2'] == null ? undefined : json['address2'],
+        'isChain': json['is_chain'],
+        'distanceMeters': json['distance_meters'],
+        'city': json['city'],
+        'address1': json['address1'],
+        'address2': json['address2'],
     };
 }
 
@@ -127,7 +133,7 @@ export function RestaurantToJSONTyped(value?: Restaurant | null, ignoreDiscrimin
         'id': value['id'],
         'name': value['name'],
         'is_chain': value['isChain'],
-        'distance': value['distance'],
+        'distance_meters': value['distanceMeters'],
         'city': value['city'],
         'address1': value['address1'],
         'address2': value['address2'],
