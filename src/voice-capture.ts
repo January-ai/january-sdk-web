@@ -369,7 +369,7 @@ function normalizeAudioLevel(value: number): number {
 
 function mapCaptureError(error: unknown): VoiceCaptureError {
   if (error instanceof VoiceCaptureError) return error;
-  if (error instanceof DOMException) {
+  if (typeof DOMException !== 'undefined' && error instanceof DOMException) {
     if (error.name === 'NotAllowedError' || error.name === 'SecurityError') {
       return new VoiceCaptureError('permissionDenied', 'Allow microphone access to capture voice.', { cause: error });
     }

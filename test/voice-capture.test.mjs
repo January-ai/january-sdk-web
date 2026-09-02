@@ -112,3 +112,21 @@ test('permission errors reset the session and preserve a stable code', async () 
   await assert.rejects(() => session.start(), (error) => error instanceof VoiceCaptureError && error.code === 'permissionDenied');
   assert.equal(session.snapshot.state, 'idle');
 });
+
+test('adapter failures are mapped when DOMException is unavailable', async () => {
+  const originalDOMException = globalThis.DOMException;
+  try {
+    delete globalThis.DOMException;
+    const fixture = fixtureAdapter({
+      async start() { throw new Error('adapter failed'); },
+    });
+    const session = new VoiceCaptureSession(fixture.adapter);
+
+    await assert.rejects(
+      () => session.start(),
+      (error) => error instanceof VoiceCaptureError && error.code === 'recordingFailed',
+    );
+  } finally {
+    globalThis.DOMException = originalDOMException;
+  }
+});
