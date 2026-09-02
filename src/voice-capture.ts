@@ -316,6 +316,9 @@ function createBrowserRecording(
       }, { once: true });
       recorder.addEventListener('error', () => reject(new VoiceCaptureError('recordingFailed', 'The browser could not record audio.')), { once: true });
       if (recorder.state === 'inactive') {
+        stopMeter();
+        try { recognition?.abort(); } catch { /* already stopped */ }
+        for (const track of stream.getTracks()) track.stop();
         reject(new VoiceCaptureError('recordingFailed', 'The audio recorder stopped unexpectedly.'));
         return;
       }

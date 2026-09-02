@@ -59,6 +59,15 @@ export function VoiceSearchInput({ disabled = false, id, onChange, placeholder, 
         className={`flex min-h-14 min-w-0 items-center gap-3 rounded-2xl px-3 transition-colors ${recording ? 'bg-stone-950 text-white shadow-lg shadow-stone-900/10' : 'border border-stone-300 bg-white focus-within:bg-stone-50'}`}
         role={recording ? 'status' : undefined}
       >
+        <input
+          className={recording || busy ? 'sr-only' : 'min-w-0 flex-1 bg-transparent px-1 text-base outline-none placeholder:text-stone-400'}
+          disabled={disabled || recording || busy}
+          id={id}
+          onChange={(event) => onChange(event.target.value)}
+          placeholder={placeholder}
+          tabIndex={recording || busy ? -1 : undefined}
+          value={value}
+        />
         {recording ? (
           <>
             <button aria-label="Cancel voice capture" className="grid size-9 shrink-0 place-items-center rounded-full border border-white/15 text-stone-300 transition-colors hover:bg-white/10 hover:text-white" onClick={cancelCapture} type="button">
@@ -80,13 +89,6 @@ export function VoiceSearchInput({ disabled = false, id, onChange, placeholder, 
           </>
         ) : (
           <>
-            <input
-              className="min-w-0 flex-1 bg-transparent px-1 text-base outline-none placeholder:text-stone-400"
-              id={id}
-              onChange={(event) => onChange(event.target.value)}
-              placeholder={placeholder}
-              value={value}
-            />
             <button
               aria-label="Start voice capture"
               className="grid size-9 shrink-0 place-items-center rounded-full bg-stone-100 text-stone-700 transition-colors hover:bg-stone-200 disabled:cursor-not-allowed disabled:opacity-35"
