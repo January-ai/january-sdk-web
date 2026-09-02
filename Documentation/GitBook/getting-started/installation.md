@@ -10,7 +10,7 @@ npm test
 npm pack
 ```
 
-The final command writes `januaryai-sdk-0.1.0.tgz`. Install that immutable
+The final command writes `januaryai-sdk-0.1.0.tgz`. Install that packed
 tarball into the application and commit the resulting lockfile:
 
 ```bash
