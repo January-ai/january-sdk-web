@@ -1,8 +1,7 @@
 # January Web SDK
 
 Typed Promise-based APIs for food discovery, restaurants, food analysis, food
-logs, and glucose prediction in modern browser applications. This is the Web
-SDK; January's future Node.js server SDK is a separate product.
+logs, and glucose prediction in modern browser applications.
 
 ## Start here
 
