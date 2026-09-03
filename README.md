@@ -1,8 +1,7 @@
 # January Web SDK
 
-Official browser SDK for January food discovery, restaurants, food analysis,
-food logs, and glucose prediction in TypeScript web applications. This is the
-Web SDK; January's future Node.js server SDK is a separate product.
+The official January SDK for food discovery, restaurants, food analysis, food
+logs, and glucose prediction in TypeScript web applications.
 
 ## Install
 
