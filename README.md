@@ -89,6 +89,10 @@ const foods = await user.foods.search({ query: 'banana' });
 console.log(`Found ${foods.items.length} foods`);
 ```
 
+The endpoint URL, HTTP method, and session mechanism belong to your app; they
+are not fixed by the SDK. The included demo uses the local endpoint documented
+earlier.
+
 A successful request prints a result count; an empty result is still a successful
 connection. Reuse the user-scoped client and recreate it when the signed-in
 account changes.
@@ -97,7 +101,8 @@ Direct browser calls also require January to enable the exact browser origin.
 If that origin is not enabled, make January API calls from your authenticated
 backend instead.
 
-Your production endpoint returns `{ "token": "ct-…", "expiresIn": 1800 }`,
+Your production endpoint returns `{ "token": "ct-…", "expiresIn": 1800 }`
+(the SDK also accepts `expires_in`),
 derives the stable end-user ID from the verified app session, and chooses scopes
 on the server. See the
 [backend token endpoint guide](Documentation/GitBook/getting-started/backend-token-endpoint.md)

@@ -12,8 +12,7 @@ cd examples/react-demo
 npm ci
 ```
 
-For the production-shaped token flow, provide explicit server-side environment
-configuration:
+For the included local token-server demo, use these server-side defaults:
 
 ```text
 PARTNER_TOKEN_URL=http://127.0.0.1:8787/api/january/token
