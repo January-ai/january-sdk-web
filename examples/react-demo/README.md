@@ -51,7 +51,7 @@ token endpoint, returns its `{ token, expiresIn }` response directly, and lets
 the SDK cache and refresh it. Replacing the local server later only changes the
 demo configuration/provider; January API calls remain pinned to production.
 
-## Optional fastest local shortcut
+## Optional debug-only shortcut
 
 To skip client-token minting, omit `PARTNER_TOKEN_URL` from `.env.local` and set
 `JANUARY_API_KEY=sk-your-server-api-key` plus

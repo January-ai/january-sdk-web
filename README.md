@@ -124,7 +124,7 @@ npm ci
 npm test
 ```
 
-## Optional: fastest local shortcut
+## Optional: fastest debug-only shortcut
 
 If you only want to make a request immediately, the full-stack demo can keep a
 server API key in its local server functions and skip client-token minting. This
