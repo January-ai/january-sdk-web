@@ -12,13 +12,12 @@ cd examples/react-demo
 npm ci
 ```
 
-For the production-shaped token flow, provide explicit server-side environment
-configuration:
+For the included local token-server demo, use these server-side defaults:
 
 ```text
-PARTNER_TOKEN_URL=http://localhost:8787/january-token
-PARTNER_APP_SESSION_TOKEN=your-local-app-session-or-relay-secret
-JANUARY_END_USER_ID=your-test-user
+PARTNER_TOKEN_URL=http://127.0.0.1:8787/api/january/token
+PARTNER_APP_SESSION_TOKEN=january-local-demo
+JANUARY_END_USER_ID=january-sdk-demo-user
 ```
 
 `PARTNER_TOKEN_URL` has no default. The demo sends a server-side `POST` with the

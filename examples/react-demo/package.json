@@ -6,7 +6,6 @@
   "scripts": {
     "predev": "npm --prefix ../.. run build",
     "dev": "vite dev",
-    "dev:token-relay": "node server/token-relay.mjs",
     "prebuild": "npm --prefix ../.. run build",
     "build": "vite build",
     "precheck": "npm --prefix ../.. run build",

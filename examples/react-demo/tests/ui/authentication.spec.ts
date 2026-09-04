@@ -24,8 +24,16 @@ test('mints a fresh client token through the relay', async ({ page }) => {
   const status = page.getByRole('region', { name: 'Authentication status' })
   await status.getByRole('button', { name: 'Mint fresh token' }).click()
   await expect(status.getByText('Token ready')).toBeVisible()
-  const requests = await (await fetch(`${fixtureApi}/__requests`)).json() as Array<{ path: string }>
-  expect(requests.some(({ path }) => path === '/january-token')).toBe(true)
+  const requests = await (await fetch(`${fixtureApi}/__requests`)).json() as Array<{
+    authorization: string | null
+    method: string
+    path: string
+  }>
+  expect(requests).toContainEqual(expect.objectContaining({
+    authorization: 'Bearer january-local-demo',
+    method: 'POST',
+    path: '/api/january/token',
+  }))
 })
 
 test('revokes the current user tokens', async ({ page }) => {
@@ -33,8 +41,8 @@ test('revokes the current user tokens', async ({ page }) => {
   const status = page.getByRole('region', { name: 'Authentication status' })
   await status.getByRole('button', { name: 'Revoke user tokens' }).click()
   await expect(status.getByText('Revoked 1 token. The next request will mint a new one.')).toBeVisible()
-  const requests = await (await fetch(`${fixtureApi}/__requests`)).json() as Array<{ path: string }>
-  expect(requests.some(({ path }) => path === '/january-token/revoke')).toBe(true)
+  const requests = await (await fetch(`${fixtureApi}/__requests`)).json() as Array<{ method: string; path: string }>
+  expect(requests.some(({ method, path }) => method === 'POST' && path === '/api/january/token/revoke')).toBe(true)
 })
 
 test('shows startup commands when the local relay is offline', async ({ page }) => {
@@ -42,6 +50,6 @@ test('shows startup commands when the local relay is offline', async ({ page }) 
   await page.goto('/search')
   const status = page.getByRole('region', { name: 'Authentication status' })
   await expect(status.getByText('Offline')).toBeVisible()
-  await expect(status.getByText('npm run dev:token-relay')).toBeVisible()
+  await expect(status.getByText('npm run demo:token-server')).toBeVisible()
   await expect(status.getByText('npm run dev', { exact: true })).toBeVisible()
 })

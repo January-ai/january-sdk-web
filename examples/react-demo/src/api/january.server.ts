@@ -64,7 +64,11 @@ export async function getDemoConfigurationDetails() {
 export async function mintFreshDemoClientToken() {
   const partnerTokenUrl = requirePartnerTokenUrl()
   const endUserId = requireEndUserId()
-  const token = await fetchPartnerClientToken(partnerTokenUrl, endUserId)
+  const partnerAppSessionToken = process.env.PARTNER_APP_SESSION_TOKEN?.trim()
+  if (!isLocalTokenRelay(partnerTokenUrl) && !partnerAppSessionToken) {
+    throw new Error('PARTNER_APP_SESSION_TOKEN is required for a non-local PARTNER_TOKEN_URL.')
+  }
+  const token = await fetchPartnerClientToken(partnerTokenUrl, endUserId, partnerAppSessionToken)
   prefetchedClientToken = token
   resetCachedClient()
   return tokenState
@@ -76,9 +80,13 @@ export async function revokeDemoClientTokens() {
   if (!isLocalTokenRelay(partnerTokenUrl)) {
     throw new Error('Demo token revocation is available only with the local relay.')
   }
-  const response = await fetch(new URL('/january-token/revoke', partnerTokenUrl), {
+  const partnerAppSessionToken = process.env.PARTNER_APP_SESSION_TOKEN?.trim()
+  const response = await fetch(new URL('/api/january/token/revoke', partnerTokenUrl), {
     method: 'POST',
-    headers: { 'x-end-user-id': endUserId },
+    headers: {
+      ...(partnerAppSessionToken ? { Authorization: `Bearer ${partnerAppSessionToken}` } : {}),
+      'x-end-user-id': endUserId,
+    },
   })
   if (!response.ok) throw new Error(await responseErrorMessage(response, 'January rejected token revocation.'))
   const result = await response.json() as { revoked_count?: unknown }
@@ -145,7 +153,7 @@ export function getJanuaryClient() {
 
 function isLocalTokenRelay(value: string) {
   const hostname = new URL(value).hostname
-  return hostname === '127.0.0.1' || hostname === 'localhost' || hostname === '[::1]'
+  return hostname === '127.0.0.1' || hostname === 'localhost' || hostname === '[::1]' || hostname === '::1'
 }
 
 async function fetchPartnerClientToken(

@@ -54,7 +54,14 @@ createServer((request, response) => {
   }
   if (url.pathname === '/__requests') return json(response, requests)
 
-  requests.push({ method: request.method, path: url.pathname, query: Object.fromEntries(url.searchParams) })
+  requests.push({
+    method: request.method,
+    path: url.pathname,
+    query: Object.fromEntries(url.searchParams),
+    authorization: Array.isArray(request.headers.authorization)
+      ? request.headers.authorization[0] ?? null
+      : request.headers.authorization ?? null,
+  })
   const rule = rules.get(url.pathname) ?? { status: 200, empty: false }
   if (rule.status !== 200) {
     const message = rule.status === 404
@@ -63,11 +70,11 @@ createServer((request, response) => {
     return json(response, { code: rule.status === 404 ? 'not_found' : 'fixture_error', message }, rule.status)
   }
   if (url.pathname === '/health') return json(response, { ok: true })
-  if (url.pathname === '/january-token') return json(response, {
+  if (url.pathname === '/api/january/token' && request.method === 'POST') return json(response, {
     token: 'ct-fixture-token', expires_in: 1800, expires_at: new Date(Date.now() + 1_800_000).toISOString(),
     end_user_id: request.headers['x-end-user-id'], scopes: ['foods:read', 'restaurants:read'],
   })
-  if (url.pathname === '/january-token/revoke') return json(response, { revoked_count: 1 })
+  if (url.pathname === '/api/january/token/revoke' && request.method === 'POST') return json(response, { revoked_count: 1 })
   if (url.pathname === '/v1.2/foods/autocomplete') return json(response, { items: rule.empty ? [] : [{
     id: food.id, name: food.name, brand_name: null, image_url: null, nutrients,
   }] })

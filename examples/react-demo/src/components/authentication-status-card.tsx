@@ -198,8 +198,14 @@ function RelayInstructions() {
         Start the local servers
       </div>
       <div className="mt-2 space-y-2 font-mono text-[10px] leading-4 text-stone-300">
-        <code className="block rounded-lg bg-white/10 p-2">npm run dev:token-relay</code>
-        <code className="block rounded-lg bg-white/10 p-2">npm run dev</code>
+        <code className="block rounded-lg bg-white/10 p-2">
+          <span className="block">cd january-server-sdk-node</span>
+          <span className="block">npm run demo:token-server</span>
+        </code>
+        <code className="block rounded-lg bg-white/10 p-2">
+          <span className="block">cd january-sdk-web/examples/react-demo</span>
+          <span className="block">npm run dev</span>
+        </code>
       </div>
     </div>
   )
