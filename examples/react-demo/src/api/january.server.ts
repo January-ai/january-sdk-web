@@ -65,6 +65,9 @@ export async function mintFreshDemoClientToken() {
   const partnerTokenUrl = requirePartnerTokenUrl()
   const endUserId = requireEndUserId()
   const partnerAppSessionToken = process.env.PARTNER_APP_SESSION_TOKEN?.trim()
+  if (!isLocalTokenRelay(partnerTokenUrl) && !partnerAppSessionToken) {
+    throw new Error('PARTNER_APP_SESSION_TOKEN is required for a non-local PARTNER_TOKEN_URL.')
+  }
   const token = await fetchPartnerClientToken(partnerTokenUrl, endUserId, partnerAppSessionToken)
   prefetchedClientToken = token
   resetCachedClient()
