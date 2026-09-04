@@ -1,103 +1,146 @@
-# January Web SDK
+# January SDK for Web
 
-Official browser SDK for January food discovery, restaurants, food analysis,
-food logs, and glucose prediction in TypeScript web applications. This is the
-Web SDK; January's future Node.js server SDK is a separate product.
+The official TypeScript SDK for January food discovery, restaurants, food
+analysis, food logs, and glucose prediction in browser applications.
 
-## Install
+## Quick start: run the demo with client tokens
+
+You can try the Web SDK before your own backend is ready. A small local Node
+server keeps the January API key out of the browser and issues the same
+short-lived client tokens your production backend will issue.
+
+### 1. Create the credentials
+
+Complete both steps—they are on separate dashboard pages:
+
+1. [Sign up](https://dashboard.january.ai/sign-up) or
+   [sign in](https://dashboard.january.ai/sign-in), then open
+   **API keys → Create key** and copy the full `sk-…` value.
+2. Open [Client tokens](https://dashboard.january.ai/dashboard/client-tokens)
+   and select **Enable client tokens**.
+
+Never put the `sk-…` key in browser code or a client-side environment variable.
+
+### 2. Start the local token server
+
+Install Node.js 22 or newer. In a first terminal:
+
+```bash
+git clone https://github.com/January-ai/january-server-sdk-node.git
+cd january-server-sdk-node
+npm ci
+cp .env.example .env
+# Edit .env and set JANUARY_API_KEY to the key you just created.
+npm run demo:token-server
+```
+
+Leave it running. The server binds only to your computer and exchanges the API
+key for short-lived tokens using the January Server SDK.
+
+### 3. Run the Web demo
+
+In a second terminal, clone the demo repository if needed:
+
+```bash
+git clone https://github.com/January-ai/january-sdk-web.git
+cd january-sdk-web
+cp .env.example .env.local
+cd examples/react-demo
+npm ci
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) and search for `banana`.
+The demo's token provider calls the local server; neither the API key nor a
+long-lived credential is included in the browser bundle.
+
+## Add the SDK to your app
+
+### 1. Install
 
 ```bash
 npm install @januaryai/web-sdk
 ```
 
-See the [installation guide](https://docs.january.ai/web-sdk/getting-started/installation)
-for package and runtime requirements.
-
-## Documentation
-
-The [Web SDK GitBook](https://docs.january.ai/web-sdk) covers the
-runtime security boundary, backend token exchange, complete provider code, first
-request, all resources, retries, cancellation, packaging, testing, and support.
-
-## Quick start
+### 2. Connect and make the first request
 
 ```ts
 import { JanuaryClient } from '@januaryai/web-sdk';
 
 const january = new JanuaryClient({
   clientTokenProvider: async () => {
-    const response = await fetch('/api/january-token', { credentials: 'include' });
-    if (!response.ok) throw new Error(`Token endpoint returned ${response.status}`);
-    return response.json(); // { token: 'ct-…', expiresIn: 1800 }
+    const response = await fetch('/api/january/token', {
+      method: 'POST',
+      credentials: 'include',
+    });
+    if (!response.ok) {
+      throw new Error(`Token endpoint returned ${response.status}`);
+    }
+    return response.json();
   },
 });
-```
 
-## Authentication rule
-
-Production authentication uses client tokens. A browser application uses a
-short-lived token returned by its own authenticated backend. Start with
-the [backend token endpoint](https://docs.january.ai/web-sdk/getting-started/backend-token-endpoint).
-
-Development API-key authentication is available for local testing only and
-prints a runtime warning. Never ship a partner API key in a browser bundle or
-production application.
-
-## Set the active user once
-
-Create one lightweight scoped client after authentication and use it across
-every resource:
-
-```ts
 const user = january.forUser({
-  endUserId: authenticatedAccount.stableId,
+  endUserId: session.user.id,
   endUserTimezone: 'America/New_York',
 });
 
 const foods = await user.foods.search({ query: 'banana' });
-const logs = await user.foodLogs.list({ start: '2026-08-01', end: '2026-08-31' });
+console.log(`Found ${foods.items.length} foods`);
 ```
 
-The scoped client exposes Foods, Restaurants, Photo Scanning, Food Logs, and
-Glucose. Recreate it when the signed-in account changes.
+A successful request prints a result count; an empty result is still a successful
+connection. Reuse the user-scoped client and recreate it when the signed-in
+account changes.
 
-## Capture a voice query
+Direct browser calls also require January to enable the exact browser origin.
+If that origin is not enabled, make January API calls from your authenticated
+backend instead.
 
-`VoiceCaptureSession` is a framework-free browser helper that captures microphone
-input for transcription and publishes live state, duration, audio level, and
-partial-transcript updates. A completed capture returns the transcript and
-duration; the SDK does not retain or return recorded audio.
+Your production endpoint returns `{ "token": "ct-…", "expiresIn": 1800 }`,
+derives the stable end-user ID from the verified app session, and chooses scopes
+on the server. See the
+[backend token endpoint guide](Documentation/GitBook/getting-started/backend-token-endpoint.md)
+for the complete contract.
 
-```ts
-import { VoiceCaptureSession } from '@januaryai/web-sdk';
+## Common tasks
 
-const voice = new VoiceCaptureSession();
-const unsubscribe = voice.subscribe((snapshot) => {
-  renderRecordingState(snapshot);
-});
+- [Foods](Documentation/GitBook/guides/foods.md)
+- [Restaurants](Documentation/GitBook/guides/restaurants.md)
+- [Photo scanning](Documentation/GitBook/guides/photo-scanning.md)
+- [Food logs](Documentation/GitBook/guides/food-logs.md)
+- [Glucose prediction](Documentation/GitBook/guides/glucose-prediction.md)
+- [Voice capture](Documentation/GitBook/guides/voice-capture.md)
 
-await voice.start({ language: 'en-US' });
-const capture = await voice.stop();
-searchInput.value = capture.transcript ?? '';
+For every resource, retries, cancellation, packaging, testing, and
+troubleshooting, see the [complete Web SDK guide](Documentation/GitBook/README.md).
 
-unsubscribe();
-voice.dispose();
+## Development
+
+To work on the SDK itself:
+
+```bash
+npm ci
+npm test
 ```
 
-Use voice capture only from a user gesture, serve the app over HTTPS (localhost
-is accepted for local development), and provide a typed-search fallback. See the
-[voice capture guide](Documentation/GitBook/guides/voice-capture.md).
+## Optional: fastest local shortcut
 
-## Menu items by restaurant ID
+If you only want to make a request immediately, the full-stack demo can keep a
+server API key in its local server functions and skip client-token minting. This
+does not put the key in the browser bundle, but it bypasses the recommended
+client-token flow above. In `.env.local`, omit `PARTNER_TOKEN_URL` and set:
 
-Use the ID of a `restaurant` search result to load its menu, independently of search text and location.
-
-```ts
-const page = await client.restaurants.getMenuItems({ restaurantId: restaurant.id, limit: 100, offset: 0 });
+```dotenv
+JANUARY_API_KEY=sk-your-server-api-key
+JANUARY_END_USER_ID=january-sdk-demo-user
 ```
 
-The response contains `items` and `totalCount` (`total_count` on the wire). Request subsequent pages by advancing `offset` by the number of items received, until it reaches the total or a page is empty. An unknown restaurant returns 404; an existing restaurant with no menu returns an empty list.
+Then run the React demo normally. Never use a `VITE_` prefix, commit the key, or
+move it into browser code. Use client tokens when the browser will call January
+directly.
 
 ## License
 
-The Apache 2.0 license applies to the source code in this repository. It does not grant rights to nutrition data, food images, or other content returned by the January API, which are subject to the January API Developer Terms.
+Apache 2.0. January API data and content remain subject to the January API
+Developer Terms.

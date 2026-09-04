@@ -1,59 +1,60 @@
 # January SDK React demo
 
 A full-stack React and TypeScript demo built with TanStack Start, TanStack
-Router, and TanStack Query. January API requests run in server functions so the
-development API key is never included in the browser bundle.
+Router, and TanStack Query. It uses short-lived client tokens; the January API
+key stays in a separate local server and is never included in the browser bundle.
 
 The Search screen also demonstrates local browser voice capture. Press the
-microphone beside a food or restaurant query to record, transcribe when supported,
-cancel, and stop. The demo uses only the transcript and never displays or sends
-the captured audio.
+microphone beside a food or restaurant query to record, transcribe when
+supported, cancel, and stop. The demo uses only the transcript and never
+displays or sends the captured audio.
 
 ## Run locally
 
-From the SDK repository root, add the development credential to `.env.local`:
+After you [sign up](https://dashboard.january.ai/sign-up) or
+[sign in](https://dashboard.january.ai/sign-in), complete both dashboard steps:
+
+1. Open **API keys → Create key** and copy the full `sk-…` value.
+2. Open [Client tokens](https://dashboard.january.ai/dashboard/client-tokens)
+   and select **Enable client tokens**.
+
+Start the local server from the
+[`january-server-sdk-node`](https://github.com/January-ai/january-server-sdk-node)
+repository:
 
 ```sh
-JANUARY_API_KEY=your-development-key
-JANUARY_END_USER_ID=your-test-user-id
+npm ci
+cp .env.example .env
+# Edit .env and set JANUARY_API_KEY.
+npm run demo:token-server
 ```
 
-Then install and run the demo:
+Leave it running. From the Web SDK repository root, configure and run the demo
+in a second terminal:
 
 ```sh
+cp .env.example .env.local
 cd examples/react-demo
-npm install
+npm ci
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000](http://localhost:3000). The authentication card
+shows the local relay status and lets you mint or revoke the fixed demo user's
+client tokens. Search for `banana` to make the first SDK request.
+
 Allow microphone access when the Search screen requests it. Voice capture needs
 a secure context; localhost is accepted for this local flow.
 
-To exercise the short-lived-token provider against January's production token
-exchange, copy the repository's example environment file and replace the local
-placeholders:
-
-```sh
-cp ../../.env.example ../../.env.local
-
-JANUARY_API_KEY=sk-your-development-key
-PARTNER_TOKEN_URL=http://127.0.0.1:8787/january-token
-JANUARY_END_USER_ID=local-web-user
-```
-
-Start the API-key relay in one terminal:
-
-```sh
-npm run dev:token-relay
-```
-
-Then run `npm run dev` in another terminal. The relay binds only to
-`127.0.0.1` and exchanges `JANUARY_API_KEY` at
-`POST https://partners.january.ai/v1.2/auth/client-tokens`.
-
-The authentication boundary in `src/api/january.server.ts` calls the explicit
+The authentication boundary in `src/api/january.server.ts` calls the configured
 token endpoint, returns its `{ token, expiresIn }` response directly, and lets
-the SDK cache and refresh it. The URL has no SDK default: replacing the stand-in
-backend later only changes this demo configuration/provider. January API calls
-remain pinned to production.
+the SDK cache and refresh it. Replacing the local server later only changes the
+demo configuration/provider; January API calls remain pinned to production.
+
+## Optional fastest local shortcut
+
+To skip client-token minting, omit `PARTNER_TOKEN_URL` from `.env.local` and set
+`JANUARY_API_KEY=sk-your-server-api-key` plus
+`JANUARY_END_USER_ID=january-sdk-demo-user`. The key remains in the demo's server
+functions and is not bundled into browser code. Never use a `VITE_` prefix or
+commit the key.

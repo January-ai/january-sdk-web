@@ -198,7 +198,7 @@ function RelayInstructions() {
         Start the local servers
       </div>
       <div className="mt-2 space-y-2 font-mono text-[10px] leading-4 text-stone-300">
-        <code className="block rounded-lg bg-white/10 p-2">npm run dev:token-relay</code>
+        <code className="block rounded-lg bg-white/10 p-2">npm run demo:token-server</code>
         <code className="block rounded-lg bg-white/10 p-2">npm run dev</code>
       </div>
     </div>
