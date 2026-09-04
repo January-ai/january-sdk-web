@@ -77,12 +77,11 @@ export async function revokeDemoClientTokens() {
   if (!isLocalTokenRelay(partnerTokenUrl)) {
     throw new Error('Demo token revocation is available only with the local relay.')
   }
+  const partnerAppSessionToken = process.env.PARTNER_APP_SESSION_TOKEN?.trim()
   const response = await fetch(new URL('/api/january/token/revoke', partnerTokenUrl), {
     method: 'POST',
     headers: {
-      ...(process.env.PARTNER_APP_SESSION_TOKEN?.trim()
-        ? { Authorization: `Bearer ${process.env.PARTNER_APP_SESSION_TOKEN.trim()}` }
-        : {}),
+      ...(partnerAppSessionToken ? { Authorization: `Bearer ${partnerAppSessionToken}` } : {}),
       'x-end-user-id': endUserId,
     },
   })
