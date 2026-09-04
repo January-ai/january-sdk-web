@@ -23,6 +23,8 @@ Start the local server from the
 repository:
 
 ```sh
+git clone https://github.com/January-ai/january-server-sdk-node.git
+cd january-server-sdk-node
 npm ci
 cp .env.example .env
 # Edit .env and set JANUARY_API_KEY.
