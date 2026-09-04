@@ -44,6 +44,7 @@ In a second terminal, clone the demo repository if needed:
 ```bash
 git clone https://github.com/January-ai/january-sdk-web.git
 cd january-sdk-web
+npm ci
 cp .env.example .env.local
 cd examples/react-demo
 npm ci

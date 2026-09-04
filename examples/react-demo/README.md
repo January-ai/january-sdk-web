@@ -33,6 +33,7 @@ Leave it running. From the Web SDK repository root, configure and run the demo
 in a second terminal:
 
 ```sh
+npm ci
 cp .env.example .env.local
 cd examples/react-demo
 npm ci
