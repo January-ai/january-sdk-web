@@ -153,7 +153,7 @@ export function getJanuaryClient() {
 
 function isLocalTokenRelay(value: string) {
   const hostname = new URL(value).hostname
-  return hostname === '127.0.0.1' || hostname === 'localhost' || hostname === '[::1]'
+  return hostname === '127.0.0.1' || hostname === 'localhost' || hostname === '[::1]' || hostname === '::1'
 }
 
 async function fetchPartnerClientToken(
