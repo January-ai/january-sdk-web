@@ -54,7 +54,12 @@ createServer((request, response) => {
   }
   if (url.pathname === '/__requests') return json(response, requests)
 
-  requests.push({ method: request.method, path: url.pathname, query: Object.fromEntries(url.searchParams) })
+  requests.push({
+    method: request.method,
+    path: url.pathname,
+    query: Object.fromEntries(url.searchParams),
+    authorization: request.headers.authorization ?? null,
+  })
   const rule = rules.get(url.pathname) ?? { status: 200, empty: false }
   if (rule.status !== 200) {
     const message = rule.status === 404

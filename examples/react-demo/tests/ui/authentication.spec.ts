@@ -24,8 +24,14 @@ test('mints a fresh client token through the relay', async ({ page }) => {
   const status = page.getByRole('region', { name: 'Authentication status' })
   await status.getByRole('button', { name: 'Mint fresh token' }).click()
   await expect(status.getByText('Token ready')).toBeVisible()
-  const requests = await (await fetch(`${fixtureApi}/__requests`)).json() as Array<{ path: string }>
-  expect(requests.some(({ path }) => path === '/api/january/token')).toBe(true)
+  const requests = await (await fetch(`${fixtureApi}/__requests`)).json() as Array<{
+    authorization: string | null
+    path: string
+  }>
+  expect(requests).toContainEqual(expect.objectContaining({
+    authorization: 'Bearer january-local-demo',
+    path: '/api/january/token',
+  }))
 })
 
 test('revokes the current user tokens', async ({ page }) => {

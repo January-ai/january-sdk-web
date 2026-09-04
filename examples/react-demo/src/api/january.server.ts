@@ -64,7 +64,8 @@ export async function getDemoConfigurationDetails() {
 export async function mintFreshDemoClientToken() {
   const partnerTokenUrl = requirePartnerTokenUrl()
   const endUserId = requireEndUserId()
-  const token = await fetchPartnerClientToken(partnerTokenUrl, endUserId)
+  const partnerAppSessionToken = process.env.PARTNER_APP_SESSION_TOKEN?.trim()
+  const token = await fetchPartnerClientToken(partnerTokenUrl, endUserId, partnerAppSessionToken)
   prefetchedClientToken = token
   resetCachedClient()
   return tokenState
@@ -79,7 +80,9 @@ export async function revokeDemoClientTokens() {
   const response = await fetch(new URL('/api/january/token/revoke', partnerTokenUrl), {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${process.env.PARTNER_APP_SESSION_TOKEN?.trim() ?? ''}`,
+      ...(process.env.PARTNER_APP_SESSION_TOKEN?.trim()
+        ? { Authorization: `Bearer ${process.env.PARTNER_APP_SESSION_TOKEN.trim()}` }
+        : {}),
       'x-end-user-id': endUserId,
     },
   })
