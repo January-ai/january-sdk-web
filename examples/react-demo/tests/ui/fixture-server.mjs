@@ -58,7 +58,9 @@ createServer((request, response) => {
     method: request.method,
     path: url.pathname,
     query: Object.fromEntries(url.searchParams),
-    authorization: request.headers.authorization ?? null,
+    authorization: Array.isArray(request.headers.authorization)
+      ? request.headers.authorization[0] ?? null
+      : request.headers.authorization ?? null,
   })
   const rule = rules.get(url.pathname) ?? { status: 200, empty: false }
   if (rule.status !== 200) {

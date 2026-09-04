@@ -72,6 +72,7 @@ const january = new JanuaryClient({
   clientTokenProvider: async () => {
     const response = await fetch('/api/january/token', {
       method: 'POST',
+      cache: 'no-store',
       credentials: 'include',
     });
     if (!response.ok) {
