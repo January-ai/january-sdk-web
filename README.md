@@ -5,9 +5,9 @@ analysis, food logs, and glucose prediction in browser applications.
 
 ## Quick start: run the demo with client tokens
 
-You can try the Web SDK before your own backend is ready. A small local Node
-server keeps the January API key out of the browser and issues the same
-short-lived client tokens your production backend will issue.
+You can try the Web SDK before your own backend is ready. The standalone
+January Token Relay keeps the January API key out of the browser and
+temporarily stands in for your production token endpoint.
 
 ### 1. Create the credentials
 
@@ -21,21 +21,19 @@ Complete both steps—they are on separate dashboard pages:
 
 Never put the `sk-…` key in browser code or a client-side environment variable.
 
-### 2. Start the local token server
+### 2. Start the local token relay
 
-Install Node.js 22 or newer. In a first terminal:
+Install Node.js 22 or newer (the relay itself requires 20.12). In a first
+terminal:
 
 ```bash
-git clone https://github.com/January-ai/january-server-sdk-node.git
-cd january-server-sdk-node
-npm ci
-cp .env.example .env
-# Edit .env and set JANUARY_API_KEY to the key you just created.
-npm run demo:token-server
+git clone https://github.com/January-ai/january-token-relay.git
+cd january-token-relay
+./start.sh
 ```
 
-Leave it running. The server binds only to your computer and exchanges the API
-key for short-lived tokens using the January Server SDK.
+Paste the API key when prompted and leave the relay running. It binds to your
+computer, uses port `8787`, and prints its status and token-endpoint URLs.
 
 ### 3. Run the Web demo
 
@@ -52,8 +50,29 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) and search for `banana`.
-The demo's token provider calls the local server; neither the API key nor a
+The demo's token provider calls the local relay; neither the API key nor a
 long-lived credential is included in the browser bundle.
+
+### 4. Optional: deploy the relay to Vercel
+
+If localhost is inconvenient, follow the relay's
+[Vercel deployment guide](https://github.com/January-ai/january-token-relay#deploy).
+Set `JANUARY_API_KEY` and a long random `RELAY_TOKEN` in Vercel, then update the
+root `.env.local` file:
+
+```dotenv
+PARTNER_TOKEN_URL=https://YOUR-PROJECT.vercel.app/api/january/client-token
+PARTNER_APP_SESSION_TOKEN=YOUR_RELAY_TOKEN
+JANUARY_END_USER_ID=january-sdk-demo-user
+```
+
+These values are read by the demo's server function, not added to the browser
+bundle. The hosted relay is still for development and testing only; its static
+relay token is not a substitute for authenticating your users.
+
+This relay is only for development. In production, keep the SDK token provider
+but point it to your authenticated backend, which verifies the app session and
+derives the end-user ID server-side.
 
 ## Add the SDK to your app
 
@@ -70,7 +89,7 @@ import { JanuaryClient } from '@januaryai/web-sdk';
 
 const january = new JanuaryClient({
   clientTokenProvider: async () => {
-    const response = await fetch('/api/january/token', {
+    const response = await fetch('/api/january/client-token', {
       method: 'POST',
       cache: 'no-store',
       credentials: 'include',

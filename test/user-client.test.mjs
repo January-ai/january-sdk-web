@@ -114,10 +114,12 @@ test('scoped client applies one identity and cancellation signal across every di
 
 test('scoped client never sends redundant identity with client-token authentication', async () => {
   let endUserId;
+  let legacyEndUserId;
   const client = new JanuaryPartnerClient({
     accessToken: 'ct-scoped',
     fetch: async (_input, init) => {
-      endUserId = new Headers(init.headers).get('x-end-user-id');
+      endUserId = new Headers(init.headers).get('January-End-User-ID');
+      legacyEndUserId = new Headers(init.headers).get('x-end-user-id');
       return new Response(JSON.stringify({ total_count: 0, items: [] }), {
         status: 200,
         headers: { 'content-type': 'application/json' },
@@ -127,4 +129,5 @@ test('scoped client never sends redundant identity with client-token authenticat
 
   await client.forUser('token-bound-user').foods.search({ query: 'banana' });
   assert.equal(endUserId, null);
+  assert.equal(legacyEndUserId, null);
 });

@@ -23,6 +23,6 @@ Request types retain optional identity fields for source compatibility. New
 integrations should use the scoped client instead of repeating `endUserId` in
 individual calls.
 
-In client-token mode, the transport removes `x-end-user-id`; do not add it back
+In client-token mode, the transport removes `January-End-User-ID`; do not add it back
 manually. A mismatch between the token-bound user and a manually asserted ID is
 an authentication error by design.

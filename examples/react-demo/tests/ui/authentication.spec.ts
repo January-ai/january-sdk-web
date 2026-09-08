@@ -30,26 +30,17 @@ test('mints a fresh client token through the relay', async ({ page }) => {
     path: string
   }>
   expect(requests).toContainEqual(expect.objectContaining({
-    authorization: 'Bearer january-local-demo',
+    authorization: null,
     method: 'POST',
-    path: '/api/january/token',
+    path: '/api/january/client-token',
   }))
 })
 
-test('revokes the current user tokens', async ({ page }) => {
-  await page.goto('/search')
-  const status = page.getByRole('region', { name: 'Authentication status' })
-  await status.getByRole('button', { name: 'Revoke user tokens' }).click()
-  await expect(status.getByText('Revoked 1 token. The next request will mint a new one.')).toBeVisible()
-  const requests = await (await fetch(`${fixtureApi}/__requests`)).json() as Array<{ method: string; path: string }>
-  expect(requests.some(({ method, path }) => method === 'POST' && path === '/api/january/token/revoke')).toBe(true)
-})
-
 test('shows startup commands when the local relay is offline', async ({ page }) => {
-  await control('/health', 503)
+  await control('/', 503)
   await page.goto('/search')
   const status = page.getByRole('region', { name: 'Authentication status' })
   await expect(status.getByText('Offline')).toBeVisible()
-  await expect(status.getByText('npm run demo:token-server')).toBeVisible()
+  await expect(status.getByText('./start.sh')).toBeVisible()
   await expect(status.getByText('npm run dev', { exact: true })).toBeVisible()
 })

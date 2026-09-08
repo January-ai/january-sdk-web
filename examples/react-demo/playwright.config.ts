@@ -24,8 +24,7 @@ export default defineConfig({
       env: {
         JANUARY_END_USER_ID: 'fixture-user',
         JANUARY_TEST_API_URL: 'http://127.0.0.1:18767',
-        PARTNER_TOKEN_URL: 'http://127.0.0.1:18767/api/january/token',
-        PARTNER_APP_SESSION_TOKEN: 'january-local-demo',
+        PARTNER_TOKEN_URL: 'http://127.0.0.1:18767/api/january/client-token',
       },
       port: 3010,
       reuseExistingServer: false,

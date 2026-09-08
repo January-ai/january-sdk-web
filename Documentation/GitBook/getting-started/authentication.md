@@ -17,7 +17,7 @@ import {
 } from '@januaryai/web-sdk';
 
 async function fetchJanuaryToken(): Promise<JanuaryClientTokenResponse> {
-  const response = await fetch('/api/january/token', {
+  const response = await fetch('/api/january/client-token', {
     method: 'POST',
     credentials: 'include',
     headers: { Accept: 'application/json' },

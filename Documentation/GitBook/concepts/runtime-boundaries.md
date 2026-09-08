@@ -25,6 +25,6 @@ Keep application-session and token-endpoint configuration appropriate to each
 runtime. A framework's environment-variable prefix is not a secret boundary if
 it exposes values to client JavaScript.
 
-Client-token mode strips `x-end-user-id` because the token itself identifies the
+Client-token mode strips `January-End-User-ID` because the token itself identifies the
 user. The host application still owns stable identity for token issuance and
 scoped-resource context.
