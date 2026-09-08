@@ -9,6 +9,8 @@ import type {
 import { executeRequest } from '../errors.js';
 import { RestaurantsApi } from '../internal/transport/apis/RestaurantsApi.js';
 
+const MAX_RESTAURANT_RADIUS_METERS = 50_000;
+
 export class RestaurantsResource {
   constructor(private readonly api: RestaurantsApi) {}
 
@@ -59,8 +61,9 @@ function validate(request: SearchRestaurantsRequest): void {
   if (request.latitude < -90 || request.latitude > 90 || request.longitude < -180 || request.longitude > 180) {
     throw new TypeError('Restaurant coordinates are outside the valid range.');
   }
-  if (request.radius !== undefined && (request.radius < 1 || request.radius > 50_000)) {
-    throw new TypeError('Restaurant radius must be between 1 and 50000 meters.');
+  if (request.radius !== undefined
+    && (!Number.isFinite(request.radius) || request.radius < 1 || request.radius > MAX_RESTAURANT_RADIUS_METERS)) {
+    throw new TypeError(`Restaurant radius must be a finite number between 1 and ${MAX_RESTAURANT_RADIUS_METERS} meters.`);
   }
   if (request.limit !== undefined && (!Number.isInteger(request.limit) || request.limit < 1 || request.limit > 100)) {
     throw new TypeError('Restaurant limit must be an integer between 1 and 100.');

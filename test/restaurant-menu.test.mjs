@@ -32,9 +32,11 @@ test('restaurant searches accept a 50000-meter radius and reject 50001 locally',
     ['/v1.2/menu-items', '50000'],
   ]);
   for (const method of ['search', 'searchMenuItems']) {
-    await assert.rejects(
-      client.restaurants[method]({...input,radius:50_001}),
-      {name:'TypeError',message:'Restaurant radius must be between 1 and 50000 meters.'},
-    );
+    for (const radius of [50_001, Number.NaN, Number.POSITIVE_INFINITY]) {
+      await assert.rejects(
+        client.restaurants[method]({...input,radius}),
+        {name:'TypeError',message:'Restaurant radius must be a finite number between 1 and 50000 meters.'},
+      );
+    }
   }
 });
