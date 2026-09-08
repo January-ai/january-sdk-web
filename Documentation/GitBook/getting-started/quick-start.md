@@ -22,7 +22,7 @@ const endUserId = 'replace-with-your-stable-user-id';
 async function fetchJanuaryToken(): Promise<JanuaryClientTokenResponse> {
   let response: Response;
   try {
-    response = await fetch('/api/january/token', {
+    response = await fetch('/api/january/client-token', {
       method: 'POST',
       // The server must also return Cache-Control: no-store.
       cache: 'no-store',

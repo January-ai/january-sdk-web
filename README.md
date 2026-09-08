@@ -23,7 +23,8 @@ Never put the `sk-…` key in browser code or a client-side environment variable
 
 ### 2. Start the local token relay
 
-Install Node.js 20.12 or newer. In a first terminal:
+Install Node.js 22 or newer (the relay itself requires 20.12). In a first
+terminal:
 
 ```bash
 git clone https://github.com/January-ai/january-token-relay.git
@@ -88,7 +89,7 @@ import { JanuaryClient } from '@januaryai/web-sdk';
 
 const january = new JanuaryClient({
   clientTokenProvider: async () => {
-    const response = await fetch('/api/january/token', {
+    const response = await fetch('/api/january/client-token', {
       method: 'POST',
       cache: 'no-store',
       credentials: 'include',
