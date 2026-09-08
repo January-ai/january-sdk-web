@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+* Restaurant and menu-item searches accept the v1.2 radius range through 50,000 meters
 * Typed Promise-based Web SDK for browser applications
 * Provider-managed short-lived tokens with single-flight refresh
 * Nine-attempt bounded exponential backoff with jitter
