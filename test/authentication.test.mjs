@@ -33,11 +33,13 @@ test('development API-key authentication warns and rejects blank keys', () => {
 test('fixed client token is injected', async () => {
   let authorization;
   let endUserId;
+  let legacyEndUserId;
   const client = new JanuaryPartnerClient({
     accessToken: 'ct-fixed',
     fetch: async (_input, init) => {
       authorization = new Headers(init.headers).get('authorization');
       endUserId = new Headers(init.headers).get('January-End-User-ID');
+      legacyEndUserId = new Headers(init.headers).get('x-end-user-id');
       return ok();
     },
   });
@@ -45,6 +47,7 @@ test('fixed client token is injected', async () => {
   await client.foods.search({ query: 'banana', endUserId: 'ignored-with-client-token' });
   assert.equal(authorization, 'Bearer ct-fixed');
   assert.equal(endUserId, null);
+  assert.equal(legacyEndUserId, null);
 });
 
 test('provider token is cached and refreshed once after token_expired', async () => {
