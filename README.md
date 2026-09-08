@@ -56,7 +56,7 @@ long-lived credential is included in the browser bundle.
 ### 4. Optional: deploy the relay to Vercel
 
 If localhost is inconvenient, follow the relay's
-[Vercel deployment guide](https://github.com/January-ai/january-token-relay#optional-deploy-to-vercel).
+[Vercel deployment guide](https://github.com/January-ai/january-token-relay#deploy).
 Set `JANUARY_API_KEY` and a long random `RELAY_TOKEN` in Vercel, then update the
 root `.env.local` file:
 

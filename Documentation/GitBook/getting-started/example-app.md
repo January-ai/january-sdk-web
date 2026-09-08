@@ -27,7 +27,7 @@ use a browser-exposed variable for server credentials.
 
 For a hosted development relay, set `PARTNER_TOKEN_URL` to the relay's Vercel
 HTTPS token URL and `PARTNER_APP_SESSION_TOKEN` to its `RELAY_TOKEN`. Follow the
-[relay deployment guide](https://github.com/January-ai/january-token-relay#optional-deploy-to-vercel).
+[relay deployment guide](https://github.com/January-ai/january-token-relay#deploy).
 This is for development and testing only; production must use your authenticated
 backend.
 

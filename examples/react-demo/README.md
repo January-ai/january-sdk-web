@@ -43,7 +43,7 @@ shows the local relay status and lets you mint a fresh client token. Search for
 `banana` to make the first SDK request.
 
 To use a hosted development relay instead, follow its
-[Vercel guide](https://github.com/January-ai/january-token-relay#optional-deploy-to-vercel)
+[Vercel guide](https://github.com/January-ai/january-token-relay#deploy)
 and set `PARTNER_TOKEN_URL` to the deployed HTTPS token URL plus
 `PARTNER_APP_SESSION_TOKEN` to its `RELAY_TOKEN` in the root `.env.local`.
 This is for development and testing only, not production authentication.
