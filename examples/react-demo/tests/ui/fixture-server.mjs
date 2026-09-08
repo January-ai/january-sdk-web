@@ -72,7 +72,7 @@ createServer((request, response) => {
   if (url.pathname === '/') return json(response, { ok: true })
   if (url.pathname === '/api/january/client-token' && request.method === 'POST') return json(response, {
     token: 'ct-fixture-token', expires_in: 1800, expires_at: new Date(Date.now() + 1_800_000).toISOString(),
-    end_user_id: request.headers['x-end-user-id'], scopes: ['foods:read', 'restaurants:read'],
+    end_user_id: request.headers['january-end-user-id'], scopes: ['foods:read', 'restaurants:read'],
   })
   if (url.pathname === '/v1.2/foods/autocomplete') return json(response, { items: rule.empty ? [] : [{
     id: food.id, name: food.name, brand_name: null, image_url: null, nutrients,

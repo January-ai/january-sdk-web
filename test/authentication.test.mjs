@@ -37,7 +37,7 @@ test('fixed client token is injected', async () => {
     accessToken: 'ct-fixed',
     fetch: async (_input, init) => {
       authorization = new Headers(init.headers).get('authorization');
-      endUserId = new Headers(init.headers).get('x-end-user-id');
+      endUserId = new Headers(init.headers).get('January-End-User-ID');
       return ok();
     },
   });

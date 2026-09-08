@@ -137,7 +137,7 @@ async function fetchPartnerClientToken(
       method: 'POST',
       headers: {
         ...(partnerAppSessionToken ? { Authorization: `Bearer ${partnerAppSessionToken}` } : {}),
-        'x-end-user-id': endUserId,
+        'January-End-User-ID': endUserId,
       },
     })
   } catch (error) {

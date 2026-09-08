@@ -117,7 +117,7 @@ test('scoped client never sends redundant identity with client-token authenticat
   const client = new JanuaryPartnerClient({
     accessToken: 'ct-scoped',
     fetch: async (_input, init) => {
-      endUserId = new Headers(init.headers).get('x-end-user-id');
+      endUserId = new Headers(init.headers).get('January-End-User-ID');
       return new Response(JSON.stringify({ total_count: 0, items: [] }), {
         status: 200,
         headers: { 'content-type': 'application/json' },

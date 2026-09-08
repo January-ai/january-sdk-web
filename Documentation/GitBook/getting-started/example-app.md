@@ -20,10 +20,16 @@ JANUARY_END_USER_ID=january-sdk-demo-user
 ```
 
 `PARTNER_TOKEN_URL` has no default. The demo sends a server-side `POST` with the
-selected stable user ID in `x-end-user-id`. A production provider instead sends
-the app's normal session to its authenticated backend, which derives the user
-ID server-side. The public SDK exposes no January base-URL override. Never use a
-browser-exposed variable for server credentials.
+selected stable user ID in `January-End-User-ID`. A production provider instead
+sends the app's normal session to its authenticated backend, which derives the
+user ID server-side. The public SDK exposes no January base-URL override. Never
+use a browser-exposed variable for server credentials.
+
+For a hosted development relay, set `PARTNER_TOKEN_URL` to the relay's Vercel
+HTTPS token URL and `PARTNER_APP_SESSION_TOKEN` to its `RELAY_TOKEN`. Follow the
+[relay deployment guide](https://github.com/January-ai/january-token-relay#optional-deploy-to-vercel).
+This is for development and testing only; production must use your authenticated
+backend.
 
 ## Run and verify
 

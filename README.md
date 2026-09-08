@@ -52,6 +52,23 @@ Open [http://localhost:3000](http://localhost:3000) and search for `banana`.
 The demo's token provider calls the local relay; neither the API key nor a
 long-lived credential is included in the browser bundle.
 
+### 4. Optional: deploy the relay to Vercel
+
+If localhost is inconvenient, follow the relay's
+[Vercel deployment guide](https://github.com/January-ai/january-token-relay#optional-deploy-to-vercel).
+Set `JANUARY_API_KEY` and a long random `RELAY_TOKEN` in Vercel, then update the
+root `.env.local` file:
+
+```dotenv
+PARTNER_TOKEN_URL=https://YOUR-PROJECT.vercel.app/api/january/client-token
+PARTNER_APP_SESSION_TOKEN=YOUR_RELAY_TOKEN
+JANUARY_END_USER_ID=january-sdk-demo-user
+```
+
+These values are read by the demo's server function, not added to the browser
+bundle. The hosted relay is still for development and testing only; its static
+relay token is not a substitute for authenticating your users.
+
 This relay is only for development. In production, keep the SDK token provider
 but point it to your authenticated backend, which verifies the app session and
 derives the end-user ID server-side.
