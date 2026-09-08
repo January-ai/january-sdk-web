@@ -5,9 +5,9 @@ analysis, food logs, and glucose prediction in browser applications.
 
 ## Quick start: run the demo with client tokens
 
-You can try the Web SDK before your own backend is ready. A small local Node
-server keeps the January API key out of the browser and issues the same
-short-lived client tokens your production backend will issue.
+You can try the Web SDK before your own backend is ready. The standalone
+January Token Relay keeps the January API key out of the browser and
+temporarily stands in for your production token endpoint.
 
 ### 1. Create the credentials
 
@@ -21,21 +21,18 @@ Complete both steps—they are on separate dashboard pages:
 
 Never put the `sk-…` key in browser code or a client-side environment variable.
 
-### 2. Start the local token server
+### 2. Start the local token relay
 
-Install Node.js 22 or newer. In a first terminal:
+Install Node.js 20.12 or newer. In a first terminal:
 
 ```bash
-git clone https://github.com/January-ai/january-server-sdk-node.git
-cd january-server-sdk-node
-npm ci
-cp .env.example .env
-# Edit .env and set JANUARY_API_KEY to the key you just created.
-npm run demo:token-server
+git clone https://github.com/January-ai/january-token-relay.git
+cd january-token-relay
+./start.sh
 ```
 
-Leave it running. The server binds only to your computer and exchanges the API
-key for short-lived tokens using the January Server SDK.
+Paste the API key when prompted and leave the relay running. It binds to your
+computer, uses port `8787`, and prints its status and token-endpoint URLs.
 
 ### 3. Run the Web demo
 
@@ -52,8 +49,12 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) and search for `banana`.
-The demo's token provider calls the local server; neither the API key nor a
+The demo's token provider calls the local relay; neither the API key nor a
 long-lived credential is included in the browser bundle.
+
+This relay is only for development. In production, keep the SDK token provider
+but point it to your authenticated backend, which verifies the app session and
+derives the end-user ID server-side.
 
 ## Add the SDK to your app
 

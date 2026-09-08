@@ -18,7 +18,6 @@ import {
   getDemoConfigurationDetails,
   getJanuaryClient,
   mintFreshDemoClientToken,
-  revokeDemoClientTokens,
 } from './january.server'
 
 const optionalUserId = z.string().trim().max(256).optional()
@@ -33,12 +32,6 @@ export const getDemoConfiguration = createServerFn({ method: 'GET' })
 export const refreshDemoClientToken = createServerFn({ method: 'POST' })
   .handler(async () => {
     await mintFreshDemoClientToken()
-    return getDemoConfigurationDetails()
-  })
-
-export const revokeAllDemoClientTokens = createServerFn({ method: 'POST' })
-  .handler(async () => {
-    await revokeDemoClientTokens()
     return getDemoConfigurationDetails()
   })
 

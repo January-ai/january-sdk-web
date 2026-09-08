@@ -4,13 +4,11 @@ import {
   RefreshCw,
   ShieldCheck,
   TerminalSquare,
-  Trash2,
   TriangleAlert,
 } from 'lucide-react'
 import {
   getDemoConfiguration,
   refreshDemoClientToken,
-  revokeAllDemoClientTokens,
 } from '~/api/january.functions'
 import { cn } from '~/lib/utils'
 import { appBrand } from './app-brand'
@@ -26,12 +24,8 @@ export function AuthenticationStatusCard() {
     mutationFn: () => refreshDemoClientToken(),
     onSuccess: (data) => queryClient.setQueryData(['demo-configuration'], data),
   })
-  const revoke = useMutation({
-    mutationFn: () => revokeAllDemoClientTokens(),
-    onSuccess: (data) => queryClient.setQueryData(['demo-configuration'], data),
-  })
   const data = configuration.data
-  const actionError = refresh.error ?? revoke.error
+  const actionError = refresh.error
 
   return (
     <section
@@ -120,21 +114,12 @@ export function AuthenticationStatusCard() {
               <div className="grid gap-2">
                 <button
                   className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-stone-950 px-3 text-xs font-bold text-white hover:bg-stone-800 disabled:cursor-not-allowed disabled:opacity-50"
-                  disabled={refresh.isPending || revoke.isPending}
+                  disabled={refresh.isPending}
                   onClick={() => refresh.mutate()}
                   type="button"
                 >
                   <RefreshCw aria-hidden="true" className={cn('size-3.5', refresh.isPending && 'animate-spin')} />
                   {refresh.isPending ? 'Minting…' : 'Mint fresh token'}
-                </button>
-                <button
-                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-3 text-xs font-bold text-red-800 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
-                  disabled={refresh.isPending || revoke.isPending}
-                  onClick={() => revoke.mutate()}
-                  type="button"
-                >
-                  <Trash2 aria-hidden="true" className="size-3.5" />
-                  {revoke.isPending ? 'Revoking…' : 'Revoke user tokens'}
                 </button>
               </div>
             ) : null}
@@ -177,13 +162,6 @@ function TokenState({ token }: { token: Awaited<ReturnType<typeof getDemoConfigu
       </div>
     )
   }
-  if (token.status === 'revoked') {
-    return (
-      <p className="border-t border-stone-200 pt-2 text-xs leading-5 text-stone-600">
-        Revoked {token.revokedCount} token{token.revokedCount === 1 ? '' : 's'}. The next request will mint a new one.
-      </p>
-    )
-  }
   if (token.status === 'error') {
     return <p className="border-t border-stone-200 pt-2 text-xs leading-5 text-red-700">{token.message}</p>
   }
@@ -199,8 +177,8 @@ function RelayInstructions() {
       </div>
       <div className="mt-2 space-y-2 font-mono text-[10px] leading-4 text-stone-300">
         <code className="block rounded-lg bg-white/10 p-2">
-          <span className="block">cd january-server-sdk-node</span>
-          <span className="block">npm run demo:token-server</span>
+          <span className="block">cd january-token-relay</span>
+          <span className="block">./start.sh</span>
         </code>
         <code className="block rounded-lg bg-white/10 p-2">
           <span className="block">cd january-sdk-web/examples/react-demo</span>

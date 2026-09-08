@@ -31,7 +31,6 @@ let prefetchedClientToken: JanuaryClientTokenResponse | undefined
 let tokenState:
   | { status: 'idle' }
   | { status: 'ready'; mintedAt: string; expiresAt: string; expiresIn: number }
-  | { status: 'revoked'; revokedAt: string; revokedCount: number }
   | { status: 'error'; message: string } = { status: 'idle' }
 
 export async function getDemoConfigurationDetails() {
@@ -71,35 +70,6 @@ export async function mintFreshDemoClientToken() {
   const token = await fetchPartnerClientToken(partnerTokenUrl, endUserId, partnerAppSessionToken)
   prefetchedClientToken = token
   resetCachedClient()
-  return tokenState
-}
-
-export async function revokeDemoClientTokens() {
-  const partnerTokenUrl = requirePartnerTokenUrl()
-  const endUserId = requireEndUserId()
-  if (!isLocalTokenRelay(partnerTokenUrl)) {
-    throw new Error('Demo token revocation is available only with the local relay.')
-  }
-  const partnerAppSessionToken = process.env.PARTNER_APP_SESSION_TOKEN?.trim()
-  const response = await fetch(new URL('/api/january/token/revoke', partnerTokenUrl), {
-    method: 'POST',
-    headers: {
-      ...(partnerAppSessionToken ? { Authorization: `Bearer ${partnerAppSessionToken}` } : {}),
-      'x-end-user-id': endUserId,
-    },
-  })
-  if (!response.ok) throw new Error(await responseErrorMessage(response, 'January rejected token revocation.'))
-  const result = await response.json() as { revoked_count?: unknown }
-  if (typeof result.revoked_count !== 'number') {
-    throw new Error('The token relay returned an invalid revocation response.')
-  }
-  prefetchedClientToken = undefined
-  resetCachedClient()
-  tokenState = {
-    status: 'revoked',
-    revokedAt: new Date().toISOString(),
-    revokedCount: result.revoked_count,
-  }
   return tokenState
 }
 
@@ -207,7 +177,7 @@ async function fetchPartnerClientToken(
 
 async function checkLocalRelay(partnerTokenUrl: string) {
   try {
-    const response = await fetch(new URL('/health', partnerTokenUrl), {
+    const response = await fetch(new URL('/', partnerTokenUrl), {
       signal: AbortSignal.timeout(1_000),
     })
     return response.ok

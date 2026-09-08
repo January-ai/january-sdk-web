@@ -18,17 +18,13 @@ After you [sign up](https://dashboard.january.ai/sign-up) or
 2. Open [Client tokens](https://dashboard.january.ai/dashboard/client-tokens)
    and select **Enable client tokens**.
 
-Start the local server from the
-[`january-server-sdk-node`](https://github.com/January-ai/january-server-sdk-node)
-repository:
+Start the standalone
+[January Token Relay](https://github.com/January-ai/january-token-relay):
 
 ```sh
-git clone https://github.com/January-ai/january-server-sdk-node.git
-cd january-server-sdk-node
-npm ci
-cp .env.example .env
-# Edit .env and set JANUARY_API_KEY.
-npm run demo:token-server
+git clone https://github.com/January-ai/january-token-relay.git
+cd january-token-relay
+./start.sh
 ```
 
 Leave it running. From the Web SDK repository root, configure and run the demo
@@ -43,8 +39,8 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000). The authentication card
-shows the local relay status and lets you mint or revoke the fixed demo user's
-client tokens. Search for `banana` to make the first SDK request.
+shows the local relay status and lets you mint a fresh client token. Search for
+`banana` to make the first SDK request.
 
 Allow microphone access when the Search screen requests it. Voice capture needs
 a secure context; localhost is accepted for this local flow.
