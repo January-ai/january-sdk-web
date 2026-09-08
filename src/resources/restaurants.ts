@@ -58,7 +58,8 @@ function parameters(request: SearchRestaurantsRequest) {
 function validate(request: SearchRestaurantsRequest): void {
   const query = request.query.trim();
   if (query.length === 0 || query.length > 256) throw new TypeError('Restaurant search query must contain between 1 and 256 characters.');
-  if (request.latitude < -90 || request.latitude > 90 || request.longitude < -180 || request.longitude > 180) {
+  if (!Number.isFinite(request.latitude) || !Number.isFinite(request.longitude)
+    || request.latitude < -90 || request.latitude > 90 || request.longitude < -180 || request.longitude > 180) {
     throw new TypeError('Restaurant coordinates are outside the valid range.');
   }
   if (request.radius !== undefined

@@ -38,5 +38,16 @@ test('restaurant searches accept a 50000-meter radius and reject 50001 locally',
         {name:'TypeError',message:'Restaurant radius must be a finite number between 1 and 50000 meters.'},
       );
     }
+    for (const coordinates of [
+      {latitude:Number.NaN},
+      {latitude:Number.POSITIVE_INFINITY},
+      {longitude:Number.NaN},
+      {longitude:Number.NEGATIVE_INFINITY},
+    ]) {
+      await assert.rejects(
+        client.restaurants[method]({...input,...coordinates}),
+        {name:'TypeError',message:'Restaurant coordinates are outside the valid range.'},
+      );
+    }
   }
 });
