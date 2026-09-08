@@ -59,7 +59,9 @@ function validate(request: SearchRestaurantsRequest): void {
   if (request.latitude < -90 || request.latitude > 90 || request.longitude < -180 || request.longitude > 180) {
     throw new TypeError('Restaurant coordinates are outside the valid range.');
   }
-  if (request.radius !== undefined && (request.radius < 1 || request.radius > 17_000)) throw new TypeError('Restaurant radius is outside the valid range.');
+  if (request.radius !== undefined && (request.radius < 1 || request.radius > 50_000)) {
+    throw new TypeError('Restaurant radius must be between 1 and 50000 meters.');
+  }
   if (request.limit !== undefined && (!Number.isInteger(request.limit) || request.limit < 1 || request.limit > 100)) {
     throw new TypeError('Restaurant limit must be an integer between 1 and 100.');
   }

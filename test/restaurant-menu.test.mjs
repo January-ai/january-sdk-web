@@ -15,3 +15,26 @@ test('restaurant menu uses the selected ID and pagination without a diary header
   assert.equal(result.items[0].servings[0].scalingFactor,1);
   await assert.rejects(client.restaurants.getMenuItems({restaurantId:'../other'}),TypeError);
 });
+
+test('restaurant searches accept a 50000-meter radius and reject 50001 locally', async () => {
+  const requests = [];
+  const client = new JanuaryClient({developmentApiKey:'fixture-key',fetch:async (url) => {
+    requests.push(new URL(url));
+    return new Response('{"items":[]}', {headers:{'content-type':'application/json'}});
+  }});
+  const input = {query:'cafe',latitude:40,longitude:-74,radius:50_000};
+
+  await client.restaurants.search(input);
+  await client.restaurants.searchMenuItems(input);
+
+  assert.deepEqual(requests.map((url) => [url.pathname, url.searchParams.get('radius_meters')]), [
+    ['/v1.2/restaurants', '50000'],
+    ['/v1.2/menu-items', '50000'],
+  ]);
+  for (const method of ['search', 'searchMenuItems']) {
+    await assert.rejects(
+      client.restaurants[method]({...input,radius:50_001}),
+      {name:'TypeError',message:'Restaurant radius must be between 1 and 50000 meters.'},
+    );
+  }
+});
