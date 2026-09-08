@@ -298,6 +298,7 @@ function withoutEndUserId(input: RequestInfo | URL, init?: RequestInit): Request
   const headers = new Headers(input instanceof Request ? input.headers : undefined);
   new Headers(init?.headers).forEach((value, name) => headers.set(name, value));
   headers.delete('January-End-User-ID');
+  headers.delete('x-end-user-id');
   return { ...init, headers };
 }
 
