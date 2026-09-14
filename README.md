@@ -9,49 +9,82 @@ You can try the Web SDK before your own backend is ready. The standalone
 January Token Relay keeps the January API key out of the browser and
 temporarily stands in for your production token endpoint.
 
-### 1. Create the credentials
+You need two terminal windows: one for the January Token Relay, which holds
+your API key and hands the app short-lived client tokens, and one for the
+demo. The first run takes about ten minutes.
 
-Complete both steps—they are on separate dashboard pages:
+### Terminal 1: start the token relay
 
-1. [Sign up](https://dashboard.january.ai/sign-up) or
-   [sign in](https://dashboard.january.ai/sign-in), then open
-   **API keys → Create key** and copy the full `sk-…` value.
-2. Open [Client tokens](https://dashboard.january.ai/dashboard/client-tokens)
-   and select **Enable client tokens**.
+1. Open a terminal.
+2. Download the relay and move into its folder. It needs Node.js 20.12 or
+   newer and nothing else:
 
-Never put the `sk-…` key in browser code or a client-side environment variable.
+   ```bash
+   git clone https://github.com/January-ai/january-token-relay.git
+   cd january-token-relay
+   ```
 
-### 2. Start the local token relay
+3. Start it:
 
-Install Node.js 22 or newer (the relay itself requires 20.12). In a first
-terminal:
+   ```bash
+   ./start.sh
+   ```
 
-```bash
-git clone https://github.com/January-ai/january-token-relay.git
-cd january-token-relay
-./start.sh
-```
+   It checks your Node version and then asks
+   `Paste your API key (input is hidden):`. Leave it waiting and create the
+   key in the next two steps.
 
-Paste the API key when prompted and leave the relay running. It binds to your
-computer, uses port `8787`, and prints its status and token-endpoint URLs.
+4. Create the API key. In a browser,
+   [sign up](https://dashboard.january.ai/sign-up) or
+   [sign in](https://dashboard.january.ai/sign-in) to the January Developer
+   Dashboard, open **API keys → Create key**, and copy the full `sk-…` value.
+   It is shown once.
+5. Enable client tokens. Open
+   [Client tokens](https://dashboard.january.ai/dashboard/client-tokens) and
+   switch on **Enable client tokens**. Until this is on, January answers the
+   relay with `403`.
+6. Back in Terminal 1, paste the key and press Enter. Nothing appears while
+   you type. You should see:
 
-### 3. Run the Web demo
+   ```text
+   ✓ API key accepted by January (sk-abcd…wxyz)
+   ✓ Saved to .env (readable only by you; git ignores it)
 
-In a second terminal, clone the demo repository if needed:
+   January Token Relay is running on this machine (development only).
+     Endpoint      http://localhost:8787/api/january/client-token
+   ```
 
-```bash
-git clone https://github.com/January-ai/january-sdk-web.git
-cd january-sdk-web
-npm ci
-cp .env.example .env.local
-cd examples/react-demo
-npm ci
-npm run dev
-```
+   Leave this window open for the whole session. The key is saved in a
+   git-ignored `.env`, so the next `./start.sh` starts without asking.
 
-Open [http://localhost:3000](http://localhost:3000) and search for `banana`.
-The demo's token provider calls the local relay; neither the API key nor a
-long-lived credential is included in the browser bundle.
+### Terminal 2: run the Web demo
+
+7. Open a second terminal.
+8. Download the SDK repository and move into it:
+
+   ```bash
+   git clone https://github.com/January-ai/january-sdk-web.git
+   cd january-sdk-web
+   ```
+
+9. Install and start the React demo. Its environment template already points
+   at the relay:
+
+   ```bash
+   npm ci
+   cp .env.example .env.local
+   cd examples/react-demo
+   npm ci
+   npm run dev
+   ```
+
+10. Open [http://localhost:3000](http://localhost:3000) and search for
+    `banana`. Terminal 1 prints `minted=true status=200` the first time the
+    page asks for a token. Neither the API key nor a long-lived credential is
+    in the browser bundle.
+
+Never put the `sk-…` key in browser code or a client-side environment
+variable.
 
 ### 4. Optional: deploy the relay to Vercel
 
