@@ -16,8 +16,8 @@ demo. The first run takes about ten minutes.
 ### Terminal 1: start the token relay
 
 1. Open a terminal.
-2. Download the relay and move into its folder. It needs Node.js 20.12 or
-   newer and nothing else:
+2. Download the relay and move into its folder. Install Node.js 22 or newer
+   first: this SDK needs 22, and the relay itself needs 20.12:
 
    ```bash
    git clone https://github.com/January-ai/january-token-relay.git
@@ -86,7 +86,7 @@ demo. The first run takes about ten minutes.
 Never put the `sk-…` key in browser code or a client-side environment
 variable.
 
-### 4. Optional: deploy the relay to Vercel
+### Optional: deploy the relay to Vercel
 
 If localhost is inconvenient, follow the relay's
 [Vercel deployment guide](https://github.com/January-ai/january-token-relay#deploy).
