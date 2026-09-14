@@ -74,7 +74,7 @@ jobs:
       - name: Install React demo dependencies and browser
         run: |
           npm --prefix examples/react-demo ci
-          npm --prefix examples/react-demo exec playwright install --with-deps chromium
+          npm --prefix examples/react-demo exec -- playwright install --with-deps chromium
 
       - name: Run complete React demo UI suite
         run: npm run demo:web:check
