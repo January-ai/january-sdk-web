@@ -21,6 +21,8 @@ export type {
   UserCorrectPhotoScanRequest,
   UserCreateFoodLogRequest,
   UserDeleteFoodLogRequest,
+  UserGetFoodLogRequest,
+  UserGetFoodLogSummaryRequest,
   UserGetFoodRequest,
   UserGetRestaurantMenuItemsRequest,
   UserListFoodLogsRequest,

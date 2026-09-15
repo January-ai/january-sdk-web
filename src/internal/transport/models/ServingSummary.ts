@@ -16,44 +16,44 @@ import { mapValues } from '../runtime.js';
 /**
  *
  * @export
- * @interface AlternativeServing
+ * @interface ServingSummary
  */
-export interface AlternativeServing {
+export interface ServingSummary {
     /**
      * Null only when the producer sent a serving with no id.
      * @type {string}
-     * @memberof AlternativeServing
+     * @memberof ServingSummary
      */
     id: string | null;
     /**
      * How much of `unit` this serving is; null when the producer reported none.
      * @type {number}
-     * @memberof AlternativeServing
+     * @memberof ServingSummary
      */
     quantity: number | null;
     /**
      * Null only when the producer sent a serving with no unit.
      * @type {string}
-     * @memberof AlternativeServing
+     * @memberof ServingSummary
      */
     unit: string | null;
 }
 
 /**
- * Check if a given object implements the AlternativeServing interface.
+ * Check if a given object implements the ServingSummary interface.
  */
-export function instanceOfAlternativeServing(value: object): value is AlternativeServing {
+export function instanceOfServingSummary(value: object): value is ServingSummary {
     if (!('id' in value) || value['id'] === undefined) return false;
     if (!('quantity' in value) || value['quantity'] === undefined) return false;
     if (!('unit' in value) || value['unit'] === undefined) return false;
     return true;
 }
 
-export function AlternativeServingFromJSON(json: any): AlternativeServing {
-    return AlternativeServingFromJSONTyped(json, false);
+export function ServingSummaryFromJSON(json: any): ServingSummary {
+    return ServingSummaryFromJSONTyped(json, false);
 }
 
-export function AlternativeServingFromJSONTyped(json: any, ignoreDiscriminator: boolean): AlternativeServing {
+export function ServingSummaryFromJSONTyped(json: any, ignoreDiscriminator: boolean): ServingSummary {
     if (json == null) {
         return json;
     }
@@ -65,11 +65,11 @@ export function AlternativeServingFromJSONTyped(json: any, ignoreDiscriminator: 
     };
 }
 
-export function AlternativeServingToJSON(json: any): AlternativeServing {
-    return AlternativeServingToJSONTyped(json, false);
+export function ServingSummaryToJSON(json: any): ServingSummary {
+    return ServingSummaryToJSONTyped(json, false);
 }
 
-export function AlternativeServingToJSONTyped(value?: AlternativeServing | null, ignoreDiscriminator: boolean = false): any {
+export function ServingSummaryToJSONTyped(value?: ServingSummary | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }

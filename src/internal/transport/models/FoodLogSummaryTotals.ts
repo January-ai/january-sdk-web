@@ -13,69 +13,79 @@
  */
 
 import { mapValues } from '../runtime.js';
-import type { AnalysisReasoning } from './AnalysisReasoning.js';
+import type { NutritionFacts } from './NutritionFacts.js';
 import {
-    AnalysisReasoningFromJSON,
-    AnalysisReasoningFromJSONTyped,
-    AnalysisReasoningToJSON,
-    AnalysisReasoningToJSONTyped,
-} from './AnalysisReasoning.js';
+    NutritionFactsFromJSON,
+    NutritionFactsFromJSONTyped,
+    NutritionFactsToJSON,
+    NutritionFactsToJSONTyped,
+} from './NutritionFacts.js';
 
 /**
  *
  * @export
- * @interface ScanFoodPhotoBody
+ * @interface FoodLogSummaryTotals
  */
-export interface ScanFoodPhotoBody {
+export interface FoodLogSummaryTotals {
     /**
-     * The food photo — the food itself or a packaged product's label — as an http(s) URL or a base64 data URI (data:image/jpeg;base64,…). Formats: JPG, PNG, WEBP, and non-animated GIF. Around 1,024 px on the shorter side is enough for reliable results (a recommendation, not a validation rule). A URL must be publicly fetchable server-side — hosts that block hotlinking or require a login cannot be read — and has no enforced size cap, though very large files slow the analysis and can time out. Base64 must be a complete data URI and fit the 5 MB request-body cap, so keep raw images under ~3.5 MB before encoding (base64 inflates by ~33%). Prefer the URL when the image is already hosted.
-     * @type {string}
-     * @memberof ScanFoodPhotoBody
+     * Logs in the whole range.
+     * @type {number}
+     * @memberof FoodLogSummaryTotals
      */
-    image: string;
+    logsCount: number;
+    /**
+     * Distinct local calendar dates in the range that carry at least one log.
+     * @type {number}
+     * @memberof FoodLogSummaryTotals
+     */
+    daysWithLogs: number;
     /**
      *
-     * @type {AnalysisReasoning}
-     * @memberof ScanFoodPhotoBody
+     * @type {NutritionFacts}
+     * @memberof FoodLogSummaryTotals
      */
-    reasoning?: AnalysisReasoning;
+    nutrients: NutritionFacts;
 }
 
 /**
- * Check if a given object implements the ScanFoodPhotoBody interface.
+ * Check if a given object implements the FoodLogSummaryTotals interface.
  */
-export function instanceOfScanFoodPhotoBody(value: object): value is ScanFoodPhotoBody {
-    if (!('image' in value) || value['image'] === undefined) return false;
+export function instanceOfFoodLogSummaryTotals(value: object): value is FoodLogSummaryTotals {
+    if ((!('logsCount' in (value as Record<string, any>)) && !('logs_count' in (value as Record<string, any>))) || ((value as Record<string, any>)['logsCount'] === undefined && (value as Record<string, any>)['logs_count'] === undefined)) return false;
+    if ((!('daysWithLogs' in (value as Record<string, any>)) && !('days_with_logs' in (value as Record<string, any>))) || ((value as Record<string, any>)['daysWithLogs'] === undefined && (value as Record<string, any>)['days_with_logs'] === undefined)) return false;
+    if (!('nutrients' in value) || value['nutrients'] === undefined) return false;
     return true;
 }
 
-export function ScanFoodPhotoBodyFromJSON(json: any): ScanFoodPhotoBody {
-    return ScanFoodPhotoBodyFromJSONTyped(json, false);
+export function FoodLogSummaryTotalsFromJSON(json: any): FoodLogSummaryTotals {
+    return FoodLogSummaryTotalsFromJSONTyped(json, false);
 }
 
-export function ScanFoodPhotoBodyFromJSONTyped(json: any, ignoreDiscriminator: boolean): ScanFoodPhotoBody {
+export function FoodLogSummaryTotalsFromJSONTyped(json: any, ignoreDiscriminator: boolean): FoodLogSummaryTotals {
     if (json == null) {
         return json;
     }
     return {
 
-        'image': json['image'],
-        'reasoning': json['reasoning'] == null ? undefined : AnalysisReasoningFromJSON(json['reasoning']),
+        'logsCount': json['logs_count'],
+        'daysWithLogs': json['days_with_logs'],
+        'nutrients': NutritionFactsFromJSON(json['nutrients']),
     };
 }
 
-export function ScanFoodPhotoBodyToJSON(json: any): ScanFoodPhotoBody {
-    return ScanFoodPhotoBodyToJSONTyped(json, false);
+export function FoodLogSummaryTotalsToJSON(json: any): FoodLogSummaryTotals {
+    return FoodLogSummaryTotalsToJSONTyped(json, false);
 }
 
-export function ScanFoodPhotoBodyToJSONTyped(value?: ScanFoodPhotoBody | null, ignoreDiscriminator: boolean = false): any {
+export function FoodLogSummaryTotalsToJSONTyped(value?: FoodLogSummaryTotals | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
 
     return {
 
-        'image': value['image'],
-        'reasoning': AnalysisReasoningToJSON(value['reasoning']),
+        'logs_count': value['logsCount'],
+        'days_with_logs': value['daysWithLogs'],
+        'nutrients': NutritionFactsToJSON(value['nutrients']),
     };
 }

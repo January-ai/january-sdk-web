@@ -22,6 +22,10 @@ cholesterol, calcium, iron, potassium, sodium, and vitamin D.
 `FoodSelection` is `{ id: number; serving: { id: number; quantity: number } }`
 and is accepted by Food Logs and Glucose.
 
+* `FoodLogSummaryGrouping`: `day`, `week`
+* `WeekStart`: `monday`, `sunday`
+* `AnalysisEffort`: `none`, `xhigh`
+
 ## Glucose profile
 
 ```ts

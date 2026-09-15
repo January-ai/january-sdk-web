@@ -13,13 +13,6 @@
  */
 
 import { mapValues } from '../runtime.js';
-import type { ServingSummary } from './ServingSummary.js';
-import {
-    ServingSummaryFromJSON,
-    ServingSummaryFromJSONTyped,
-    ServingSummaryToJSON,
-    ServingSummaryToJSONTyped,
-} from './ServingSummary.js';
 import type { NutritionFacts } from './NutritionFacts.js';
 import {
     NutritionFactsFromJSON,
@@ -31,95 +24,86 @@ import {
 /**
  *
  * @export
- * @interface DetectedFood
+ * @interface FoodLogSummaryBucket
  */
-export interface DetectedFood {
+export interface FoodLogSummaryBucket {
     /**
-     * Catalog food id, or null when the producer matched none.
-     * @type {string}
-     * @memberof DetectedFood
+     * First local calendar date this bucket covers. Clipped to the requested range, so the first week bucket may be partial.
+     * @type {Date}
+     * @memberof FoodLogSummaryBucket
      */
-    id: string | null;
+    startDate: Date;
     /**
-     * Null only when the producer sent a food with no name.
-     * @type {string}
-     * @memberof DetectedFood
+     * Last local calendar date this bucket covers, inclusive. Equal to start_date when grouping by day.
+     * @type {Date}
+     * @memberof FoodLogSummaryBucket
      */
-    name: string | null;
+    endDate: Date;
     /**
-     * Null for generic (non-branded) foods.
-     * @type {string}
-     * @memberof DetectedFood
-     */
-    brandName: string | null;
-    /**
-     * Number of catalog servings consumed, ready to use as food-log quantity. For 40 g from a 100 g serving this is 0.4. Null when the producer supplied no usable portion.
+     * How many logs fall in this bucket.
      * @type {number}
-     * @memberof DetectedFood
+     * @memberof FoodLogSummaryBucket
      */
-    quantity: number | null;
+    logsCount: number;
     /**
-     *
-     * @type {ServingSummary}
-     * @memberof DetectedFood
+     * How many distinct local calendar dates in this bucket carry at least one log.
+     * @type {number}
+     * @memberof FoodLogSummaryBucket
      */
-    serving: ServingSummary;
+    daysWithLogs: number;
     /**
      *
      * @type {NutritionFacts}
-     * @memberof DetectedFood
+     * @memberof FoodLogSummaryBucket
      */
     nutrients: NutritionFacts;
 }
 
 /**
- * Check if a given object implements the DetectedFood interface.
+ * Check if a given object implements the FoodLogSummaryBucket interface.
  */
-export function instanceOfDetectedFood(value: object): value is DetectedFood {
-    if (!('id' in value) || value['id'] === undefined) return false;
-    if (!('name' in value) || value['name'] === undefined) return false;
-    if ((!('brandName' in (value as Record<string, any>)) && !('brand_name' in (value as Record<string, any>))) || ((value as Record<string, any>)['brandName'] === undefined && (value as Record<string, any>)['brand_name'] === undefined)) return false;
-    if (!('quantity' in value) || value['quantity'] === undefined) return false;
-    if (!('serving' in value) || value['serving'] === undefined) return false;
+export function instanceOfFoodLogSummaryBucket(value: object): value is FoodLogSummaryBucket {
+    if ((!('startDate' in (value as Record<string, any>)) && !('start_date' in (value as Record<string, any>))) || ((value as Record<string, any>)['startDate'] === undefined && (value as Record<string, any>)['start_date'] === undefined)) return false;
+    if ((!('endDate' in (value as Record<string, any>)) && !('end_date' in (value as Record<string, any>))) || ((value as Record<string, any>)['endDate'] === undefined && (value as Record<string, any>)['end_date'] === undefined)) return false;
+    if ((!('logsCount' in (value as Record<string, any>)) && !('logs_count' in (value as Record<string, any>))) || ((value as Record<string, any>)['logsCount'] === undefined && (value as Record<string, any>)['logs_count'] === undefined)) return false;
+    if ((!('daysWithLogs' in (value as Record<string, any>)) && !('days_with_logs' in (value as Record<string, any>))) || ((value as Record<string, any>)['daysWithLogs'] === undefined && (value as Record<string, any>)['days_with_logs'] === undefined)) return false;
     if (!('nutrients' in value) || value['nutrients'] === undefined) return false;
     return true;
 }
 
-export function DetectedFoodFromJSON(json: any): DetectedFood {
-    return DetectedFoodFromJSONTyped(json, false);
+export function FoodLogSummaryBucketFromJSON(json: any): FoodLogSummaryBucket {
+    return FoodLogSummaryBucketFromJSONTyped(json, false);
 }
 
-export function DetectedFoodFromJSONTyped(json: any, ignoreDiscriminator: boolean): DetectedFood {
+export function FoodLogSummaryBucketFromJSONTyped(json: any, ignoreDiscriminator: boolean): FoodLogSummaryBucket {
     if (json == null) {
         return json;
     }
     return {
 
-        'id': json['id'],
-        'name': json['name'],
-        'brandName': json['brand_name'],
-        'quantity': json['quantity'],
-        'serving': ServingSummaryFromJSON(json['serving']),
+        'startDate': (new Date(json['start_date'])),
+        'endDate': (new Date(json['end_date'])),
+        'logsCount': json['logs_count'],
+        'daysWithLogs': json['days_with_logs'],
         'nutrients': NutritionFactsFromJSON(json['nutrients']),
     };
 }
 
-export function DetectedFoodToJSON(json: any): DetectedFood {
-    return DetectedFoodToJSONTyped(json, false);
+export function FoodLogSummaryBucketToJSON(json: any): FoodLogSummaryBucket {
+    return FoodLogSummaryBucketToJSONTyped(json, false);
 }
 
-export function DetectedFoodToJSONTyped(value?: DetectedFood | null, ignoreDiscriminator: boolean = false): any {
+export function FoodLogSummaryBucketToJSONTyped(value?: FoodLogSummaryBucket | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
 
     return {
 
-        'id': value['id'],
-        'name': value['name'],
-        'brand_name': value['brandName'],
-        'quantity': value['quantity'],
-        'serving': ServingSummaryToJSON(value['serving']),
+        'start_date': value['startDate'].toISOString().substring(0,10),
+        'end_date': value['endDate'].toISOString().substring(0,10),
+        'logs_count': value['logsCount'],
+        'days_with_logs': value['daysWithLogs'],
         'nutrients': NutritionFactsToJSON(value['nutrients']),
     };
 }

@@ -127,27 +127,6 @@ export interface SearchFoodsByNaturalLanguageRequest {
   signal?: AbortSignal;
 }
 
-export interface NaturalLanguageServing {
-  id: string | null;
-  quantity?: number | null;
-  unit: string | null;
-  selectedQuantity?: number;
-}
-
-export interface NaturalLanguageFood {
-  id?: string | null;
-  name: string | null;
-  brandName?: string | null;
-  nutrients: CompleteScanNutritionFacts;
-  servings?: NaturalLanguageServing[];
-}
-
-export interface NaturalLanguageFoodDetection {
-  food: NaturalLanguageFood;
-}
-
-export type SearchFoodsByNaturalLanguageResponse = FoodScan;
-
 export const DietRestriction = {
   gluten: 'gluten', lactose: 'lactose', yeast: 'yeast', treeNuts: 'tree_nuts',
   peanuts: 'peanuts', dairy: 'dairy', eggs: 'eggs', sulfites: 'sulfites', soy: 'soy', wheat: 'wheat',
@@ -171,23 +150,42 @@ export interface SuggestFoodAlternativesRequest {
   signal?: AbortSignal;
 }
 
-export interface DetectedServing {
+/** The catalog serving a detected or alternative food is expressed in. `quantity` is the size of one serving, not the amount eaten. */
+export interface ServingSummary {
   id: string | null;
   quantity?: number | null;
   unit: string | null;
-  selectedQuantity?: number | null;
 }
 
+/** @deprecated Use ServingSummary. The amount eaten is now DetectedFood.quantity. */
+export type DetectedServing = ServingSummary;
+
+/**
+ * A food recognized from a photo or a description. `serving` is the selected catalog serving and
+ * `quantity` is how many of that serving were eaten (0.4 for 40 g of a 100 g serving), so together
+ * they are ready to use as a food-log entry. `nutrients` are already scaled to `quantity`.
+ * `quantity` is null when no usable portion was found.
+ */
 export interface DetectedFood {
   id?: string | null;
   name: string | null;
   brandName?: string | null;
   nutrients: CompleteScanNutritionFacts;
-  servings?: DetectedServing[];
+  serving: ServingSummary;
+  quantity?: number | null;
 }
 
-export type FoodAlternative = DetectedFood;
-export interface SuggestFoodAlternativesResponse { alternatives: FoodAlternative[] }
+/** A healthier alternative to a food, with the servings its nutrition can be read against. */
+export interface AlternativeFood {
+  id?: string | null;
+  name: string | null;
+  brandName?: string | null;
+  nutrients: CompleteScanNutritionFacts;
+  servings: ServingSummary[];
+}
+
+export type FoodAlternative = AlternativeFood;
+export interface SuggestFoodAlternativesResponse { alternatives: AlternativeFood[] }
 
 export interface GetRestaurantMenuItemsRequest {
   restaurantId: ContractRestaurant['id'];
@@ -263,9 +261,15 @@ export interface RestaurantMenuEntry {
 }
 export interface GetRestaurantMenuItemsResponse { items: RestaurantMenuEntry[] }
 
+/** How much analysis effort a photo scan uses. Both modes return the same FoodScan shape and cost the same. */
+export const AnalysisEffort = { none: 'none', xhigh: 'xhigh' } as const;
+export type AnalysisEffort = typeof AnalysisEffort[keyof typeof AnalysisEffort];
+
 export interface ScanFoodPhotoRequest {
   image: string;
   endUserId?: string;
+  /** Omit or `none` for the standard analyzer; `xhigh` for the reasoning-based one. */
+  reasoningEffort?: AnalysisEffort;
   signal?: AbortSignal;
 }
 
@@ -326,6 +330,50 @@ export interface UpdateFoodLogRequest extends PartnerUserContext {
 }
 
 export interface GetFoodLogRequest extends PartnerUserContext { logId: string; signal?: AbortSignal }
+
+/** Bucket size for a food-log summary. */
+export const FoodLogSummaryGrouping = { day: 'day', week: 'week' } as const;
+export type FoodLogSummaryGrouping = typeof FoodLogSummaryGrouping[keyof typeof FoodLogSummaryGrouping];
+
+/** Which weekday a week bucket begins on. Ignored when grouping by day. */
+export const WeekStart = { monday: 'monday', sunday: 'sunday' } as const;
+export type WeekStart = typeof WeekStart[keyof typeof WeekStart];
+
+/**
+ * Summarizes the logs between `start` and `end` (inclusive calendar dates in the user's timezone,
+ * at most 366 days) into day or week buckets with summed nutrients.
+ */
+export interface GetFoodLogSummaryRequest extends PartnerUserContext {
+  start: string;
+  end: string;
+  groupBy?: FoodLogSummaryGrouping;
+  weekStart?: WeekStart;
+  signal?: AbortSignal;
+}
+
+/** One day or week of a food-log summary. Buckets tile the requested range, so an empty period is present with zero counts. */
+export interface FoodLogSummaryBucket {
+  startDate: string;
+  endDate: string;
+  logsCount: number;
+  daysWithLogs: number;
+  /** Nutrients summed over the bucket. Sparse: a key is absent when nothing could be totalled. */
+  nutrients: NutritionFacts;
+}
+export interface FoodLogSummaryTotals { logsCount: number; daysWithLogs: number; nutrients: NutritionFacts }
+/** Totals divided by the number of days that have at least one log. */
+export interface FoodLogSummaryAverage { nutrients: NutritionFacts }
+export interface FoodLogSummary {
+  groupBy: FoodLogSummaryGrouping;
+  /** Null when grouped by day. */
+  weekStart: WeekStart | null;
+  timezone: string;
+  startDate: string;
+  endDate: string;
+  buckets: FoodLogSummaryBucket[];
+  totals: FoodLogSummaryTotals;
+  averagePerLoggedDay: FoodLogSummaryAverage;
+}
 export interface DeleteFoodLogRequest extends PartnerUserContext { logId: string; signal?: AbortSignal }
 export interface ConsumedServing { id: string | null; quantity: number | null }
 export interface ServingDetails { id: string | null; quantity: number | null; unit: string | null; weightGrams?: number | null }

@@ -72,6 +72,7 @@ export interface SearchFoodsRequest {
     query: string;
     type?: FoodCategory;
     limit?: number;
+    offset?: number;
 }
 
 export interface SuggestFoodAlternativesRequest {
@@ -285,6 +286,10 @@ export class FoodsApi extends runtime.BaseAPI {
             queryParameters['limit'] = requestParameters['limit'];
         }
 
+        if (requestParameters['offset'] != null) {
+            queryParameters['offset'] = requestParameters['offset'];
+        }
+
         const headerParameters: runtime.HTTPHeaders = {};
 
         if (this.configuration && this.configuration.accessToken) {
@@ -307,7 +312,7 @@ export class FoodsApi extends runtime.BaseAPI {
     }
 
     /**
-     * **API key or client token.**  Full-text search over the January food database, returning up to 40 ranked matches. Generic foods, branded products and recipes are searched together unless `type` narrows it to one. To look up a scanned barcode, use `GET /v1.2/foods/barcode/{barcode}` instead.  Callable with a client token carrying the `foods:read` scope.
+     * **API key or client token.**  Full-text search over the January food database, returning up to 50 ranked matches per call. Generic foods, branded products and recipes are searched together unless `type` narrows it to one; page deeper with `offset`. To look up a scanned barcode, use `GET /v1.2/foods/barcode/{barcode}` instead.  Callable with a client token carrying the `foods:read` scope.
      * Search foods by name
      */
     async searchFoodsRaw(requestParameters: SearchFoodsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FoodSearchResults>> {
@@ -318,7 +323,7 @@ export class FoodsApi extends runtime.BaseAPI {
     }
 
     /**
-     * **API key or client token.**  Full-text search over the January food database, returning up to 40 ranked matches. Generic foods, branded products and recipes are searched together unless `type` narrows it to one. To look up a scanned barcode, use `GET /v1.2/foods/barcode/{barcode}` instead.  Callable with a client token carrying the `foods:read` scope.
+     * **API key or client token.**  Full-text search over the January food database, returning up to 50 ranked matches per call. Generic foods, branded products and recipes are searched together unless `type` narrows it to one; page deeper with `offset`. To look up a scanned barcode, use `GET /v1.2/foods/barcode/{barcode}` instead.  Callable with a client token carrying the `foods:read` scope.
      * Search foods by name
      */
     async searchFoods(requestParameters: SearchFoodsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<FoodSearchResults> {

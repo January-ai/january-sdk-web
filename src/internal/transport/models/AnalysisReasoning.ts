@@ -16,77 +16,62 @@ import { mapValues } from '../runtime.js';
 /**
  *
  * @export
- * @interface DetectedServing
+ * @interface AnalysisReasoning
  */
-export interface DetectedServing {
+export interface AnalysisReasoning {
     /**
-     * Null only when the producer sent a serving with no id.
-     * @type {string}
-     * @memberof DetectedServing
+     * `none` uses the standard analyzer; `xhigh` uses the reasoning-based analyzer.
+     * @type {AnalysisReasoningEffortEnum}
+     * @memberof AnalysisReasoning
      */
-    id: string | null;
-    /**
-     * How much of `unit` this serving is; null when the producer reported none.
-     * @type {number}
-     * @memberof DetectedServing
-     */
-    quantity: number | null;
-    /**
-     * Null only when the producer sent a serving with no unit.
-     * @type {string}
-     * @memberof DetectedServing
-     */
-    unit: string | null;
-    /**
-     * Quantity parsed from the text ('2 cups' → 2); null on image analyses. Advisory — corrections reads the serving's own quantity.
-     * @type {number}
-     * @memberof DetectedServing
-     */
-    selectedQuantity: number | null;
+    effort: AnalysisReasoningEffortEnum;
 }
 
+
 /**
- * Check if a given object implements the DetectedServing interface.
+ * @export
  */
-export function instanceOfDetectedServing(value: object): value is DetectedServing {
-    if (!('id' in value) || value['id'] === undefined) return false;
-    if (!('quantity' in value) || value['quantity'] === undefined) return false;
-    if (!('unit' in value) || value['unit'] === undefined) return false;
-    if ((!('selectedQuantity' in (value as Record<string, any>)) && !('selected_quantity' in (value as Record<string, any>))) || ((value as Record<string, any>)['selectedQuantity'] === undefined && (value as Record<string, any>)['selected_quantity'] === undefined)) return false;
+export const AnalysisReasoningEffortEnum = {
+    none: 'none',
+    xhigh: 'xhigh',
+    unknownDefaultOpenApi: '11184809'
+} as const;
+export type AnalysisReasoningEffortEnum = typeof AnalysisReasoningEffortEnum[keyof typeof AnalysisReasoningEffortEnum];
+
+
+/**
+ * Check if a given object implements the AnalysisReasoning interface.
+ */
+export function instanceOfAnalysisReasoning(value: object): value is AnalysisReasoning {
+    if (!('effort' in value) || value['effort'] === undefined) return false;
     return true;
 }
 
-export function DetectedServingFromJSON(json: any): DetectedServing {
-    return DetectedServingFromJSONTyped(json, false);
+export function AnalysisReasoningFromJSON(json: any): AnalysisReasoning {
+    return AnalysisReasoningFromJSONTyped(json, false);
 }
 
-export function DetectedServingFromJSONTyped(json: any, ignoreDiscriminator: boolean): DetectedServing {
+export function AnalysisReasoningFromJSONTyped(json: any, ignoreDiscriminator: boolean): AnalysisReasoning {
     if (json == null) {
         return json;
     }
     return {
 
-        'id': json['id'],
-        'quantity': json['quantity'],
-        'unit': json['unit'],
-        'selectedQuantity': json['selected_quantity'],
+        'effort': json['effort'],
     };
 }
 
-export function DetectedServingToJSON(json: any): DetectedServing {
-    return DetectedServingToJSONTyped(json, false);
+export function AnalysisReasoningToJSON(json: any): AnalysisReasoning {
+    return AnalysisReasoningToJSONTyped(json, false);
 }
 
-export function DetectedServingToJSONTyped(value?: DetectedServing | null, ignoreDiscriminator: boolean = false): any {
+export function AnalysisReasoningToJSONTyped(value?: AnalysisReasoning | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
 
     return {
 
-        'id': value['id'],
-        'quantity': value['quantity'],
-        'unit': value['unit'],
-        'selected_quantity': value['selectedQuantity'],
+        'effort': value['effort'],
     };
 }

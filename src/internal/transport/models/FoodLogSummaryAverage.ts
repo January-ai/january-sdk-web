@@ -13,69 +13,61 @@
  */
 
 import { mapValues } from '../runtime.js';
-import type { AnalysisReasoning } from './AnalysisReasoning.js';
+import type { NutritionFacts } from './NutritionFacts.js';
 import {
-    AnalysisReasoningFromJSON,
-    AnalysisReasoningFromJSONTyped,
-    AnalysisReasoningToJSON,
-    AnalysisReasoningToJSONTyped,
-} from './AnalysisReasoning.js';
+    NutritionFactsFromJSON,
+    NutritionFactsFromJSONTyped,
+    NutritionFactsToJSON,
+    NutritionFactsToJSONTyped,
+} from './NutritionFacts.js';
 
 /**
  *
  * @export
- * @interface ScanFoodPhotoBody
+ * @interface FoodLogSummaryAverage
  */
-export interface ScanFoodPhotoBody {
-    /**
-     * The food photo — the food itself or a packaged product's label — as an http(s) URL or a base64 data URI (data:image/jpeg;base64,…). Formats: JPG, PNG, WEBP, and non-animated GIF. Around 1,024 px on the shorter side is enough for reliable results (a recommendation, not a validation rule). A URL must be publicly fetchable server-side — hosts that block hotlinking or require a login cannot be read — and has no enforced size cap, though very large files slow the analysis and can time out. Base64 must be a complete data URI and fit the 5 MB request-body cap, so keep raw images under ~3.5 MB before encoding (base64 inflates by ~33%). Prefer the URL when the image is already hosted.
-     * @type {string}
-     * @memberof ScanFoodPhotoBody
-     */
-    image: string;
+export interface FoodLogSummaryAverage {
     /**
      *
-     * @type {AnalysisReasoning}
-     * @memberof ScanFoodPhotoBody
+     * @type {NutritionFacts}
+     * @memberof FoodLogSummaryAverage
      */
-    reasoning?: AnalysisReasoning;
+    nutrients: NutritionFacts;
 }
 
 /**
- * Check if a given object implements the ScanFoodPhotoBody interface.
+ * Check if a given object implements the FoodLogSummaryAverage interface.
  */
-export function instanceOfScanFoodPhotoBody(value: object): value is ScanFoodPhotoBody {
-    if (!('image' in value) || value['image'] === undefined) return false;
+export function instanceOfFoodLogSummaryAverage(value: object): value is FoodLogSummaryAverage {
+    if (!('nutrients' in value) || value['nutrients'] === undefined) return false;
     return true;
 }
 
-export function ScanFoodPhotoBodyFromJSON(json: any): ScanFoodPhotoBody {
-    return ScanFoodPhotoBodyFromJSONTyped(json, false);
+export function FoodLogSummaryAverageFromJSON(json: any): FoodLogSummaryAverage {
+    return FoodLogSummaryAverageFromJSONTyped(json, false);
 }
 
-export function ScanFoodPhotoBodyFromJSONTyped(json: any, ignoreDiscriminator: boolean): ScanFoodPhotoBody {
+export function FoodLogSummaryAverageFromJSONTyped(json: any, ignoreDiscriminator: boolean): FoodLogSummaryAverage {
     if (json == null) {
         return json;
     }
     return {
 
-        'image': json['image'],
-        'reasoning': json['reasoning'] == null ? undefined : AnalysisReasoningFromJSON(json['reasoning']),
+        'nutrients': NutritionFactsFromJSON(json['nutrients']),
     };
 }
 
-export function ScanFoodPhotoBodyToJSON(json: any): ScanFoodPhotoBody {
-    return ScanFoodPhotoBodyToJSONTyped(json, false);
+export function FoodLogSummaryAverageToJSON(json: any): FoodLogSummaryAverage {
+    return FoodLogSummaryAverageToJSONTyped(json, false);
 }
 
-export function ScanFoodPhotoBodyToJSONTyped(value?: ScanFoodPhotoBody | null, ignoreDiscriminator: boolean = false): any {
+export function FoodLogSummaryAverageToJSONTyped(value?: FoodLogSummaryAverage | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
 
     return {
 
-        'image': value['image'],
-        'reasoning': AnalysisReasoningToJSON(value['reasoning']),
+        'nutrients': NutritionFactsToJSON(value['nutrients']),
     };
 }
