@@ -29,6 +29,11 @@ import {
     FoodLogToJSON,
 } from '../models/FoodLog.js';
 import {
+    type FoodLogSummary,
+    FoodLogSummaryFromJSON,
+    FoodLogSummaryToJSON,
+} from '../models/FoodLogSummary.js';
+import {
     type ListFoodLogsResponse,
     ListFoodLogsResponseFromJSON,
     ListFoodLogsResponseToJSON,
@@ -52,6 +57,15 @@ export interface DeleteFoodLogRequest {
 export interface GetFoodLogRequest {
     logId: string;
     januaryEndUserID?: string;
+}
+
+export interface GetFoodLogSummaryRequest {
+    startDate: Date;
+    endDate: Date;
+    timezone: string;
+    januaryEndUserID?: string;
+    groupBy?: GetFoodLogSummaryGroupByEnum;
+    weekStart?: GetFoodLogSummaryWeekStartEnum;
 }
 
 export interface ListFoodLogsRequest {
@@ -251,6 +265,98 @@ export class FoodLogsApi extends runtime.BaseAPI {
     }
 
     /**
+     * Creates request options for getFoodLogSummary without sending the request
+     */
+    async getFoodLogSummaryRequestOpts(requestParameters: GetFoodLogSummaryRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['startDate'] == null) {
+            throw new runtime.RequiredError(
+                'startDate',
+                'Required parameter "startDate" was null or undefined when calling getFoodLogSummary().'
+            );
+        }
+
+        if (requestParameters['endDate'] == null) {
+            throw new runtime.RequiredError(
+                'endDate',
+                'Required parameter "endDate" was null or undefined when calling getFoodLogSummary().'
+            );
+        }
+
+        if (requestParameters['timezone'] == null) {
+            throw new runtime.RequiredError(
+                'timezone',
+                'Required parameter "timezone" was null or undefined when calling getFoodLogSummary().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        if (requestParameters['startDate'] != null) {
+            queryParameters['start_date'] = (requestParameters['startDate'] as any).toISOString().substring(0,10);
+        }
+
+        if (requestParameters['endDate'] != null) {
+            queryParameters['end_date'] = (requestParameters['endDate'] as any).toISOString().substring(0,10);
+        }
+
+        if (requestParameters['timezone'] != null) {
+            queryParameters['timezone'] = requestParameters['timezone'];
+        }
+
+        if (requestParameters['groupBy'] != null) {
+            queryParameters['group_by'] = requestParameters['groupBy'];
+        }
+
+        if (requestParameters['weekStart'] != null) {
+            queryParameters['week_start'] = requestParameters['weekStart'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (requestParameters['januaryEndUserID'] != null) {
+            headerParameters['January-End-User-ID'] = String(requestParameters['januaryEndUserID']);
+        }
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearerAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/v1.2/food-logs/summary`;
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * **API key or client token.**  Aggregates the logs between `start_date` and `end_date` (both inclusive local calendar dates in `timezone`) into per-day or per-week buckets, each with summed nutrients, plus totals for the range and an average per logged day. The range spans at most 366 days — wide enough for a year at a time; the 366-day cap bounds the number of buckets. The buckets tile the whole range in chronological order: a day or week with no logs is still returned, with zero counts, and under `group_by=week` the first and last buckets are clipped to the dates you asked for. `nutrients` is sparse, so read `logs_count` to tell a bucket with no logs from one whose logs could not be resolved.  Callable with a client token carrying the `food_logs:read` scope.
+     * Summarize a user\'s food logs over a date range
+     */
+    async getFoodLogSummaryRaw(requestParameters: GetFoodLogSummaryRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FoodLogSummary>> {
+        const requestOptions = await this.getFoodLogSummaryRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => FoodLogSummaryFromJSON(jsonValue));
+    }
+
+    /**
+     * **API key or client token.**  Aggregates the logs between `start_date` and `end_date` (both inclusive local calendar dates in `timezone`) into per-day or per-week buckets, each with summed nutrients, plus totals for the range and an average per logged day. The range spans at most 366 days — wide enough for a year at a time; the 366-day cap bounds the number of buckets. The buckets tile the whole range in chronological order: a day or week with no logs is still returned, with zero counts, and under `group_by=week` the first and last buckets are clipped to the dates you asked for. `nutrients` is sparse, so read `logs_count` to tell a bucket with no logs from one whose logs could not be resolved.  Callable with a client token carrying the `food_logs:read` scope.
+     * Summarize a user\'s food logs over a date range
+     */
+    async getFoodLogSummary(requestParameters: GetFoodLogSummaryRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<FoodLogSummary> {
+        const response = await this.getFoodLogSummaryRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
      * Creates request options for listFoodLogs without sending the request
      */
     async listFoodLogsRequestOpts(requestParameters: ListFoodLogsRequest): Promise<runtime.RequestOpts> {
@@ -404,3 +510,22 @@ export class FoodLogsApi extends runtime.BaseAPI {
     }
 
 }
+
+/**
+ * @export
+ */
+export const GetFoodLogSummaryGroupByEnum = {
+    day: 'day',
+    week: 'week',
+    unknownDefaultOpenApi: '11184809'
+} as const;
+export type GetFoodLogSummaryGroupByEnum = typeof GetFoodLogSummaryGroupByEnum[keyof typeof GetFoodLogSummaryGroupByEnum];
+/**
+ * @export
+ */
+export const GetFoodLogSummaryWeekStartEnum = {
+    monday: 'monday',
+    sunday: 'sunday',
+    unknownDefaultOpenApi: '11184809'
+} as const;
+export type GetFoodLogSummaryWeekStartEnum = typeof GetFoodLogSummaryWeekStartEnum[keyof typeof GetFoodLogSummaryWeekStartEnum];

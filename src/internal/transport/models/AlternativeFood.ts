@@ -13,13 +13,13 @@
  */
 
 import { mapValues } from '../runtime.js';
-import type { AlternativeServing } from './AlternativeServing.js';
+import type { ServingSummary } from './ServingSummary.js';
 import {
-    AlternativeServingFromJSON,
-    AlternativeServingFromJSONTyped,
-    AlternativeServingToJSON,
-    AlternativeServingToJSONTyped,
-} from './AlternativeServing.js';
+    ServingSummaryFromJSON,
+    ServingSummaryFromJSONTyped,
+    ServingSummaryToJSON,
+    ServingSummaryToJSONTyped,
+} from './ServingSummary.js';
 import type { NutritionFacts } from './NutritionFacts.js';
 import {
     NutritionFactsFromJSON,
@@ -60,10 +60,10 @@ export interface AlternativeFood {
     nutrients: NutritionFacts;
     /**
      * Servings to read the nutrition against. Empty when the recommender returned none — the key itself is always present.
-     * @type {Array<AlternativeServing>}
+     * @type {Array<ServingSummary>}
      * @memberof AlternativeFood
      */
-    servings: Array<AlternativeServing>;
+    servings: Array<ServingSummary>;
 }
 
 /**
@@ -92,7 +92,7 @@ export function AlternativeFoodFromJSONTyped(json: any, ignoreDiscriminator: boo
         'name': json['name'],
         'brandName': json['brand_name'],
         'nutrients': NutritionFactsFromJSON(json['nutrients']),
-        'servings': ((json['servings'] as Array<any>).map(AlternativeServingFromJSON)),
+        'servings': ((json['servings'] as Array<any>).map(ServingSummaryFromJSON)),
     };
 }
 
@@ -111,6 +111,6 @@ export function AlternativeFoodToJSONTyped(value?: AlternativeFood | null, ignor
         'name': value['name'],
         'brand_name': value['brandName'],
         'nutrients': NutritionFactsToJSON(value['nutrients']),
-        'servings': ((value['servings'] as Array<any>).map(AlternativeServingToJSON)),
+        'servings': ((value['servings'] as Array<any>).map(ServingSummaryToJSON)),
     };
 }
