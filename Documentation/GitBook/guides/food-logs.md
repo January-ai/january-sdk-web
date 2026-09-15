@@ -16,6 +16,8 @@ const log = await user.foodLogs.create({
 });
 
 await user.foodLogs.list({ start: '2026-08-01', end: '2026-08-31' });
+const summary = await user.foodLogs.getSummary({ start: '2026-08-01', end: '2026-08-31', groupBy: 'week' });
+summary.buckets.forEach((week) => console.log(week.startDate, week.logsCount, week.nutrients.calories?.value));
 await user.foodLogs.update({ logId: log.id, name: 'Post-workout breakfast' });
 await user.foodLogs.delete({ logId: log.id });
 ```

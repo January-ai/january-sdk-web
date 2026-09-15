@@ -3,7 +3,9 @@ import type {
   DeleteFoodLogRequest,
   DeleteFoodLogResponse,
   FoodLog,
+  FoodLogSummary,
   GetFoodLogRequest,
+  GetFoodLogSummaryRequest,
   ListFoodLogsRequest,
   ListFoodLogsResponse,
   UpdateFoodLogRequest,
@@ -34,6 +36,37 @@ export class FoodLogsResource {
       timezone: request.endUserTimezone ?? 'UTC',
     }, init(request.signal)));
     return { totalCount: response.items.length, items: response.items.map(mapFoodLog) };
+  }
+
+  async getSummary(request: GetFoodLogSummaryRequest): Promise<FoodLogSummary> {
+    const response = await executeRequest(() => this.api.getFoodLogSummary({
+      januaryEndUserID: request.endUserId,
+      startDate: parseDate(request.start, 'start'),
+      endDate: parseDate(request.end, 'end'),
+      timezone: request.endUserTimezone ?? 'UTC',
+      groupBy: request.groupBy ?? 'day',
+      weekStart: request.weekStart ?? 'monday',
+    }, init(request.signal)));
+    return {
+      groupBy: response.groupBy === 'week' ? 'week' : 'day',
+      weekStart: response.weekStart === 'sunday' ? 'sunday' : response.weekStart === 'monday' ? 'monday' : null,
+      timezone: response.timezone,
+      startDate: formatDate(response.startDate),
+      endDate: formatDate(response.endDate),
+      buckets: response.buckets.map((bucket) => ({
+        startDate: formatDate(bucket.startDate),
+        endDate: formatDate(bucket.endDate),
+        logsCount: bucket.logsCount,
+        daysWithLogs: bucket.daysWithLogs,
+        nutrients: bucket.nutrients,
+      })),
+      totals: {
+        logsCount: response.totals.logsCount,
+        daysWithLogs: response.totals.daysWithLogs,
+        nutrients: response.totals.nutrients,
+      },
+      averagePerLoggedDay: { nutrients: response.averagePerLoggedDay.nutrients },
+    };
   }
 
   async get(request: GetFoodLogRequest): Promise<FoodLog> {
@@ -99,6 +132,8 @@ function parseDate(value: string, name: string): Date {
   if (Number.isNaN(result.getTime())) throw new TypeError(`${name} must be an ISO-8601 date.`);
   return result;
 }
+
+function formatDate(value: Date): string { return value.toISOString().slice(0, 10) }
 
 function parseDateTime(value: string, name: string): Date {
   const result = new Date(value);

@@ -6,11 +6,13 @@ import type {
   DeleteFoodLogResponse,
   DeleteFoodLogRequest,
   FoodLog,
+  FoodLogSummary,
   FoodScan,
   FoodSearchItem,
   FoodSearchResults,
   GetFoodRequest,
   GetFoodLogRequest,
+  GetFoodLogSummaryRequest,
   GetRestaurantMenuItemsResponse,
   GetRestaurantMenuItemsRequest,
   GlucosePrediction,
@@ -51,6 +53,7 @@ export type UserCorrectPhotoScanRequest = WithoutUserId<CorrectPhotoScanRequest>
 export type UserCreateFoodLogRequest = WithoutUserContext<CreateFoodLogRequest>;
 export type UserListFoodLogsRequest = WithoutUserContext<ListFoodLogsRequest>;
 export type UserGetFoodLogRequest = WithoutUserContext<GetFoodLogRequest>;
+export type UserGetFoodLogSummaryRequest = WithoutUserContext<GetFoodLogSummaryRequest>;
 export type UserUpdateFoodLogRequest = WithoutUserContext<UpdateFoodLogRequest>;
 export type UserDeleteFoodLogRequest = WithoutUserContext<DeleteFoodLogRequest>;
 export type UserPredictGlucoseRequest = WithoutUserContext<PredictGlucoseRequest>;
@@ -163,6 +166,8 @@ export interface UserFoodLogsResource {
   list(request: UserListFoodLogsRequest): Promise<ListFoodLogsResponse>;
   /** Gets one food log by id. */
   get(request: UserGetFoodLogRequest): Promise<FoodLog>;
+  /** Summarizes food logs per day or week over an inclusive calendar-date range. */
+  getSummary(request: UserGetFoodLogSummaryRequest): Promise<FoodLogSummary>;
   /** Updates an existing food log. */
   update(request: UserUpdateFoodLogRequest): Promise<FoodLog>;
   /** Deletes a food log. */
@@ -185,6 +190,10 @@ class DefaultUserFoodLogsResource implements UserFoodLogsResource {
 
   get(request: UserGetFoodLogRequest) {
     return this.resource.get({ ...request, ...this.context });
+  }
+
+  getSummary(request: UserGetFoodLogSummaryRequest) {
+    return this.resource.getSummary({ ...request, ...this.context });
   }
 
   update(request: UserUpdateFoodLogRequest) {

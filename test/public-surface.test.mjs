@@ -27,7 +27,7 @@ test('all 17 client operations are exposed through the public client', async () 
   await client.restaurants.getMenuItems({ restaurantId: 'restaurant-1', endUserId });
   await client.foodAnalysis.analyzePhoto({ image: 'fixture-image', endUserId });
   await client.foodAnalysis.correct({
-    analysis: { mealName: 'Meal', totalNutrients: {}, detections: [{ food: { id: '1', name: 'Banana', nutrients: {} } }] },
+    analysis: { mealName: 'Meal', totalNutrients: {}, detections: [{ food: { id: '1', name: 'Banana', nutrients: {}, serving: { id: '2', quantity: 1, unit: 'serving' }, quantity: 1 } }] },
     instruction: 'Add banana', endUserId,
   });
   const created = await client.foodLogs.create({ endUserId, foods: [food] });

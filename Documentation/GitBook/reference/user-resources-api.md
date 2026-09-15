@@ -20,6 +20,14 @@ list(request: {
   signal?: AbortSignal;
 }): Promise<ListFoodLogsResponse>
 
+getSummary(request: {
+  start: string;
+  end: string;
+  groupBy?: 'day' | 'week';
+  weekStart?: 'monday' | 'sunday';
+  signal?: AbortSignal;
+}): Promise<FoodLogSummary>
+
 update(request: {
   logId: string;
   foods?: FoodSelection[];
@@ -38,6 +46,14 @@ Timestamps must be ISO-8601 date-times. `start` and `end` must be ISO dates
 (`YYYY-MM-DD`) and are inclusive calendar boundaries in the scoped timezone.
 `FoodLog` contains `id`, `foods`, `timestampUtc`, and optional `name`; list
 returns `totalCount` and items; delete returns `status`.
+
+`getSummary` aggregates the logs in the inclusive range (at most 366 days) into
+`buckets`, one per local calendar day or per week, each with `logsCount`,
+`daysWithLogs`, and summed `nutrients`. Empty periods are still returned with
+zero counts. `totals` covers the whole range and `averagePerLoggedDay` divides
+the totals by the number of days that have a log. `nutrients` is sparse: read
+`logsCount` to tell an empty bucket from one whose logs had no nutrition data.
+`weekStart` is `null` when grouping by day.
 
 The unscoped `january.foodLogs` methods use the same signatures plus required
 `endUserId: string` and optional `endUserTimezone: string`.

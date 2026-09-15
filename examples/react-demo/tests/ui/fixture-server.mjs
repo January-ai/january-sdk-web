@@ -83,13 +83,15 @@ createServer((request, response) => {
   if (url.pathname === '/v1.2/food-analysis/text') return json(response, {
     meal_name: 'Fixture meal', total_nutrients: nutrients,
     detections: rule.empty ? [] : [{ confidence: 'high', food: {
-      id: food.id, name: food.name, brand_name: null, nutrients, servings,
+      id: food.id, name: food.name, brand_name: null, nutrients, quantity: 1,
+      serving: { id: servings[0].id, quantity: servings[0].quantity, unit: servings[0].unit },
     } }],
   })
   if (url.pathname === '/v1.2/food-analysis/image') return json(response, {
     meal_name: 'Fixture photo meal', total_nutrients: nutrients,
     detections: rule.empty ? [] : [{ confidence: 'high', food: {
-      id: food.id, name: food.name, brand_name: null, nutrients, servings,
+      id: food.id, name: food.name, brand_name: null, nutrients, quantity: 1,
+      serving: { id: servings[0].id, quantity: servings[0].quantity, unit: servings[0].unit },
     } }],
   })
   if (url.pathname === '/v1.2/glucose/predictions') return json(response, {

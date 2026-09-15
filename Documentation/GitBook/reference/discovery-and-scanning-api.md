@@ -49,13 +49,22 @@ analyzeDescription(
 correct(request: CorrectPhotoScanRequest): Promise<FoodScan>
 ```
 
-`ScanFoodPhotoRequest.image` is a required nonblank base64 data URI.
-`CorrectPhotoScanRequest` requires `mealName`, current `detections`, and
-`userInput`.
+`ScanFoodPhotoRequest.image` is a required nonblank base64 data URI. Optional
+`reasoningEffort: 'xhigh'` selects the reasoning-based analyzer; the result
+shape and cost are the same. `CorrectPhotoScanRequest` takes the prior
+`analysis` and an `instruction`.
 
-`FoodScan` contains optional `mealName`, `totalNutrients`, `detections`, and
-`glucoseImpact`. Each detection contains a detected food and optional confidence
-score.
+`FoodScan` contains `mealName`, `totalNutrients`, and `detections`. Each
+detection contains a `DetectedFood` and an optional confidence score.
+`DetectedFood` has `id`, `name`, `brandName`, `nutrients`, `serving`, and
+`quantity`: `serving` is the selected catalog serving (`ServingSummary` with
+`id`, `quantity`, `unit`, where `quantity` is the size of one serving) and
+`quantity` is how many of that serving were eaten, so
+`{ id: food.id, serving: { id: food.serving.id, quantity: food.quantity } }`
+logs the detection as is. `nutrients` are already scaled to `quantity`.
+
+Food alternatives (`foods.suggestAlternatives`) return `AlternativeFood` values
+with `servings: ServingSummary[]` to read the nutrition against.
 
 ## Browser image helper
 

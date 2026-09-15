@@ -14,7 +14,10 @@ export class FoodAnalysisResource {
   async analyzePhoto(request: ScanFoodPhotoRequest): Promise<FoodScan> {
     if (!request.image.trim()) throw new TypeError('A base64-encoded image is required.');
     return mapFoodScan(await executeRequest(() => this.api.scanFoodPhoto({
-      scanFoodPhotoBody: { image: request.image },
+      scanFoodPhotoBody: {
+        image: request.image,
+        ...(request.reasoningEffort !== undefined ? { reasoning: { effort: request.reasoningEffort } } : {}),
+      },
     }, request.signal ? { signal: request.signal } : undefined)));
   }
 
@@ -43,8 +46,12 @@ function mapFoodScan(scan: import('../internal/transport/models/FoodScan.js').Fo
     detections: scan.detections.map((detection) => ({
       confidenceScore: detection.confidence ?? undefined,
       food: {
-        ...detection.food,
-        servings: detection.food.servings.map((serving) => ({ ...serving })),
+        id: detection.food.id,
+        name: detection.food.name,
+        brandName: detection.food.brandName,
+        nutrients: detection.food.nutrients,
+        serving: { ...detection.food.serving },
+        quantity: detection.food.quantity,
       },
     })),
   };
@@ -61,11 +68,12 @@ function toTransportFoodScan(scan: FoodScan): import('../internal/transport/mode
         name: detection.food.name,
         brandName: detection.food.brandName ?? null,
         nutrients: detection.food.nutrients,
-        servings: (detection.food.servings ?? []).map((serving) => ({
-          ...serving,
-          quantity: serving.quantity ?? null,
-          selectedQuantity: serving.selectedQuantity ?? null,
-        })),
+        quantity: detection.food.quantity ?? null,
+        serving: {
+          id: detection.food.serving.id,
+          quantity: detection.food.serving.quantity ?? null,
+          unit: detection.food.serving.unit,
+        },
       },
     })),
   };
