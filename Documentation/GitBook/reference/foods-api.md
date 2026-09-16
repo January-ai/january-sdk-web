@@ -25,7 +25,7 @@ suggestAlternatives(
 | Request | Fields |
 | --- | --- |
 | `AutocompleteFoodsRequest` | `query: string`; `category?: AutocompleteFoodCategory`; `limit?: number` (default 8, range 1–20) |
-| `SearchFoodsRequest` | `query: string` (trimmed, 1–256 characters); `category?: FoodCategory`; `limit?: number` (default 10, range 1–40) |
+| `SearchFoodsRequest` | `query: string` (trimmed, 1–256 characters); `category?: FoodCategory`; `limit?: number` (default 10, range 1–50); `offset?: number` (default 0, for paging) |
 | `GetFoodRequest` | `foodId: number` (positive safe integer) |
 | `LookupFoodByBarcodeRequest` | `upc: string` (trimmed, nonempty) |
 | `SuggestFoodAlternativesRequest` | `foodId: number`; `dietRestrictions: DietRestriction[]`; `dietPreferences: DietPreference[]` |

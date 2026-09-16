@@ -20,14 +20,16 @@ test('food search sends authentication and SDK identity without a diary header',
     query: 'greek yogurt',
     endUserId: 'partner-user-1',
     limit: 5,
+    offset: 10,
   });
 
   assert.deepEqual(result, { totalCount: 0, items: [] });
+  assert.match(captured.url, /offset=10/);
   assert.match(captured.url, /^https:\/\/partners\.january\.ai\/v1\.2\/foods\?/);
   assert.match(captured.url, /query=greek%20yogurt/);
   assert.match(captured.url, /limit=5/);
   const headers = new Headers(captured.init.headers);
   assert.equal(headers.get('authorization'), 'Bearer test-key');
   assert.equal(headers.get('january-end-user-id'), null);
-  assert.match(headers.get('user-agent'), /^JanuaryPartnerSDK-Node\/0\.1\.0/);
+  assert.match(headers.get('user-agent'), /^JanuaryPartnerSDK-Node\/0\.2\.0/);
 });

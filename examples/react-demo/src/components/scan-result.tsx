@@ -15,13 +15,16 @@ type MealFood = NonNullable<MealAnalysis['detections']>[number]['food']
 export function ScanResult({ result, onAnalyzeAnother }: { result: MealAnalysis; onAnalyzeAnother(): void }) {
   const session = useUserSession()
   const nutrients = result.totalNutrients
+  // A detection the API could not size is left out of the prediction rather
+  // than being counted as one serving.
   const foods = (result.detections ?? []).flatMap((detection) => {
     const servingId = detection.food.serving.id
-    if (!detection.food.id || !servingId) return []
+    const quantity = detection.food.quantity
+    if (!detection.food.id || !servingId || quantity == null) return []
     return [{
       foodId: detection.food.id,
       servingId,
-      quantity: detection.food.quantity ?? 1,
+      quantity,
     }]
   })
   const prediction = useMutation({
