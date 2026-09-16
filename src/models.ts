@@ -44,7 +44,10 @@ export interface GetFoodRequest {
 export interface SearchFoodsRequest {
   query: string;
   category?: FoodCategory;
+  /** Results per call, 1–50 (default 10). */
   limit?: number;
+  /** Results to skip for paging (default 0). A page shorter than `limit` is the last one. */
+  offset?: number;
   endUserId?: string;
   signal?: AbortSignal;
 }

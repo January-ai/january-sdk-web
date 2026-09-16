@@ -58,14 +58,19 @@ export class FoodsResource {
       throw new TypeError('Food search query must contain between 1 and 256 characters.');
     }
     const limit = request.limit ?? 10;
-    if (!Number.isInteger(limit) || limit < 1 || limit > 40) {
-      throw new TypeError('Food search limit must be an integer between 1 and 40.');
+    if (!Number.isInteger(limit) || limit < 1 || limit > 50) {
+      throw new TypeError('Food search limit must be an integer between 1 and 50.');
+    }
+    const offset = request.offset ?? 0;
+    if (!Number.isInteger(offset) || offset < 0) {
+      throw new TypeError('Food search offset must be an integer of 0 or more.');
     }
 
     const response = await executeRequest(() => this.api.searchFoods({
       query,
       ...(request.category !== undefined ? { type: request.category } : {}),
       limit,
+      ...(offset > 0 ? { offset } : {}),
     }, request.signal ? { signal: request.signal } : undefined));
 
     return mapFoodSearchResults(response);

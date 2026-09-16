@@ -16,7 +16,7 @@ import {
 } from './user-client.js';
 import { JanuaryError } from './errors.js';
 
-const SDK_VERSION = '0.1.0';
+const SDK_VERSION = '0.2.0';
 const PRODUCTION_BASE_URL = 'https://partners.january.ai';
 let didWarnAboutDevelopmentAPIKey = false;
 const isNodeRuntime = Boolean(
