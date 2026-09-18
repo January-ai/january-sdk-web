@@ -122,7 +122,8 @@ jobs:
         run: npm --prefix examples/react-demo exec playwright install --with-deps chromium
 
       - name: Run the web suite shard
-        run: npm --prefix examples/react-demo exec playwright test -- --shard=${{ matrix.shard }}/3
+        run: npm run test:ui -- --shard=${{ matrix.shard }}/3
+        working-directory: examples/react-demo
         env:
           CI: "true"
           npm_config_ignore_scripts: "true"
