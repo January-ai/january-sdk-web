@@ -17,7 +17,7 @@ test('searches foods, opens string-ID details, and predicts glucose', async ({ p
   await expect(page.getByRole('combobox', { name: 'Serving' })).toHaveValue('11')
 
   await page.getByRole('button', { name: 'Check glucose' }).click()
-  await expect(page.getByText('Likely peak')).toBeVisible()
+  await expect(page.getByText('Likely peak').first()).toBeVisible()
   await expect(page.getByText('132')).toBeVisible()
 })
 

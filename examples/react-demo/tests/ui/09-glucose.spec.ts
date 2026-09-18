@@ -14,6 +14,6 @@ test('Glucose meal prediction', async ({ page }) => {
   await byId(page, 'glucose-predict').click()
   await expect(byId(page, 'glucose-results-screen')).toBeVisible()
   await expect(byId(page, 'glucose-chart')).toBeVisible()
-  await expect(page.getByText('Likely peak')).toBeVisible()
+  await expect(page.getByText('Likely peak').first()).toBeVisible()
   await expect(page.getByText(/medium impact/i)).toBeVisible()
 })

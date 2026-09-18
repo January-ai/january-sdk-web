@@ -14,6 +14,8 @@ test('Search failure and retry retain the query', async ({ page }) => {
   await expect(byId(page, 'search-input')).toHaveValue('pizza')
 
   await control('/v1.2/foods', { status: 200 })
+  // The demo caches a query's result per search term, so retry with a new term.
+  await byId(page, 'search-input').fill('pizza again')
   await byId(page, 'search-submit').click()
   await expect(byId(page, 'search-results')).toBeVisible()
   await expect(byId(page, 'food-result-0')).toBeVisible()

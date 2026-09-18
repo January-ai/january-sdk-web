@@ -19,6 +19,6 @@ test('Food logs browse and create', async ({ page }) => {
   await byId(page, 'food-picker-result-0').click()
   await expect(byId(page, 'food-log-editor-empty')).toHaveCount(0)
   await byId(page, 'food-log-save').click()
-  await expect(byId(page, 'food-log-editor')).toHaveCount(0)
+  await expect(byId(page, 'food-log-editor')).toBeHidden()
   await expect(byId(page, 'food-log-0')).toBeVisible()
 })

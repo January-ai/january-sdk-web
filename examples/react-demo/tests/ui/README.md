@@ -22,6 +22,17 @@ the server's behaviour through `control()` in `flow.ts` (HTTP status, empty
 collections, a delay per route) and start from `resetFixture()` so no spec
 inherits another's configuration.
 
+## Coverage against the shared catalog
+
+The numbered specs follow the React Native flow numbers. Two have no web
+counterpart and are left out on purpose: 16 (food picker above the keyboard;
+no soft keyboard on the web) and 24 (food alternatives; the web demo has no
+alternatives feature). Scan correction, menu-item detail, health conditions and
+the settings sheet also do not exist on the web, so those steps are omitted
+from the flows that would otherwise include them. The older role-based specs
+(`authentication`, `foods`, `restaurants`, `scan`, `food-logs`, `glucose`)
+remain alongside for the relay and contract-shape checks they cover.
+
 ## Conventions
 
 - Select elements with `byId(page, 'search-input')` (`data-testid`), never by

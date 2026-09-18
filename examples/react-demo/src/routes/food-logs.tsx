@@ -76,6 +76,7 @@ function FoodLogsPage() {
             <div><SectionLabel>Meal history</SectionLabel><h2 className="mt-2 font-serif text-4xl">{logs.data ? `${logs.data.totalCount} logged meal${logs.data.totalCount === 1 ? '' : 's'}` : 'Choose a date range'}</h2>{logs.isFetching && logs.data && <p className="mt-2 text-sm font-semibold text-stone-500">Refreshing meal history…</p>}</div>
             <CalendarDays aria-hidden="true" className="size-7 text-stone-400" />
           </div>
+          {remove.isError ? <div className="mb-4"><ErrorMessage error={remove.error} testId="food-log-delete-error" /></div> : null}
           {!request ? <EmptyState description="Save an active user and load a calendar range to see meal history." icon={<ClipboardList aria-hidden="true" className="size-6" />} testId="food-logs-prompt" title="No request yet" />
             : logs.isPending && !logs.data ? <SkeletonList testId="food-logs-loading" />
               : logs.isError ? <ErrorMessage error={logs.error} testId="food-logs-error" />

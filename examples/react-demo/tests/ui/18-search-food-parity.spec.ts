@@ -19,7 +19,7 @@ test('Native parity - search and food detail surfaces', async ({ page }) => {
   await expect(byId(page, 'food-serving-unit')).toBeVisible()
   await byId(page, 'food-check-glucose').click()
   await expect(byId(page, 'food-glucose-result')).toBeVisible()
-  await expect(page.getByText('Likely peak')).toBeVisible()
+  await expect(page.getByText('Likely peak').first()).toBeVisible()
   await byId(page, 'food-detail-back').click()
   await expect(byId(page, 'search-screen')).toBeVisible()
 })
