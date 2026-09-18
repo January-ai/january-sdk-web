@@ -5,8 +5,13 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   preserveOutput: 'always',
-  retries: 0,
-  reporter: 'line',
+  // CI reruns a failed flow once and marks it flaky in the report, so a one-off
+  // hiccup does not fail the run while flakiness stays visible.
+  retries: process.env.CI ? 1 : 0,
+  reporter: process.env.CI
+    ? [['line'], ['junit', { outputFile: 'test-results/junit.xml' }]]
+    : 'line',
+  outputDir: 'test-results',
   use: {
     baseURL: 'http://127.0.0.1:3010',
     screenshot: 'only-on-failure',

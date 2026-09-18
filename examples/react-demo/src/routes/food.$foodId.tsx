@@ -40,11 +40,11 @@ function FoodDetailPage() {
   })
 
   return (
-    <Page>
-      <Link className="inline-flex min-h-11 items-center gap-2 rounded-full border border-stone-300 bg-white px-4 text-sm font-bold text-stone-700 hover:bg-stone-50" search={upc ? {} : { q }} to={upc ? '/scan' : '/search'}>
+    <Page data-testid="food-detail-screen">
+      <Link className="inline-flex min-h-11 items-center gap-2 rounded-full border border-stone-300 bg-white px-4 text-sm font-bold text-stone-700 hover:bg-stone-50" data-testid="food-detail-back" search={upc ? {} : { q }} to={upc ? '/scan' : '/search'}>
         <ArrowLeft aria-hidden="true" className="size-4" /> Back to results
       </Link>
-      {food.isPending ? <div className="mt-6"><SkeletonList /></div> : food.isError ? <div className="mt-6"><ErrorMessage error={food.error} /></div> : (
+      {food.isPending ? <div className="mt-6"><SkeletonList testId="food-detail-loading" /></div> : food.isError ? <div className="mt-6"><ErrorMessage error={food.error} testId="food-detail-error" /></div> : (
         <FoodDetailContent configuration={configuration} food={food.data} />
       )}
     </Page>
@@ -103,7 +103,7 @@ function FoodDetailContent({ food, configuration }: { food: FoodSearchItem; conf
         <Card className="p-5 sm:p-6">
           <label className="block">
             <span className="mb-2 block text-sm font-bold text-stone-700">Serving</span>
-            <select className="min-h-14 w-full rounded-2xl border border-stone-300 bg-white px-4 font-bold outline-none transition-colors focus:bg-stone-50" disabled={!food.servings.some((option) => option.id)} onChange={(event) => chooseServing(event.target.value)} value={servingId}>
+            <select className="min-h-14 w-full rounded-2xl border border-stone-300 bg-white px-4 font-bold outline-none transition-colors focus:bg-stone-50" data-testid="food-serving-unit" disabled={!food.servings.some((option) => option.id)} onChange={(event) => chooseServing(event.target.value)} value={servingId}>
               {food.servings.filter((option) => option.id).map((option) => <option key={option.id} value={option.id!}>{servingLabel(option)}</option>)}
             </select>
           </label>
@@ -112,7 +112,7 @@ function FoodDetailContent({ food, configuration }: { food: FoodSearchItem; conf
               <SectionLabel>Quantity</SectionLabel>
               <div className="data-number mt-1 text-3xl font-bold">{formatNumber(quantity)} <span className="text-base font-medium text-stone-500">{serving?.unit}</span></div>
             </div>
-            <QuantityControl decreaseDisabled={quantity <= 0.25} onDecrease={() => changeQuantity(quantity - 0.25)} onIncrease={() => changeQuantity(quantity + 0.25)} value={formatNumber(quantity)} />
+            <QuantityControl decreaseDisabled={quantity <= 0.25} onDecrease={() => changeQuantity(quantity - 0.25)} onIncrease={() => changeQuantity(quantity + 0.25)} testId="food-serving-controls" value={formatNumber(quantity)} />
           </div>
         </Card>
       </div>
@@ -120,10 +120,10 @@ function FoodDetailContent({ food, configuration }: { food: FoodSearchItem; conf
       <div className="space-y-6">
         <FoodMacroGrid portion={portion} />
         <FoodNutritionFacts portion={portion} />
-        <Button busy={prediction.isPending} className="w-full" disabled={!serving || prediction.isPending} onClick={() => prediction.mutate()}>
+        <Button busy={prediction.isPending} busyTestId="food-glucose-loading" className="w-full" data-testid="food-check-glucose" disabled={!serving || prediction.isPending} onClick={() => prediction.mutate()}>
           <Activity aria-hidden="true" className="size-5" /> {prediction.isPending ? 'Predicting response…' : 'Check glucose'}
         </Button>
-        {prediction.isError && <ErrorMessage error={prediction.error} />}
+        {prediction.isError && <ErrorMessage error={prediction.error} testId="food-glucose-error" />}
         {prediction.data && <FoodPredictionPanel food={food} quantity={quantity} serving={serving!} result={prediction.data} />}
       </div>
     </div>

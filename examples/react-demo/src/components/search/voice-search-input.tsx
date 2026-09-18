@@ -12,9 +12,11 @@ interface VoiceSearchInputProps {
   onChange(value: string): void
   placeholder: string
   value: string
+  inputTestId?: string
+  voiceTestId?: string
 }
 
-export function VoiceSearchInput({ disabled = false, id, onChange, placeholder, value }: VoiceSearchInputProps) {
+export function VoiceSearchInput({ disabled = false, id, onChange, placeholder, value, inputTestId, voiceTestId }: VoiceSearchInputProps) {
   const session = useMemo(() => new VoiceCaptureSession(), [])
   const [snapshot, setSnapshot] = useState<VoiceCaptureSnapshot>(session.snapshot)
   const [error, setError] = useState<string | null>(null)
@@ -67,6 +69,7 @@ export function VoiceSearchInput({ disabled = false, id, onChange, placeholder, 
       >
         <input
           className={recording || busy ? 'sr-only' : 'min-w-0 flex-1 bg-transparent px-1 text-base outline-none placeholder:text-stone-400'}
+          data-testid={inputTestId}
           disabled={recording || busy}
           id={id}
           onChange={(event) => onChange(event.target.value)}
@@ -98,6 +101,7 @@ export function VoiceSearchInput({ disabled = false, id, onChange, placeholder, 
             <button
               aria-label="Start voice capture"
               className="grid size-9 shrink-0 place-items-center rounded-full bg-stone-100 text-stone-700 transition-colors hover:bg-stone-200 disabled:cursor-not-allowed disabled:opacity-35"
+              data-testid={voiceTestId}
               disabled={micDisabled}
               onClick={() => void toggleCapture()}
               title={mounted && !session.isSupported

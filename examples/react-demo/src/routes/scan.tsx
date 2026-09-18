@@ -22,7 +22,7 @@ import {
 import { formatNumber } from '~/lib/utils'
 import { preparePhotoScanImage } from '~/lib/photo-scan-image'
 
-const sampleImage = 'https://friendlysrestaurants.com/assets/live/img/production/detail/menu/lunch-dinner_999-combohs_all-american-burger-fries.jpg'
+const sampleImage = '/sample-meal.jpg'
 
 export const Route = createFileRoute('/scan')({
   component: ScanPage,
@@ -66,6 +66,16 @@ function ScanPage() {
     scan.reset()
   }
 
+  async function useSample() {
+    // The bundled sample goes through the same preparation as an uploaded
+    // file, so the SDK receives a data URI rather than a relative asset path.
+    const response = await fetch(sampleImage)
+    const preparedImage = await preparePhotoScanImage(await response.blob())
+    setImage(preparedImage)
+    setImageUrl('')
+    scan.reset()
+  }
+
   function useUrl() {
     const value = imageUrl.trim()
     if (!value) return
@@ -89,7 +99,7 @@ function ScanPage() {
   }
 
   return (
-    <Page>
+    <Page data-testid="scan-screen">
       <PageHeader
         description={method === 'photo'
           ? 'Provide a public image URL or upload a file. The image is analyzed through the SDK without exposing your API key.'
@@ -104,6 +114,7 @@ function ScanPage() {
         <button
           aria-selected={method === 'photo'}
           className={`flex min-h-12 items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold transition ${method === 'photo' ? 'bg-stone-950 text-white shadow-sm' : 'text-stone-600 hover:bg-white/70'}`}
+          data-testid="scan-mode-photo"
           onClick={() => chooseMethod('photo')}
           role="tab"
           type="button"
@@ -113,6 +124,7 @@ function ScanPage() {
         <button
           aria-selected={method === 'description'}
           className={`flex min-h-12 items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold transition ${method === 'description' ? 'bg-stone-950 text-white shadow-sm' : 'text-stone-600 hover:bg-white/70'}`}
+          data-testid="scan-mode-description"
           onClick={() => chooseMethod('description')}
           role="tab"
           type="button"
@@ -122,6 +134,7 @@ function ScanPage() {
         <button
           aria-selected={method === 'upc'}
           className={`flex min-h-12 items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold transition ${method === 'upc' ? 'bg-stone-950 text-white shadow-sm' : 'text-stone-600 hover:bg-white/70'}`}
+          data-testid="scan-mode-barcode"
           onClick={() => chooseMethod('upc')}
           role="tab"
           type="button"
@@ -135,9 +148,9 @@ function ScanPage() {
           <Card className="overflow-hidden">
             <div className="scan-pattern relative grid h-[clamp(280px,55vw,520px)] w-full place-items-center overflow-hidden p-8">
               {image ? (
-                <img alt="Meal selected for analysis" className="absolute inset-0 size-full object-cover object-center" src={image} />
+                <img alt="Meal selected for analysis" className="absolute inset-0 size-full object-cover object-center" data-testid="scan-preview" src={image} />
               ) : (
-                <div className="mx-auto flex max-w-md flex-col items-center text-center">
+                <div className="mx-auto flex max-w-md flex-col items-center text-center" data-testid="scan-guide">
                   <div className="grid size-16 place-items-center rounded-2xl border border-stone-300 bg-white text-stone-700 shadow-sm">
                     <Camera aria-hidden="true" className="size-7" />
                   </div>
@@ -151,6 +164,7 @@ function ScanPage() {
                 accept="image/*"
                 capture="environment"
                 className="sr-only"
+                data-testid="scan-camera"
                 onChange={(event) => chooseFile(event.target.files?.[0])}
                 ref={cameraInput}
                 type="file"
@@ -158,28 +172,29 @@ function ScanPage() {
               <input
                 accept="image/*"
                 className="sr-only"
+                data-testid="scan-library"
                 onChange={(event) => chooseFile(event.target.files?.[0])}
                 ref={fileInput}
                 type="file"
               />
-              <Button onClick={() => cameraInput.current?.click()} type="button">
+              <Button data-testid="scan-camera-button" onClick={() => cameraInput.current?.click()} type="button">
                 <Camera aria-hidden="true" className="size-5" />
                 Take photo
               </Button>
-              <SecondaryButton onClick={() => fileInput.current?.click()} type="button">
+              <SecondaryButton data-testid="scan-library-button" onClick={() => fileInput.current?.click()} type="button">
                 <ImagePlus aria-hidden="true" className="size-5" />
                 Choose from library
               </SecondaryButton>
-              <SecondaryButton className="sm:col-span-2" onClick={() => { setImage(sampleImage); setImageUrl(sampleImage); scan.reset() }} type="button">
+              <SecondaryButton className="sm:col-span-2" data-testid="scan-sample" onClick={() => void useSample()} type="button">
                 <Utensils aria-hidden="true" className="size-5" />
                 Use sample meal
               </SecondaryButton>
             </div>
           </Card>
 
-          <Card className="mt-5 p-5 sm:p-6">
-            <TextField label="Or use a public image URL" onChange={(event) => setImageUrl(event.target.value)} placeholder="https://example.com/meal.jpg" type="url" value={imageUrl} />
-            <SecondaryButton className="mt-3 w-full sm:w-auto" disabled={!imageUrl.trim()} onClick={useUrl} type="button">
+          <Card className="mt-5 p-5 sm:p-6" data-testid="scan-image-url">
+            <TextField data-testid="image-url-input" label="Or use a public image URL" onChange={(event) => setImageUrl(event.target.value)} placeholder="https://example.com/meal.jpg" type="url" value={imageUrl} />
+            <SecondaryButton className="mt-3 w-full sm:w-auto" data-testid="image-url-use" disabled={!imageUrl.trim()} onClick={useUrl} type="button">
               <LinkIcon aria-hidden="true" className="size-4" />
               Use image URL
             </SecondaryButton>
@@ -192,16 +207,16 @@ function ScanPage() {
             <h2 className="mt-2 text-balance font-serif text-4xl">What January sees</h2>
           </div>
           {!image ? (
-            <EmptyState description="Choose a photo or load the sample meal, then analyze it through the SDK." icon={<ScanLine aria-hidden="true" className="size-6" />} title="Waiting for a meal" />
+            <EmptyState description="Choose a photo or load the sample meal, then analyze it through the SDK." icon={<ScanLine aria-hidden="true" className="size-6" />} testId="scan-prompt" title="Waiting for a meal" />
           ) : scan.isError ? (
-            <ErrorMessage error={scan.error} />
+            <ErrorMessage error={scan.error} onRetry={() => scan.mutate()} retryTestId="scan-error-retry" testId="scan-error" />
           ) : scan.data ? (
-            <ScanResult onAnalyzeAnother={resetPhotoAnalysis} result={scan.data} />
+            <ScanResult onAnalyzeAnother={resetPhotoAnalysis} result={scan.data} testId="scan-results" />
           ) : (
             <Card className="p-6">
               <h3 className="text-balance font-serif text-3xl">Photo ready</h3>
               <p className="mt-3 text-pretty leading-7 text-stone-600">Send this image to January for food detection, serving estimates, and complete nutrition.</p>
-              <Button busy={scan.isPending} className="mt-6 w-full" onClick={() => scan.mutate()} type="button">
+              <Button busy={scan.isPending} busyTestId="scan-loading" className="mt-6 w-full" data-testid="scan-analyze" onClick={() => scan.mutate()} type="button">
                 Analyze meal
               </Button>
             </Card>
@@ -219,17 +234,21 @@ function ScanPage() {
               <label className="mb-2 block text-sm font-semibold text-stone-700" htmlFor="meal-description">What did you eat?</label>
               <VoiceSearchInput
                 id="meal-description"
+                inputTestId="description-input"
                 onChange={(value) => {
                   setDescription(value)
                   descriptionScan.reset()
                 }}
                 placeholder="e.g. Two tacos and a Diet Coke"
                 value={description}
+                voiceTestId="description-voice"
               />
             </div>
             <Button
               busy={descriptionScan.isPending}
+              busyTestId="description-loading"
               className="mt-4 w-full"
+              data-testid="description-submit"
               disabled={!description.trim() || descriptionScan.isPending}
               onClick={() => descriptionScan.mutate()}
               type="button"
@@ -244,11 +263,11 @@ function ScanPage() {
               <h2 className="mt-2 text-balance font-serif text-4xl">What January understood</h2>
             </div>
             {descriptionScan.isError ? (
-              <ErrorMessage error={descriptionScan.error} />
+              <ErrorMessage error={descriptionScan.error} testId="description-error" />
             ) : descriptionScan.data ? (
-              <ScanResult onAnalyzeAnother={resetDescriptionAnalysis} result={descriptionScan.data} />
+              <ScanResult onAnalyzeAnother={resetDescriptionAnalysis} result={descriptionScan.data} testId="description-results" />
             ) : (
-              <EmptyState description="Type or dictate a complete meal description, then analyze it through the SDK." icon={<MessageSquareText aria-hidden="true" className="size-6" />} title="Waiting for a meal description" />
+              <EmptyState description="Type or dictate a complete meal description, then analyze it through the SDK." icon={<MessageSquareText aria-hidden="true" className="size-6" />} testId="description-prompt" title="Waiting for a meal description" />
             )}
           </section>
         </div>
@@ -263,6 +282,7 @@ function ScanPage() {
             <div className="mt-6"><BarcodeCamera onDetected={(value) => { setUpc(value); barcodeLookup.reset() }} /></div>
             <div className="mt-7">
               <TextField
+                data-testid="barcode-input"
                 inputMode="numeric"
                 label="UPC code"
                 onChange={(event) => {
@@ -275,7 +295,9 @@ function ScanPage() {
             </div>
             <Button
               busy={barcodeLookup.isPending}
+              busyTestId="barcode-loading"
               className="mt-4 w-full"
+              data-testid="barcode-submit"
               disabled={!upc.trim() || barcodeLookup.isPending}
               onClick={() => barcodeLookup.mutate()}
               type="button"
@@ -289,11 +311,12 @@ function ScanPage() {
               <SectionLabel>Food database</SectionLabel>
               <h2 className="mt-2 text-balance font-serif text-4xl">Matching food</h2>
             </div>
-            {barcodeLookup.isError ? <ErrorMessage error={barcodeLookup.error} /> : barcodeLookup.data?.items?.length ? (
-              <Card className="overflow-hidden">
-                {barcodeLookup.data.items.map((food) => (
+            {barcodeLookup.isError ? <ErrorMessage error={barcodeLookup.error} testId="search-error" /> : barcodeLookup.data?.items?.length ? (
+              <Card className="overflow-hidden" data-testid="search-results">
+                {barcodeLookup.data.items.map((food, index) => (
                   <button
                     className="flex min-h-24 w-full items-center gap-4 border-b border-stone-200 p-5 text-left last:border-0 hover:bg-stone-50"
+                    data-testid={`food-result-${index}`}
                     key={food.id}
                     onClick={() => navigate({
                       to: '/food/$foodId',
@@ -312,9 +335,9 @@ function ScanPage() {
                 ))}
               </Card>
             ) : barcodeLookup.data ? (
-              <EmptyState description="No food matched that UPC. Check the digits and try again." icon={<Barcode aria-hidden="true" className="size-6" />} title="No match found" />
+              <EmptyState description="No food matched that UPC. Check the digits and try again." icon={<Barcode aria-hidden="true" className="size-6" />} testId="empty-results" title="No match found" />
             ) : (
-              <EmptyState description="Enter a UPC to retrieve its food, servings, and nutrition through the SDK." icon={<Barcode aria-hidden="true" className="size-6" />} title="Waiting for a UPC" />
+              <EmptyState description="Enter a UPC to retrieve its food, servings, and nutrition through the SDK." icon={<Barcode aria-hidden="true" className="size-6" />} testId="barcode-prompt" title="Waiting for a UPC" />
             )}
           </section>
         </div>

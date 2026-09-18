@@ -157,7 +157,7 @@ function SearchPage() {
   const activeQuery = kind === 'foods' ? foods : restaurants
 
   return (
-    <Page>
+    <Page data-testid="search-screen">
       <PageHeader
         aside={<div className="hidden rounded-full border border-stone-300 bg-white px-4 py-2 text-sm font-bold text-stone-600 md:block">Food intelligence · Live</div>}
         description="Search nutrition data, understand servings, and move from nearby restaurants to their menu—all through the TypeScript SDK."
@@ -165,7 +165,7 @@ function SearchPage() {
         title="Find something worth knowing."
       />
 
-      <div className="mt-8 grid gap-8 xl:grid-cols-[minmax(320px,0.78fr)_minmax(0,1.45fr)] xl:items-start">
+      <div className="mt-8 grid gap-8 xl:grid-cols-[minmax(320px,0.78fr)_minmax(0,1.45fr)] xl:items-start" data-testid={kind === 'restaurants' ? 'restaurant-search-screen' : undefined}>
         <Card className="p-5 sm:p-6 xl:sticky xl:top-8">
           <form onSubmit={submit}>
             <SectionLabel>Search source</SectionLabel>
@@ -175,6 +175,7 @@ function SearchPage() {
               name="catalog-kind"
               onChange={(value) => { setKind(value); setSelectedRestaurant(null) }}
               options={[{ value: 'foods', label: 'Foods' }, { value: 'restaurants', label: 'Restaurants' }]}
+              testIdPrefix="search-scope"
               value={kind}
             />
 
@@ -183,14 +184,16 @@ function SearchPage() {
               <VoiceSearchInput
                 disabled={kind === 'foods' && mode === 'barcode'}
                 id="catalog-search"
+                inputTestId={kind === 'foods' ? 'search-input' : 'restaurant-search-input'}
                 onChange={(value) => { setDraft(value); setAcceptedSuggestion(null) }}
                 placeholder={kind === 'foods' ? 'Try “Greek yogurt”' : 'Try “pizza”'}
                 value={draft}
+                voiceTestId="search-voice"
               />
             </div>
 
             {draft.trim() !== acceptedSuggestion && suggestions.data?.items.length ? (
-              <div className="mt-2"><FoodSuggestionList items={suggestions.data.items} onSelect={(suggestion) => chooseSuggestion(suggestion.name ?? '')} /></div>
+              <div className="mt-2"><FoodSuggestionList itemTestIdPrefix="autocomplete-result" items={suggestions.data.items} onSelect={(suggestion) => chooseSuggestion(suggestion.name ?? '')} testId="autocomplete-suggestions" /></div>
             ) : null}
 
             {kind === 'foods' ? (
@@ -201,6 +204,7 @@ function SearchPage() {
                   name="food-mode"
                   onChange={setMode}
                   options={[{ value: 'name', label: 'Name' }, { value: 'barcode', label: 'Barcode' }]}
+                  testIdPrefix="search-mode"
                   value={mode}
                   variant="outlined"
                 />
@@ -211,7 +215,12 @@ function SearchPage() {
                     label="Category"
                     name="food-category"
                     onChange={setCategory}
-                    options={[{ value: 'all', label: 'All' }, { value: 'generic', label: 'Generic' }, { value: 'branded', label: 'Branded' }, { value: 'recipe', label: 'Recipe' }]}
+                    options={[
+                      { value: 'all', label: 'All', testId: 'category-all' },
+                      { value: 'generic', label: 'Generic', testId: 'category-general' },
+                      { value: 'branded', label: 'Branded', testId: 'category-branded' },
+                      { value: 'recipe', label: 'Recipe', testId: 'category-recipe' },
+                    ]}
                     value={category}
                   />
                 )}
@@ -229,7 +238,7 @@ function SearchPage() {
               </div>
             )}
 
-            <Button className="mt-6 w-full" disabled={!draft.trim()} type="submit">
+            <Button className="mt-6 w-full" data-testid={kind === 'foods' ? 'search-submit' : 'restaurant-search-submit'} disabled={!draft.trim()} type="submit">
               {kind === 'foods' ? 'Search foods' : 'Search nearby'}
             </Button>
           </form>
@@ -247,16 +256,16 @@ function SearchPage() {
           </div>
 
           {!submittedQuery ? (
-            <EmptyState description="Choose a source, enter a query, and the results will appear here without leaving this workspace." icon={<SearchIcon aria-hidden="true" className="size-6" />} title="Start with a food or restaurant" />
+            <EmptyState description="Choose a source, enter a query, and the results will appear here without leaving this workspace." icon={<SearchIcon aria-hidden="true" className="size-6" />} testId="search-prompt" title="Start with a food or restaurant" />
           ) : activeQuery.isPending ? (
-            <SkeletonList />
+            <SkeletonList testId={kind === 'foods' ? 'search-loading' : 'restaurants-loading'} />
           ) : activeQuery.isError ? (
-            <ErrorMessage error={activeQuery.error} />
+            <ErrorMessage error={activeQuery.error} testId={kind === 'foods' ? 'search-error' : 'restaurants-error'} />
           ) : kind === 'foods' && foods.data ? (
             <div>
               {foods.data.items.length ? (
-                <Card className="overflow-hidden">
-                  {foods.data.items.map((food) => (
+                <Card className="overflow-hidden" data-testid="search-results">
+                  {foods.data.items.map((food, index) => (
                     <ResultRow
                       key={food.id}
                       media={<NetworkImage alt="" className="size-full" fallback={<Utensils aria-hidden="true" className="size-6 text-stone-600" />} src={food.photoUrl} />}
@@ -266,23 +275,25 @@ function SearchPage() {
                         params: { foodId: String(food.id) },
                         search: { q: food.name ?? '' },
                       })}
+                      testId={`food-result-${index}`}
                       title={food.name ?? 'Unnamed food'}
                     />
                   ))}
                 </Card>
               ) : (
-                <EmptyState description="Try a broader food name or check the barcode." icon={<Utensils aria-hidden="true" className="size-6" />} title="No foods matched" />
+                <EmptyState description="Try a broader food name or check the barcode." icon={<Utensils aria-hidden="true" className="size-6" />} testId="empty-results" title="No foods matched" />
               )}
             </div>
           ) : restaurants.data ? (
             <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_minmax(320px,0.85fr)]">
-              <Card className="overflow-hidden">
-                {restaurants.data.items.map((restaurant) => (
+              <Card className="overflow-hidden" data-testid={restaurants.data.items.length ? 'restaurant-results' : 'restaurants-empty'}>
+                {restaurants.data.items.map((restaurant, index) => (
                   <ResultRow
                     key={restaurant.id}
                     media={<Building2 aria-hidden="true" className="size-6 text-stone-600" />}
                     meta={[restaurant.city, restaurant.distance != null ? `${formatNumber(restaurant.distance)} mi` : null].filter(Boolean).join(' · ')}
                     onClick={() => setSelectedRestaurant(restaurant)}
+                    testId={`restaurant-result-${index}`}
                     title={restaurant.name ?? 'Unnamed restaurant'}
                   />
                 ))}

@@ -5,7 +5,7 @@ import { Card } from './ui'
 import { formatNumber } from '~/lib/utils'
 
 export function FoodMacroGrid({ portion }: { portion: FoodPortion | null }) {
-  return <Card className="p-5 sm:p-6"><MacroGrid values={[
+  return <Card className="p-5 sm:p-6" data-testid="food-macros"><MacroGrid values={[
     { label: 'Calories', value: portion?.nutrition.calories?.value == null ? '—' : formatNumber(portion.nutrition.calories.value), unit: 'cal' },
     { label: 'Protein', value: portion?.nutrition.protein?.value == null ? '—' : formatNumber(portion.nutrition.protein.value), unit: 'g' },
     { label: 'Carbs', value: portion?.nutrition.carbohydrates?.value == null ? '—' : formatNumber(portion.nutrition.carbohydrates.value), unit: 'g' },
@@ -27,5 +27,5 @@ export function FoodNutritionFacts({ portion }: { portion: FoodPortion | null })
     ['Glycemic load', portion?.glycemicLoad, ''],
   ] as const
   const available = values.filter(([, value]) => value != null).map(([label, value, unit]) => ({ label, value: `${formatNumber(value ?? 0)}${unit ? ` ${unit}` : ''}` }))
-  return <Card className="p-5 sm:p-6"><h2 className="font-serif text-3xl">Nutrition facts</h2>{available.length ? <div className="mt-4"><NutritionList values={available} /></div> : <p className="mt-4 text-stone-500">No additional nutrients were returned.</p>}</Card>
+  return <Card className="p-5 sm:p-6" data-testid="food-nutrition"><h2 className="font-serif text-3xl">Nutrition facts</h2>{available.length ? <div className="mt-4"><NutritionList values={available} /></div> : <p className="mt-4 text-stone-500">No additional nutrients were returned.</p>}</Card>
 }

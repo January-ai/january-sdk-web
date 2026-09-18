@@ -10,8 +10,8 @@ import {
 type HeightDisplayUnit = 'imperial' | 'metric'
 
 const heightUnits: readonly SegmentedOption<HeightDisplayUnit>[] = [
-  { value: 'imperial', label: 'ft + in' },
-  { value: 'metric', label: 'cm' },
+  { value: 'imperial', label: 'ft + in', testId: 'glucose-height-unit-imperial' },
+  { value: 'metric', label: 'cm', testId: 'glucose-height-unit-metric' },
 ]
 
 export function HeightInput({ heightInches, onHeightInchesChange, className }: {
@@ -40,6 +40,7 @@ export function HeightInput({ heightInches, onHeightInchesChange, className }: {
       {displayUnit === 'imperial' ? (
         <div className="grid grid-cols-2 gap-3">
           <TextField
+            data-testid="glucose-height-feet"
             inputMode="numeric"
             label="Feet"
             max={8}
@@ -53,6 +54,7 @@ export function HeightInput({ heightInches, onHeightInchesChange, className }: {
             value={imperial.feet}
           />
           <TextField
+            data-testid="glucose-height-inches"
             inputMode="numeric"
             label="Inches"
             max={11}
@@ -68,6 +70,7 @@ export function HeightInput({ heightInches, onHeightInchesChange, className }: {
         </div>
       ) : (
         <TextField
+          data-testid="glucose-height-centimeters"
           inputMode="decimal"
           label="Centimeters"
           max={244}

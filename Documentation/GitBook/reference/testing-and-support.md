@@ -13,6 +13,10 @@ npm run demo:web:build
 For a release candidate, inspect `npm pack --dry-run`, install the resulting
 tarball into a clean temporary ESM project, and import `JanuaryClient`.
 
+The example app also has an end-to-end suite of Playwright specs that exercise
+every screen against a local fixture server; see
+`examples/react-demo/tests/ui/README.md` in the repository for how to run it.
+
 ## Verify an integration
 
 Test token success, both expiry spellings, exhausted provider retries,

@@ -64,7 +64,7 @@ export function BarcodeCamera({ onDetected }: { onDetected(value: string): void 
   return (
     <div>
       {active && <div className="relative mb-4 h-56 overflow-hidden rounded-2xl bg-stone-950"><video aria-label="Live barcode camera" className="size-full object-cover" muted playsInline ref={video} /><div aria-hidden="true" className="pointer-events-none absolute inset-8 rounded-2xl border-2 border-[#f5c842]" /></div>}
-      <SecondaryButton className="w-full" onClick={active ? stop : start} type="button">
+      <SecondaryButton className="w-full" data-testid="scan-barcode-button" onClick={active ? stop : start} type="button">
         {active ? <CameraOff aria-hidden="true" className="size-5" /> : <Camera aria-hidden="true" className="size-5" />}
         {active ? 'Stop camera' : 'Scan barcode with camera'}
       </SecondaryButton>

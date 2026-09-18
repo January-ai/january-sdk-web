@@ -17,9 +17,9 @@ import { formatNumber } from '~/lib/utils'
 export const Route = createFileRoute('/food-logs')({ component: FoodLogsPage })
 
 const spans = [
-  { value: FoodLogTimeSpan.today, label: 'Today' },
-  { value: FoodLogTimeSpan.thisWeek, label: 'This week' },
-  { value: FoodLogTimeSpan.lastMonth, label: 'Last month' },
+  { value: FoodLogTimeSpan.today, label: 'Today', testId: 'logs-range-today' },
+  { value: FoodLogTimeSpan.thisWeek, label: 'This week', testId: 'logs-range-week' },
+  { value: FoodLogTimeSpan.lastMonth, label: 'Last month', testId: 'logs-range-month' },
 ] as const
 
 function FoodLogsPage() {
@@ -53,8 +53,8 @@ function FoodLogsPage() {
   }
 
   return (
-    <Page>
-      <PageHeader aside={<Button disabled={!session.endUserId} onClick={() => openEditor()} type="button"><Plus aria-hidden="true" className="size-4" />Add meal</Button>} description="Use one partner-owned account ID for meal history. Calendar presets resolve locally, then the scoped SDK sends inclusive API dates." eyebrow="Partner-owned identity" title="Food logs with context." />
+    <Page data-testid="food-logs-screen">
+      <PageHeader aside={<Button data-testid="food-log-add" disabled={!session.endUserId} onClick={() => openEditor()} type="button"><Plus aria-hidden="true" className="size-4" />Add meal</Button>} description="Use one partner-owned account ID for meal history. Calendar presets resolve locally, then the scoped SDK sends inclusive API dates." eyebrow="Partner-owned identity" title="Food logs with context." />
       <div className="mt-8 grid gap-8 xl:grid-cols-[minmax(340px,0.78fr)_minmax(0,1.35fr)] xl:items-start">
         <div className="space-y-5 xl:sticky xl:top-8">
           <UserContextCard description="The demo stores this account context in this browser. The SDK applies it to Food Logs without owning or persisting identity." />
@@ -63,7 +63,7 @@ function FoodLogsPage() {
             <SegmentedControl<FoodLogTimeSpan> className="mt-4" label="Food log date range" name="food-log-range" onChange={setSpan} options={spans} value={span} />
             <p className="mt-4 font-semibold text-stone-800">{range.display}</p>
             <p className="data-number mt-1 text-xs text-stone-500">API: {range.start} through {range.end}, inclusive</p>
-            <Button className="mt-6 w-full" disabled={!session.endUserId} onClick={() => setRequest({ endUserId: session.endUserId, endUserTimezone: session.endUserTimezone, start: range.start, end: range.end })} type="button">Load food logs</Button>
+            <Button className="mt-6 w-full" data-testid="food-logs-refresh" disabled={!session.endUserId} onClick={() => setRequest({ endUserId: session.endUserId, endUserTimezone: session.endUserTimezone, start: range.start, end: range.end })} type="button">Load food logs</Button>
           </Card>
           <Card className="p-5 text-sm leading-6 text-stone-600 sm:p-6">
             <SectionLabel>One meal, multiple foods</SectionLabel>
@@ -76,14 +76,15 @@ function FoodLogsPage() {
             <div><SectionLabel>Meal history</SectionLabel><h2 className="mt-2 font-serif text-4xl">{logs.data ? `${logs.data.totalCount} logged meal${logs.data.totalCount === 1 ? '' : 's'}` : 'Choose a date range'}</h2>{logs.isFetching && logs.data && <p className="mt-2 text-sm font-semibold text-stone-500">Refreshing meal history…</p>}</div>
             <CalendarDays aria-hidden="true" className="size-7 text-stone-400" />
           </div>
-          {!request ? <EmptyState description="Save an active user and load a calendar range to see meal history." icon={<ClipboardList aria-hidden="true" className="size-6" />} title="No request yet" />
-            : logs.isPending && !logs.data ? <SkeletonList />
-              : logs.isError ? <ErrorMessage error={logs.error} />
-                : logs.data?.items.length ? <div className="space-y-4">{logs.data.items.map((log, index) => <Card className="overflow-hidden" key={log.id ?? `log-${index}`}>
-                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-200 px-5 py-4 sm:px-6"><div><h3 className="text-lg font-bold">{log.name || 'Logged meal'}</h3><p className="data-number mt-1 text-sm text-stone-500">{new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(log.timestampUtc))}</p></div><div className="flex items-center gap-2"><span className="rounded-full bg-[#eee8dc] px-3 py-1.5 text-xs font-bold text-stone-600">{log.foods.length} food{log.foods.length === 1 ? '' : 's'}</span><button aria-label={`Edit ${log.name || 'meal'}`} className="grid size-10 place-items-center rounded-full hover:bg-stone-100" disabled={!log.id} onClick={() => openEditor(log)} type="button"><Pencil aria-hidden="true" className="size-4" /></button><button aria-label={`Delete ${log.name || 'meal'}`} className="grid size-10 place-items-center rounded-full text-red-800 hover:bg-red-50" disabled={remove.isPending || !log.id} onClick={() => log.id && remove.mutate(log.id)} type="button"><Trash2 aria-hidden="true" className="size-4" /></button></div></div>
+          {remove.isError ? <div className="mb-4"><ErrorMessage error={remove.error} testId="food-log-delete-error" /></div> : null}
+          {!request ? <EmptyState description="Save an active user and load a calendar range to see meal history." icon={<ClipboardList aria-hidden="true" className="size-6" />} testId="food-logs-prompt" title="No request yet" />
+            : logs.isPending && !logs.data ? <SkeletonList testId="food-logs-loading" />
+              : logs.isError ? <ErrorMessage error={logs.error} testId="food-logs-error" />
+                : logs.data?.items.length ? <div className="space-y-4" data-testid="food-log-list">{logs.data.items.map((log, index) => <Card className="overflow-hidden" data-testid={`food-log-${index}`} key={log.id ?? `log-${index}`}>
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-200 px-5 py-4 sm:px-6"><div><h3 className="text-lg font-bold">{log.name || 'Logged meal'}</h3><p className="data-number mt-1 text-sm text-stone-500">{new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(log.timestampUtc))}</p></div><div className="flex items-center gap-2"><span className="rounded-full bg-[#eee8dc] px-3 py-1.5 text-xs font-bold text-stone-600">{log.foods.length} food{log.foods.length === 1 ? '' : 's'}</span><button aria-label={`Edit ${log.name || 'meal'}`} className="grid size-10 place-items-center rounded-full hover:bg-stone-100" data-testid="food-log-edit" disabled={!log.id} onClick={() => openEditor(log)} type="button"><Pencil aria-hidden="true" className="size-4" /></button><button aria-label={`Delete ${log.name || 'meal'}`} className="grid size-10 place-items-center rounded-full text-red-800 hover:bg-red-50" data-testid="food-log-delete" disabled={remove.isPending || !log.id} onClick={() => log.id && remove.mutate(log.id)} type="button"><Trash2 aria-hidden="true" className="size-4" /></button></div></div>
                   {log.foods.map((food, foodIndex) => <div className="flex items-center gap-4 border-b border-stone-200 px-5 py-4 last:border-0 sm:px-6" key={`${log.id ?? index}-${food.id ?? foodIndex}`}><NetworkImage alt="" className="size-12 shrink-0 rounded-xl" fallback={<Utensils aria-hidden="true" className="size-5 text-stone-600" />} src={food.imageUrl} /><div className="min-w-0 flex-1"><div className="truncate font-bold">{food.name ?? 'Unnamed food'}</div><div className="data-number mt-1 text-sm text-stone-500">{formatNumber(food.nutrients.calories?.value, 0)} cal · {formatNumber(food.consumedServing.quantity)} {food.servingDetails.unit ?? 'serving'}</div></div></div>)}
                 </Card>)}</div>
-                  : <EmptyState description="No meals were returned for this person and date range." icon={<ClipboardList aria-hidden="true" className="size-6" />} title="No food logs found" />}
+                  : <EmptyState description="No meals were returned for this person and date range." icon={<ClipboardList aria-hidden="true" className="size-6" />} testId="food-logs-empty" title="No food logs found" />}
         </section>
       </div>
       <Dialog onClose={() => setEditorOpen(false)} open={editorOpen} title={editingLog ? 'Edit meal' : 'Add a meal'}>

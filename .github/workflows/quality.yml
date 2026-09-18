@@ -26,10 +26,10 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Set up Node.js
-        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.0.0
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: ${{ matrix.node }}
           cache: npm
@@ -53,10 +53,58 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Set up Node.js
-        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.0.0
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            examples/react-demo/package-lock.json
+
+      - name: Install pinned dependencies
+        run: |
+          npm ci
+          npm run build
+          npm --prefix examples/react-demo ci
+
+      - name: Typecheck, test, and build the React example
+        run: npm --prefix examples/react-demo run check:static
+        env:
+          npm_config_ignore_scripts: "true"
+
+      - name: Install the packed SDK in a clean ESM project
+        run: |
+          archive="$(npm pack --silent)"
+          mkdir -p "$RUNNER_TEMP/january-sdk-smoke"
+          cd "$RUNNER_TEMP/january-sdk-smoke"
+          npm init -y >/dev/null
+          npm pkg set type=module >/dev/null
+          npm install "$GITHUB_WORKSPACE/$archive"
+          node --input-type=module -e "import { JanuaryClient } from '@januaryai/web-sdk'; if (typeof JanuaryClient !== 'function') process.exit(1)"
+
+  # The Playwright suite (examples/react-demo/tests/ui) runs the demo end to end
+  # against the fixture server, split across three jobs. A failed test is retried
+  # once and marked flaky in the JUnit report; traces and screenshots of failures
+  # are uploaded with it.
+  ui-test-web:
+    name: ui-test-web (shard ${{ matrix.shard }} of 3)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
           cache: npm
@@ -73,17 +121,31 @@ jobs:
       - name: Install Playwright browser
         run: npm --prefix examples/react-demo exec playwright install --with-deps chromium
 
-      - name: Typecheck, build, and run React example UAT
-        run: npm run demo:web:check
+      - name: Run the web suite shard
+        run: npm run test:ui -- --shard=${{ matrix.shard }}/3
+        working-directory: examples/react-demo
         env:
+          CI: "true"
           npm_config_ignore_scripts: "true"
 
-      - name: Install the packed SDK in a clean ESM project
+      - name: Upload web UI artifacts
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: playwright-web-${{ matrix.shard }}
+          path: examples/react-demo/test-results
+          if-no-files-found: ignore
+
+  # One check that summarizes every shard, so branch protection can require a
+  # single stable name.
+  ui-tests:
+    needs: ui-test-web
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Every UI shard passed
+        env:
+          RESULT: ${{ needs.ui-test-web.result }}
         run: |
-          archive="$(npm pack --silent)"
-          mkdir -p "$RUNNER_TEMP/january-sdk-smoke"
-          cd "$RUNNER_TEMP/january-sdk-smoke"
-          npm init -y >/dev/null
-          npm pkg set type=module >/dev/null
-          npm install "$GITHUB_WORKSPACE/$archive"
-          node --input-type=module -e "import { JanuaryClient } from '@januaryai/web-sdk'; if (typeof JanuaryClient !== 'function') process.exit(1)"
+          echo "web=$RESULT"
+          test "$RESULT" = "success"

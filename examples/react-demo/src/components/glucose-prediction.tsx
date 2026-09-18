@@ -16,7 +16,7 @@ export function GlucoseChart({ result }: { result: GlucosePrediction }) {
   const peak = points.reduce((best, point) => point.value > best.value ? point : best, points[0] ?? { minutes: 0, value: 0 })
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
+    <div className="p-4 sm:p-6 lg:p-8" data-testid="glucose-chart">
       <div className="mb-4 flex items-center justify-between gap-4">
         <SectionLabel>Predicted response</SectionLabel>
         <span className="text-sm font-bold text-stone-500">mg/dL</span>

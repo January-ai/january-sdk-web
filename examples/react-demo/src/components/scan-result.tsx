@@ -12,7 +12,7 @@ type MealAnalysis = Awaited<ReturnType<typeof analyzeFoodPhoto>>
 type MealPrediction = Awaited<ReturnType<typeof requestMealGlucosePrediction>>
 type MealFood = NonNullable<MealAnalysis['detections']>[number]['food']
 
-export function ScanResult({ result, onAnalyzeAnother }: { result: MealAnalysis; onAnalyzeAnother(): void }) {
+export function ScanResult({ result, onAnalyzeAnother, testId }: { result: MealAnalysis; onAnalyzeAnother(): void; testId?: string }) {
   const session = useUserSession()
   const nutrients = result.totalNutrients
   // A detection the API could not size is left out of the prediction rather
@@ -43,7 +43,7 @@ export function ScanResult({ result, onAnalyzeAnother }: { result: MealAnalysis;
   })
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5" data-testid={testId}>
       <Card className="p-6">
         <SectionLabel>Meal</SectionLabel>
         <h3 className="mt-3 text-balance font-serif text-4xl">{result.mealName ?? 'Detected meal'}</h3>
@@ -81,7 +81,7 @@ export function ScanResult({ result, onAnalyzeAnother }: { result: MealAnalysis;
       {prediction.isError && <ErrorMessage error={prediction.error} />}
       {prediction.data && <MealPredictionPanel result={prediction.data} />}
 
-      <Button className="w-full" onClick={onAnalyzeAnother} type="button">Analyze another meal</Button>
+      <Button className="w-full" data-testid="scan-another" onClick={onAnalyzeAnother} type="button">Analyze another meal</Button>
     </div>
   )
 }
