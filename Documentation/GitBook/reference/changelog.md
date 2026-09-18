@@ -1,6 +1,10 @@
 # Changelog
 
-## Unreleased
+## 0.2.1 - 2026-09-18
+
+* No changes to the SDK. The React demo gains an end-to-end UI suite that exercises every screen against a local fixture server, its screens carry stable test identifiers shared with the other January demos, and the sample meal photo ships with the demo
+
+## 0.2.0 - 2026-09-16
 
 * Breaking: `DetectedFood` exposes `serving` and `quantity` instead of `servings`, matching the current Partner API; `0.1.x` fails to decode photo scans and description analyses
 * Food alternatives are `AlternativeFood` values with `servings: ServingSummary[]`

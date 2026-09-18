@@ -31,5 +31,5 @@ test('food search sends authentication and SDK identity without a diary header',
   const headers = new Headers(captured.init.headers);
   assert.equal(headers.get('authorization'), 'Bearer test-key');
   assert.equal(headers.get('january-end-user-id'), null);
-  assert.match(headers.get('user-agent'), /^JanuaryPartnerSDK-Node\/0\.2\.0/);
+  assert.match(headers.get('user-agent'), /^JanuaryPartnerSDK-Node\/0\.2\.1/);
 });
