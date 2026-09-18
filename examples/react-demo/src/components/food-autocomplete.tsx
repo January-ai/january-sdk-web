@@ -38,20 +38,25 @@ export function FoodSuggestionList({
   items,
   busyFoodId,
   onSelect,
+  testId,
+  itemTestIdPrefix,
 }: {
   items: FoodSuggestion[]
   busyFoodId?: string
   onSelect(suggestion: FoodSuggestion): void
+  testId?: string
+  itemTestIdPrefix?: string
 }) {
   if (!items.length) return null
 
   return (
-    <Card aria-label="Food suggestions" className="overflow-hidden">
-      {items.map((suggestion) => {
+    <Card aria-label="Food suggestions" className="overflow-hidden" data-testid={testId}>
+      {items.map((suggestion, index) => {
         const busy = busyFoodId === suggestion.id
         return (
           <button
             className="flex min-h-14 w-full items-center gap-3 border-b border-stone-100 px-4 py-3 text-left last:border-b-0 hover:bg-stone-50 disabled:cursor-wait disabled:opacity-70"
+            data-testid={itemTestIdPrefix ? `${itemTestIdPrefix}-${index}` : undefined}
             disabled={busyFoodId !== undefined}
             key={suggestion.id}
             onClick={() => onSelect(suggestion)}

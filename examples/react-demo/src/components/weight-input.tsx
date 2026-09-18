@@ -6,8 +6,8 @@ import { kilogramsToPounds, poundsToKilograms } from '~/lib/weight-units'
 type WeightDisplayUnit = 'pounds' | 'kilograms'
 
 const weightUnits: readonly SegmentedOption<WeightDisplayUnit>[] = [
-  { value: 'pounds', label: 'lb' },
-  { value: 'kilograms', label: 'kg' },
+  { value: 'pounds', label: 'lb', testId: 'glucose-weight-unit-lb' },
+  { value: 'kilograms', label: 'kg', testId: 'glucose-weight-unit-kg' },
 ]
 
 export function WeightInput({ weightPounds, onWeightPoundsChange, className }: {
@@ -33,6 +33,7 @@ export function WeightInput({ weightPounds, onWeightPoundsChange, className }: {
         />
       </div>
       <TextField
+        data-testid="glucose-weight"
         inputMode="decimal"
         label={displayUnit === 'pounds' ? 'Pounds' : 'Kilograms'}
         max={displayUnit === 'pounds' ? 700 : 317.5}

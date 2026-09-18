@@ -79,30 +79,31 @@ export function FoodLogEditor({ log, onSaved }: { log?: FoodLog; onSaved(): void
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5" data-testid="food-log-editor">
       <div className="grid gap-4 sm:grid-cols-2">
-        <TextField label="Meal name (optional)" onChange={(event) => setName(event.target.value)} placeholder="Lunch" value={name} />
+        <TextField data-testid="food-log-name" label="Meal name (optional)" onChange={(event) => setName(event.target.value)} placeholder="Lunch" value={name} />
         <TextField label="When it was eaten" onChange={(event) => setTimestamp(event.target.value)} type="datetime-local" value={timestamp} />
       </div>
       <Card className="p-5">
         <SectionLabel>Foods in this meal</SectionLabel>
         <p className="mt-2 text-sm leading-6 text-stone-600">Add every food, choose its quantity, then save the complete array once.</p>
         <div className="mt-4 space-y-3">
-          {foods.map((food) => <div className="flex flex-wrap items-center gap-3 rounded-2xl bg-[#f8f5ed] p-3" key={food.id}>
+          {foods.map((food, index) => <div className="flex flex-wrap items-center gap-3 rounded-2xl bg-[#f8f5ed] p-3" data-testid={`food-log-food-${index}`} key={food.id}>
             <div className="grid size-10 place-items-center rounded-xl bg-[#eee8dc]"><Utensils aria-hidden="true" className="size-4" /></div>
             <div className="min-w-40 flex-1"><div className="truncate font-bold">{food.name}</div><div className="text-xs text-stone-500">{food.servingUnit}</div></div>
             <div className="min-w-40"><ServingSelector label="Serving" onChange={(servingId) => setFoods((current) => current.map((item) => item.id === food.id ? { ...item, servingId, servingUnit: item.servings.find((serving) => serving.id === servingId)?.unit ?? item.servingUnit } : item))} servings={food.servings} value={food.servingId} /></div>
             <label className="flex items-center gap-2 text-sm font-semibold"><span>Qty</span><input aria-label={`Quantity for ${food.name}`} className="h-10 w-20 rounded-xl border border-stone-300 bg-white px-3 outline-none transition-colors focus:bg-stone-50" min="0.25" onChange={(event) => setFoods((current) => current.map((item) => item.id === food.id ? { ...item, quantity: event.currentTarget.valueAsNumber } : item))} step="0.25" type="number" value={food.quantity} /></label>
             <button aria-label={`Remove ${food.name}`} className="grid size-10 place-items-center rounded-full hover:bg-white" onClick={() => setFoods((current) => current.filter((item) => item.id !== food.id))} type="button"><Trash2 aria-hidden="true" className="size-4" /></button>
           </div>)}
-          {!foods.length && <p className="rounded-2xl border border-dashed border-stone-300 p-4 text-sm text-stone-500">No foods added yet.</p>}
+          {!foods.length && <p className="rounded-2xl border border-dashed border-stone-300 p-4 text-sm text-stone-500" data-testid="food-log-editor-empty">No foods added yet.</p>}
         </div>
       </Card>
-      <form className="flex gap-2" onSubmit={(event) => { event.preventDefault(); const value = query.trim(); setAcceptedSuggestion(value); setSubmittedQuery(value) }}>
-        <InputFrame className="flex-1"><Search aria-hidden="true" className="size-4 text-stone-500" /><span className="sr-only">Search foods to add</span><input className="min-w-0 flex-1 bg-transparent outline-none" onChange={(event) => { setQuery(event.target.value); setAcceptedSuggestion(null); setSubmittedQuery('') }} placeholder="Search foods to add" value={query} /></InputFrame>
-        <SecondaryButton disabled={!query.trim()} type="submit"><Plus aria-hidden="true" className="size-4" />Find</SecondaryButton>
+      <form className="flex gap-2" data-testid="food-picker" onSubmit={(event) => { event.preventDefault(); const value = query.trim(); setAcceptedSuggestion(value); setSubmittedQuery(value) }}>
+        <InputFrame className="flex-1"><Search aria-hidden="true" className="size-4 text-stone-500" /><span className="sr-only">Search foods to add</span><input className="min-w-0 flex-1 bg-transparent outline-none" data-testid="food-picker-input" onChange={(event) => { setQuery(event.target.value); setAcceptedSuggestion(null); setSubmittedQuery('') }} placeholder="Search foods to add" value={query} /></InputFrame>
+        <SecondaryButton data-testid="food-log-add-food" disabled={!query.trim()} type="submit"><Plus aria-hidden="true" className="size-4" />Find</SecondaryButton>
       </form>
       <FoodSuggestionList
+        itemTestIdPrefix="food-picker-suggestion"
         items={autocomplete.items}
         onSelect={(suggestion) => {
           const name = suggestion.name ?? ''
@@ -110,11 +111,12 @@ export function FoodLogEditor({ log, onSaved }: { log?: FoodLog; onSaved(): void
           setAcceptedSuggestion(name)
           setSubmittedQuery(name)
         }}
+        testId="food-picker-suggestions"
       />
-      {search.isPending && submittedQuery ? <SkeletonList /> : search.isError ? <ErrorMessage error={search.error} /> : search.data?.items.length ? <Card className="max-h-64 overflow-y-auto">{search.data.items.map((food) => <ResultRow busy={hydratedFood.isPending && hydratedFood.variables?.id === food.id} disabled={hydratedFood.isPending || foods.some((item) => item.id === food.id)} key={food.id} media={<NetworkImage alt="" className="size-full" fallback={<Utensils aria-hidden="true" className="size-5" />} src={food.photoUrl} />} meta={`${formatNumber(food.calories, 0)} cal · ${food.servings[0]?.unit ?? 'No serving'}`} onClick={() => addFood(food)} title={foods.some((item) => item.id === food.id) ? `${food.name ?? 'Unnamed food'} · Added` : food.name ?? 'Unnamed food'} />)}</Card> : null}
-      {hydratedFood.isError && <ErrorMessage error={hydratedFood.error} />}
-      {save.isError && <ErrorMessage error={save.error} />}
-      <Button busy={save.isPending} className="w-full" disabled={!foods.length || !session.endUserId || !timestamp} onClick={() => save.mutate()} type="button">{log ? 'Update meal' : 'Create meal'}</Button>
+      {search.isPending && submittedQuery ? <SkeletonList testId="food-picker-loading" /> : search.isError ? <ErrorMessage error={search.error} testId="food-picker-error" /> : search.data?.items.length ? <Card className="max-h-64 overflow-y-auto" data-testid="food-picker-results">{search.data.items.map((food, index) => <ResultRow busy={hydratedFood.isPending && hydratedFood.variables?.id === food.id} disabled={hydratedFood.isPending || foods.some((item) => item.id === food.id)} key={food.id} media={<NetworkImage alt="" className="size-full" fallback={<Utensils aria-hidden="true" className="size-5" />} src={food.photoUrl} />} meta={`${formatNumber(food.calories, 0)} cal · ${food.servings[0]?.unit ?? 'No serving'}`} onClick={() => addFood(food)} testId={`food-picker-result-${index}`} title={foods.some((item) => item.id === food.id) ? `${food.name ?? 'Unnamed food'} · Added` : food.name ?? 'Unnamed food'} />)}</Card> : null}
+      {hydratedFood.isError && <ErrorMessage error={hydratedFood.error} testId="food-picker-error" />}
+      {save.isError && <ErrorMessage error={save.error} testId="food-log-save-error" />}
+      <Button busy={save.isPending} busyTestId="food-log-save-loading" className="w-full" data-testid="food-log-save" disabled={!foods.length || !session.endUserId || !timestamp} onClick={() => save.mutate()} type="button">{log ? 'Update meal' : 'Create meal'}</Button>
     </div>
   )
 }

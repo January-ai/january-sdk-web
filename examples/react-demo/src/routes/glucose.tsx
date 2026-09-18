@@ -90,7 +90,7 @@ function GlucosePage() {
   }
 
   return (
-    <Page>
+    <Page data-testid="glucose-screen">
       <PageHeader
         description="Build a representative profile, choose what the person plans to eat, then ask January for a personalized estimate. Every result comes from the scoped SDK response."
         eyebrow="Personalized prediction"
@@ -114,12 +114,12 @@ function GlucosePage() {
           <Card className="p-5 sm:p-6">
             <SectionLabel>About you</SectionLabel>
             <div className="mt-5 grid grid-cols-2 gap-4">
-              <TextField inputMode="numeric" label="Age" min={18} onChange={(event) => setAge(event.currentTarget.valueAsNumber)} type="number" value={age} />
+              <TextField data-testid="glucose-age" inputMode="numeric" label="Age" min={18} onChange={(event) => setAge(event.currentTarget.valueAsNumber)} type="number" value={age} />
               <label className="block">
                 <span className="mb-2 block text-sm font-semibold text-stone-700">Sex</span>
-                <select className="min-h-12 w-full rounded-2xl border border-stone-300 bg-white px-4 outline-none transition-colors focus:bg-stone-50" onChange={(event) => setSex(event.target.value as typeof sex)} value={sex}>
-                  <option value={Sex.female}>Female</option>
-                  <option value={Sex.male}>Male</option>
+                <select className="min-h-12 w-full rounded-2xl border border-stone-300 bg-white px-4 outline-none transition-colors focus:bg-stone-50" data-testid="glucose-sex" onChange={(event) => setSex(event.target.value as typeof sex)} value={sex}>
+                  <option data-testid="glucose-sex-female" value={Sex.female}>Female</option>
+                  <option data-testid="glucose-sex-male" value={Sex.male}>Male</option>
                 </select>
               </label>
               <HeightInput className="col-span-2" heightInches={height} onHeightInchesChange={setHeight} />
@@ -140,28 +140,29 @@ function GlucosePage() {
             <SectionLabel>This meal</SectionLabel>
             {food ? (
               <div className="mt-5">
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4" data-testid="glucose-food-0">
                   <NetworkImage alt="" className="size-14 shrink-0 rounded-2xl" fallback={<Utensils aria-hidden="true" className="size-5 text-stone-600" />} src={food.photoUrl} />
                   <div className="min-w-0 flex-1">
                     <div className="truncate font-bold">{food.name}</div>
                     <div className="mt-1 text-sm text-stone-500">{formatNumber(food.calories, 0)} calories</div>
                   </div>
-                  <QuantityControl decreaseDisabled={quantity <= 0.25} onDecrease={() => setQuantity((value) => Math.max(0.25, value - 0.25))} onIncrease={() => setQuantity((value) => value + 0.25)} value={formatNumber(quantity)} />
+                  <QuantityControl decreaseDisabled={quantity <= 0.25} onDecrease={() => setQuantity((value) => Math.max(0.25, value - 0.25))} onIncrease={() => setQuantity((value) => value + 0.25)} testId="food-serving-controls" value={formatNumber(quantity)} />
                 </div>
-                {servingId != null && <div className="mt-4"><ServingSelector onChange={(value) => { setServingId(value); prediction.reset() }} servings={food.servings} value={servingId} /></div>}
-                <button className="mt-4 min-h-11 text-sm font-bold text-amber-800" onClick={() => { setFood(null); setServingId(null); prediction.reset() }} type="button">Choose a different food</button>
+                {servingId != null && <div className="mt-4"><ServingSelector onChange={(value) => { setServingId(value); prediction.reset() }} servings={food.servings} testId="food-serving-unit" value={servingId} /></div>}
+                <button className="mt-4 min-h-11 text-sm font-bold text-amber-800" data-testid="glucose-start-over" onClick={() => { setFood(null); setServingId(null); prediction.reset() }} type="button">Choose a different food</button>
               </div>
             ) : (
-              <form className="mt-5 flex gap-2" onSubmit={(event) => { event.preventDefault(); const value = queryDraft.trim(); setAcceptedSuggestion(value); setSubmittedQuery(value) }}>
+              <form className="mt-5 flex gap-2" data-testid="food-picker" onSubmit={(event) => { event.preventDefault(); const value = queryDraft.trim(); setAcceptedSuggestion(value); setSubmittedQuery(value) }}>
                 <InputFrame className="flex-1">
                   <Search aria-hidden="true" className="size-4 text-stone-500" />
                   <span className="sr-only">Search for a food</span>
-                  <input className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-stone-400" onChange={(event) => { setQueryDraft(event.target.value); setAcceptedSuggestion(null); setSubmittedQuery('') }} placeholder="Search for a food" value={queryDraft} />
+                  <input className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-stone-400" data-testid="food-picker-input" onChange={(event) => { setQueryDraft(event.target.value); setAcceptedSuggestion(null); setSubmittedQuery('') }} placeholder="Search for a food" value={queryDraft} />
                 </InputFrame>
-                <Button disabled={!queryDraft.trim()} type="submit">Find</Button>
+                <Button data-testid="glucose-add-food" disabled={!queryDraft.trim()} type="submit">Find</Button>
               </form>
             )}
             {!food && <div className="mt-3"><FoodSuggestionList
+              itemTestIdPrefix="food-picker-suggestion"
               items={autocomplete.items}
               onSelect={(suggestion) => {
                 const name = suggestion.name ?? ''
@@ -169,17 +170,18 @@ function GlucosePage() {
                 setAcceptedSuggestion(name)
                 setSubmittedQuery(name)
               }}
+              testId="food-picker-suggestions"
             /></div>}
           </Card>
 
-          <Button busy={prediction.isPending} className="w-full" disabled={!food || !session.endUserId} onClick={() => prediction.mutate()} type="button">
+          <Button busy={prediction.isPending} busyTestId="glucose-loading" className="w-full" data-testid="glucose-predict" disabled={!food || !session.endUserId} onClick={() => prediction.mutate()} type="button">
             Predict glucose response
           </Button>
         </div>
 
         <section aria-live="polite">
           {prediction.isError ? (
-            <ErrorMessage error={prediction.error} />
+            <ErrorMessage error={prediction.error} testId="glucose-error" />
           ) : prediction.data ? (
             <PredictionResult food={food!} quantity={quantity} result={prediction.data} servingId={servingId!} />
           ) : !food && submittedQuery ? (
@@ -188,10 +190,10 @@ function GlucosePage() {
                 <SectionLabel>Choose a food</SectionLabel>
                 <h2 className="mt-2 font-serif text-4xl">Results for “{submittedQuery}”</h2>
               </div>
-              {hydratedFood.isError && <div className="mb-4"><ErrorMessage error={hydratedFood.error} /></div>}
-              {foodSearch.isPending ? <SkeletonList /> : foodSearch.isError ? <ErrorMessage error={foodSearch.error} /> : foodSearch.data ? (
-                <Card className="overflow-hidden">
-                  {foodSearch.data.items.map((item) => (
+              {hydratedFood.isError && <div className="mb-4"><ErrorMessage error={hydratedFood.error} testId="food-picker-error" /></div>}
+              {foodSearch.isPending ? <SkeletonList testId="food-picker-loading" /> : foodSearch.isError ? <ErrorMessage error={foodSearch.error} testId="food-picker-error" /> : foodSearch.data ? (
+                <Card className="overflow-hidden" data-testid={foodSearch.data.items.length ? 'food-picker-results' : 'food-picker-empty'}>
+                  {foodSearch.data.items.map((item, index) => (
                     <ResultRow
                       key={item.id}
                       busy={hydratedFood.isPending && hydratedFood.variables?.id === item.id}
@@ -199,6 +201,7 @@ function GlucosePage() {
                       media={<NetworkImage alt="" className="size-full" fallback={<Utensils aria-hidden="true" className="size-5 text-stone-600" />} src={item.photoUrl} />}
                       meta={`${formatNumber(item.calories, 0)} cal · ${item.servings[0] ? `${item.servings[0].quantity} ${item.servings[0].unit}` : 'No serving'}`}
                       onClick={() => chooseFood(item)}
+                      testId={`food-picker-result-${index}`}
                       title={item.name ?? 'Unnamed food'}
                     />
                   ))}
@@ -206,7 +209,7 @@ function GlucosePage() {
               ) : null}
             </div>
           ) : (
-            <EmptyState action={<span className="text-sm font-bold text-stone-700">Start by choosing a food</span>} description="Add a food, adjust the representative profile, and request a predicted response through the SDK." icon={<Activity aria-hidden="true" className="size-6" />} title="Build a prediction" />
+            <EmptyState action={<span className="text-sm font-bold text-stone-700">Start by choosing a food</span>} description="Add a food, adjust the representative profile, and request a predicted response through the SDK." icon={<Activity aria-hidden="true" className="size-6" />} testId="glucose-prompt" title="Build a prediction" />
           )}
         </section>
       </div>
@@ -217,8 +220,8 @@ function GlucosePage() {
 function PredictionResult({ food, servingId, quantity, result }: { food: FoodSearchItem; servingId: string; quantity: number; result: Awaited<ReturnType<typeof predictGlucose>> }) {
   const peak = result.prediction.reduce((best, point) => point.value > best.value ? point : best, result.prediction[0] ?? { minutes: 0, value: 0 })
   return (
-    <div className="space-y-5">
-      <Card className="overflow-hidden">
+    <div className="space-y-5" data-testid="glucose-results-screen">
+      <Card className="overflow-hidden" data-testid="glucose-result">
         <div className="grid gap-6 border-b border-stone-200 p-6 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end lg:p-8">
           <div>
             <SectionLabel>Likely peak</SectionLabel>

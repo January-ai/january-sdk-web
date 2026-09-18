@@ -9,17 +9,20 @@ export function ServingSelector({
   value,
   onChange,
   label = 'Serving',
+  testId,
 }: {
   servings: readonly ServingChoice[]
   value: string
   onChange(servingId: string): void
   label?: string
+  testId?: string
 }) {
   return (
     <label className="block">
       <span className="mb-2 block text-sm font-semibold text-stone-700">{label}</span>
       <select
         className="min-h-11 w-full rounded-xl border border-stone-300 bg-white px-3 outline-none transition-colors focus:bg-stone-50"
+        data-testid={testId}
         onChange={(event) => onChange(event.currentTarget.value)}
         value={value}
       >

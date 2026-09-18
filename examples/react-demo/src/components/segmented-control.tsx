@@ -1,8 +1,12 @@
 import { cn } from '~/lib/utils'
 
-export interface SegmentedOption<T extends string> { value: T; label: string }
+export interface SegmentedOption<T extends string> { value: T; label: string; testId?: string }
 
-export function SegmentedControl<T extends string>({ label, name, options, value, onChange, className, variant = 'filled' }: {
+export function optionTestId<T extends string>(option: SegmentedOption<T>, prefix?: string) {
+  return option.testId ?? (prefix ? `${prefix}-${option.value}` : undefined)
+}
+
+export function SegmentedControl<T extends string>({ label, name, options, value, onChange, className, variant = 'filled', testIdPrefix }: {
   label: string
   name: string
   options: readonly SegmentedOption<T>[]
@@ -10,6 +14,7 @@ export function SegmentedControl<T extends string>({ label, name, options, value
   onChange(value: T): void
   className?: string
   variant?: 'filled' | 'outlined'
+  testIdPrefix?: string
 }) {
   return (
     <fieldset className={className}>
@@ -22,7 +27,7 @@ export function SegmentedControl<T extends string>({ label, name, options, value
             value === option.value
               ? variant === 'filled' ? 'bg-white text-stone-950 shadow-sm' : 'border-stone-950 bg-stone-950 text-white'
               : variant === 'filled' ? 'text-stone-600' : 'border-stone-300 bg-white text-stone-600',
-          )} key={option.value}>
+          )} data-testid={optionTestId(option, testIdPrefix)} key={option.value}>
             <input className="sr-only" checked={value === option.value} name={name} onChange={() => onChange(option.value)} type="radio" value={option.value} />
             {option.label}
           </label>

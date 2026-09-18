@@ -63,3 +63,9 @@ To skip client-token minting, omit `PARTNER_TOKEN_URL` from `.env.local` and set
 `JANUARY_END_USER_ID=january-sdk-demo-user`. The key remains in the demo's server
 functions and is not bundled into browser code. Never use a `VITE_` prefix or
 commit the key.
+
+## End-to-end suite
+
+The Playwright flows under `tests/ui` and how to run them locally are described
+in [tests/ui/README.md](tests/ui/README.md). They run on every pull request as
+the `ui-tests` check.

@@ -9,8 +9,10 @@ const food = {
   id: 'food-1', type: 'generic', name: 'Fixture Pizza', brand_name: null, nutrients,
   glycemic_index: 52, glycemic_load: 12, image_url: null, barcode: '012345678905', servings,
 }
+// An hour ago, so the seeded log always falls in the demo's default date range.
+const seededEatenAt = () => new Date(Date.now() - 60 * 60 * 1000).toISOString().replace(/\.\d{3}Z$/, 'Z')
 const foodLog = {
-  id: 'log-1', name: 'Fixture lunch', eaten_at: '2026-09-01T16:00:00Z',
+  id: 'log-1', name: 'Fixture lunch', get eaten_at() { return seededEatenAt() },
   foods: [{
     food_id: food.id, name: food.name, brand_name: null, image_url: null,
     glycemic_index: 52, glycemic_load: 12, nutrients,
@@ -40,7 +42,7 @@ function json(response, value, status = 200) {
   response.end(JSON.stringify(value))
 }
 
-createServer((request, response) => {
+createServer(async (request, response) => {
   const url = new URL(request.url ?? '/', 'http://127.0.0.1:18767')
   if (url.pathname === '/__reset') {
     rules.clear(); requests.length = 0; return json(response, {})
@@ -49,6 +51,7 @@ createServer((request, response) => {
     rules.set(url.searchParams.get('route'), {
       status: Number(url.searchParams.get('status') ?? 200),
       empty: url.searchParams.get('empty') === 'true',
+      delay: Number(url.searchParams.get('delay') ?? 0),
     })
     return json(response, {})
   }
@@ -62,7 +65,8 @@ createServer((request, response) => {
       ? request.headers.authorization[0] ?? null
       : request.headers.authorization ?? null,
   })
-  const rule = rules.get(url.pathname) ?? { status: 200, empty: false }
+  const rule = rules.get(url.pathname) ?? { status: 200, empty: false, delay: 0 }
+  if (rule.delay) await new Promise((resolve) => setTimeout(resolve, rule.delay * 1000))
   if (rule.status !== 200) {
     const message = rule.status === 404
       ? 'No restaurant with id cafe. Use an id from a GET /v1.2/restaurants result.'

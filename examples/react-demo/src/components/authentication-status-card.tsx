@@ -31,6 +31,7 @@ export function AuthenticationStatusCard() {
     <section
       aria-label="Authentication status"
       className="overflow-hidden rounded-3xl border border-stone-300 bg-white/80 shadow-sm"
+      data-testid="configuration-card"
     >
       <div className="border-b border-stone-200 px-5 py-4">
         <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.08em] text-stone-500">
