@@ -9,8 +9,13 @@ const food = {
   id: 'food-1', type: 'generic', name: 'Fixture Pizza', brand_name: null, nutrients,
   glycemic_index: 52, glycemic_load: 12, image_url: null, barcode: '012345678905', servings,
 }
-// An hour ago, so the seeded log always falls in the demo's default date range.
-const seededEatenAt = () => new Date(Date.now() - 60 * 60 * 1000).toISOString().replace(/\.\d{3}Z$/, 'Z')
+// An hour ago, but never before today's local midnight, so the seeded log
+// always falls in the demo's default "today" range.
+const seededEatenAt = () => {
+  const startOfToday = new Date(); startOfToday.setHours(0, 0, 0, 0)
+  const anHourAgo = Date.now() - 60 * 60 * 1000
+  return new Date(Math.max(anHourAgo, startOfToday.getTime() + 60 * 1000)).toISOString().replace(/\.\d{3}Z$/, 'Z')
+}
 const foodLog = {
   id: 'log-1', name: 'Fixture lunch', get eaten_at() { return seededEatenAt() },
   foods: [{

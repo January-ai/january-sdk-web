@@ -6,9 +6,11 @@ test.beforeEach(async () => {
 })
 
 test('Food logs loading empty failure and retry', async ({ page }) => {
+  await control('/v1.2/food-logs', { delay: 2 })
   await openDemo(page, '/food-logs')
   await byId(page, 'food-logs-refresh').click()
-  await expect(byId(page, 'food-log-0')).toContainText('Fixture lunch')
+  await expect(byId(page, 'food-logs-loading')).toBeVisible()
+  await expect(byId(page, 'food-log-0')).toContainText('Fixture lunch', { timeout: 15_000 })
   // The demo caches results per date range, so change the range before each reload.
   await control('/v1.2/food-logs', { empty: true })
   await byId(page, 'logs-range-week').click()

@@ -26,9 +26,9 @@ export async function resetFixture() {
 }
 
 /** The requests the fixture server has received since the last reset. */
-export async function fixtureRequests(): Promise<Array<{ method: string; path: string }>> {
+export async function fixtureRequests(): Promise<Array<{ method: string; path: string; query: Record<string, string> }>> {
   const response = await fetch(`${fixtureApi}/__requests`)
-  return (await response.json()) as Array<{ method: string; path: string }>
+  return (await response.json()) as Array<{ method: string; path: string; query: Record<string, string> }>
 }
 
 /** Opens a demo route and waits until the client has hydrated. */

@@ -66,6 +66,16 @@ function ScanPage() {
     scan.reset()
   }
 
+  async function useSample() {
+    // The bundled sample goes through the same preparation as an uploaded
+    // file, so the SDK receives a data URI rather than a relative asset path.
+    const response = await fetch(sampleImage)
+    const preparedImage = await preparePhotoScanImage(await response.blob())
+    setImage(preparedImage)
+    setImageUrl('')
+    scan.reset()
+  }
+
   function useUrl() {
     const value = imageUrl.trim()
     if (!value) return
@@ -175,7 +185,7 @@ function ScanPage() {
                 <ImagePlus aria-hidden="true" className="size-5" />
                 Choose from library
               </SecondaryButton>
-              <SecondaryButton className="sm:col-span-2" data-testid="scan-sample" onClick={() => { setImage(sampleImage); setImageUrl(sampleImage); scan.reset() }} type="button">
+              <SecondaryButton className="sm:col-span-2" data-testid="scan-sample" onClick={() => void useSample()} type="button">
                 <Utensils aria-hidden="true" className="size-5" />
                 Use sample meal
               </SecondaryButton>
@@ -199,7 +209,7 @@ function ScanPage() {
           {!image ? (
             <EmptyState description="Choose a photo or load the sample meal, then analyze it through the SDK." icon={<ScanLine aria-hidden="true" className="size-6" />} testId="scan-prompt" title="Waiting for a meal" />
           ) : scan.isError ? (
-            <ErrorMessage error={scan.error} testId="scan-error" />
+            <ErrorMessage error={scan.error} onRetry={() => scan.mutate()} retryTestId="scan-error-retry" testId="scan-error" />
           ) : scan.data ? (
             <ScanResult onAnalyzeAnother={resetPhotoAnalysis} result={scan.data} testId="scan-results" />
           ) : (

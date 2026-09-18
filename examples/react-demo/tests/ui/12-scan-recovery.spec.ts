@@ -13,10 +13,10 @@ test('Scan failure recovers without losing the photo', async ({ page }) => {
   await byId(page, 'scan-analyze').click()
   await expect(byId(page, 'scan-error')).toBeVisible()
 
+  await expect(byId(page, 'scan-preview')).toBeVisible()
+
   await control('/v1.2/food-analysis/image', { status: 200 })
-  // A failed analysis clears the photo; pick the sample again and retry.
-  await byId(page, 'scan-sample').click()
-  await byId(page, 'scan-analyze').click()
+  await byId(page, 'scan-error-retry').click()
   await expect(byId(page, 'scan-results')).toContainText('Fixture photo meal')
   await expect(byId(page, 'scan-error')).toHaveCount(0)
 })
