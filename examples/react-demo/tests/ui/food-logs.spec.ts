@@ -8,7 +8,6 @@ test.beforeEach(async () => {
 
 test('loads food logs with nullable contract fields', async ({ page }) => {
   await openDemo(page, '/food-logs')
-  await page.getByRole('button', { name: 'Load food logs' }).click()
   await expect(page.getByRole('heading', { name: 'Fixture lunch' })).toBeVisible()
   await expect(page.getByText('Fixture Pizza', { exact: true })).toBeVisible()
 })
@@ -29,7 +28,6 @@ test('creates a meal using opaque string food and serving IDs', async ({ page })
 
 test('updates and deletes an existing meal', async ({ page }) => {
   await openDemo(page, '/food-logs')
-  await page.getByRole('button', { name: 'Load food logs' }).click()
   await page.getByRole('button', { name: 'Edit Fixture lunch' }).click()
   const dialog = page.getByRole('dialog', { name: 'Edit meal' })
   await dialog.getByLabel('Meal name (optional)').fill('Updated lunch')
@@ -48,6 +46,5 @@ test('updates and deletes an existing meal', async ({ page }) => {
 test('shows the empty logs state', async ({ page }) => {
   await fetch(`${fixtureApi}/__control?route=/v1.2/food-logs&empty=true`)
   await openDemo(page, '/food-logs')
-  await page.getByRole('button', { name: 'Load food logs' }).click()
   await expect(page.getByText('No food logs found')).toBeVisible()
 })

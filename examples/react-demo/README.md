@@ -40,8 +40,9 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000). The authentication card
 shows the local relay status and lets you mint a fresh client token. Search for
-`banana` to make the first SDK request. The Water & weight screen logs water and
-weight for the active user and lists daily totals and weights.
+`banana` to make the first SDK request. The Logs screen shows one day at a
+time: the day's meals with their totals, water with the day's total, and the
+day's weight, each with a log action.
 
 To use a hosted development relay instead, follow its
 [Vercel guide](https://github.com/January-ai/january-token-relay#deploy)

@@ -1,16 +1,15 @@
 import { Link } from '@tanstack/react-router'
-import { Camera, ClipboardList, Droplets, Search, TrendingUp } from 'lucide-react'
+import { Camera, NotebookPen, Search, TrendingUp } from 'lucide-react'
 import type { ComponentType } from 'react'
 
 export const navigation = [
   { to: '/search', label: 'Search', description: 'Foods & restaurants', icon: Search, testId: 'tab-search' },
   { to: '/scan', label: 'Meal scan', description: 'Photo or description', icon: Camera, testId: 'tab-scan' },
-  { to: '/food-logs', label: 'Food logs', description: 'Meal history', icon: ClipboardList, testId: 'tab-food-logs' },
-  { to: '/water-weight', label: 'Water & weight', description: 'Daily intake and weight', icon: Droplets, testId: 'tab-water-weight' },
+  { to: '/food-logs', label: 'Logs', description: 'Meals, water, weight', icon: NotebookPen, testId: 'tab-food-logs' },
   { to: '/glucose', label: 'Glucose', description: 'Predict a response', icon: TrendingUp, testId: 'tab-glucose' },
 ] as const
 
-type NavigationItem = { to: '/search' | '/scan' | '/food-logs' | '/water-weight' | '/glucose'; label: string; description: string; icon: ComponentType<{ className?: string; 'aria-hidden'?: boolean }>; testId: string }
+type NavigationItem = { to: '/search' | '/scan' | '/food-logs' | '/glucose'; label: string; description: string; icon: ComponentType<{ className?: string; 'aria-hidden'?: boolean }>; testId: string }
 
 export function DesktopNavItem({ to, label, description, icon: Icon, testId }: NavigationItem) {
   return <Link activeProps={{ className: 'bg-stone-950 text-white shadow-md' }} className="group flex min-h-16 items-center gap-4 rounded-2xl px-4 py-3 text-stone-600 hover:bg-white/70 hover:text-stone-950" data-testid={testId} to={to}><Icon aria-hidden={true} className="size-5 shrink-0" /><span><span className="block font-semibold">{label}</span><span className="block text-xs text-current opacity-65">{description}</span></span></Link>

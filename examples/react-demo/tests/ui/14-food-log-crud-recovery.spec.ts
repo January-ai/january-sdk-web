@@ -7,7 +7,6 @@ test.beforeEach(async () => {
 
 test('Food log update delete and retry preserve state', async ({ page }) => {
   await openDemo(page, '/food-logs')
-  await byId(page, 'food-logs-refresh').click()
   await expect(byId(page, 'food-log-0')).toContainText('Fixture lunch')
   await byId(page, 'food-log-0').getByTestId('food-log-edit').click()
   await expect(byId(page, 'food-log-editor')).toBeVisible()

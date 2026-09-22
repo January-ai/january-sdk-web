@@ -34,7 +34,30 @@ from the flows that would otherwise include them. The older role-based specs
 remain alongside for the relay and contract-shape checks they cover. Flows 26
 to 28 (water logs, weight logs, and their recovery states) were added on the
 web first; the native suites pick up the same numbers when they gain the
-feature.
+feature. That makes 26 numbered specs plus 20 role-based ones, 46 in all.
+
+## The Logs day view
+
+`/food-logs` (tab `tab-food-logs`, screen `food-logs-screen`) shows one day at a
+time and loads meals, the day's totals, water, and weight as soon as a user is
+set; every query is keyed by the day, so a flow that needs a fresh request moves
+to another day rather than reloading a cached one. Its test ids:
+
+- Day: `logs-day-previous`, `logs-day-next`, `logs-day-today`, `logs-day-input`,
+  `logs-day-label` (`Today`, `Yesterday`, or the spelled-out date),
+  `food-logs-refresh` (reload every query for the day).
+- Meals: `food-day-totals` (from `foodLogs.getSummary`, `food-day-totals-error`),
+  `food-log-list`, `food-log-N`, `food-log-add`, `food-log-edit`,
+  `food-log-delete`, `food-logs-loading`, `food-logs-empty`, `food-logs-error`,
+  `food-log-delete-error`, `food-logs-prompt` (no user yet); the editor keeps
+  its `food-log-*` and `food-picker-*` ids.
+- Water: `water-day-total` or `water-logs-empty` / `water-logs-loading` /
+  `water-logs-error`, `water-unit-fl-oz`, `water-unit-ml`, `water-amount`,
+  `water-log-add`, `water-log-add-error`, `water-log-last`, `water-log-delete`,
+  `water-log-delete-error`.
+- Weight: `weight-day-value` or `weight-logs-empty` / `weight-logs-loading` /
+  `weight-logs-error`, `weight-unit-lb`, `weight-unit-kg`, `weight-value`,
+  `weight-log-add`, `weight-log-add-error`, `weight-log-last`.
 
 ## Conventions
 

@@ -108,6 +108,18 @@ export const analyzeFoodDescription = createServerFn({ method: 'POST' })
     ...(data.endUserId ? { endUserId: data.endUserId } : {}),
   }))
 
+export const getFoodLogSummary = createServerFn({ method: 'GET' })
+  .validator(z.object({
+    start: z.iso.date(),
+    end: z.iso.date(),
+    endUserId: z.string().trim().min(1).max(256),
+    endUserTimezone: z.string().trim().min(1).max(100),
+  }))
+  .handler(({ data }) => {
+    const { endUserId, endUserTimezone, ...request } = data
+    return getJanuaryClient().forUser({ endUserId, endUserTimezone }).foodLogs.getSummary({ ...request, groupBy: 'day' })
+  })
+
 export const listFoodLogs = createServerFn({ method: 'GET' })
   .validator(z.object({
     start: z.iso.date(),

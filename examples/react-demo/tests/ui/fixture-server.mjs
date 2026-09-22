@@ -113,6 +113,15 @@ createServer(async (request, response) => {
     impact_score: 'medium', chart: { min: 90, max: 140 },
     points: [{ minutes: 0, value: 95 }, { minutes: 45, value: 132 }, { minutes: 120, value: 98 }],
   })
+  if (url.pathname === '/v1.2/food-logs/summary') {
+    const day = url.searchParams.get('start_date')
+    const logs = rule.empty ? 0 : 1
+    const totals = { logs_count: logs, days_with_logs: logs, nutrients: logs ? nutrients : {} }
+    return json(response, {
+      group_by: 'day', week_start: null, timezone: url.searchParams.get('timezone'), start_date: day, end_date: url.searchParams.get('end_date'),
+      buckets: [{ start_date: day, end_date: day, ...totals }], totals, average_per_logged_day: { nutrients: totals.nutrients },
+    })
+  }
   if (url.pathname === '/v1.2/food-logs' && request.method === 'GET') return json(response, {
     items: rule.empty ? [] : [foodLog],
   })
@@ -124,14 +133,14 @@ createServer(async (request, response) => {
   if (url.pathname === '/v1.2/water-logs' && request.method === 'POST') return json(response, waterLog, 201)
   if (url.pathname === '/v1.2/water-logs' && request.method === 'GET') {
     const unit = url.searchParams.get('unit') === 'ml' ? 'ml' : 'fl_oz'
-    return json(response, { items: rule.empty ? [] : [{ date: localToday(), total: { value: unit === 'ml' ? 709.8 : 24, unit } }] })
+    return json(response, { items: rule.empty ? [] : [{ date: url.searchParams.get('start_date') ?? localToday(), total: { value: unit === 'ml' ? 709.8 : 24, unit } }] })
   }
   if (url.pathname === '/v1.2/water-logs/water-1' && request.method === 'DELETE') {
     response.writeHead(204); return response.end()
   }
   if (url.pathname === '/v1.2/weight-logs' && request.method === 'POST') return json(response, weightLog, 201)
   if (url.pathname === '/v1.2/weight-logs' && request.method === 'GET') return json(response, {
-    items: rule.empty ? [] : [{ date: localToday(), weight: { value: 150, unit: 'lb' } }],
+    items: rule.empty ? [] : [{ date: url.searchParams.get('start_date') ?? localToday(), weight: { value: 150, unit: 'lb' } }],
   })
   if (url.pathname === '/v1.2/restaurants') return json(response, { items: rule.empty ? [] : [{
     type: 'restaurant', id: 'cafe', name: 'Fixture Cafe', is_chain: false,

@@ -1,9 +1,10 @@
 # React example app
 
 `examples/react-demo` is a full-stack TanStack Start application demonstrating
-shared UI, autocomplete, hydrated servings, browser photo preparation, food
-logs, water and weight logs, glucose prediction, user context, imperial/metric
-controls, and local voice capture for food and restaurant search.
+shared UI, autocomplete, hydrated servings, browser photo preparation, a
+per-day Logs view for meals, water, and weight, glucose prediction, user
+context, imperial/metric controls, and local voice capture for food and
+restaurant search.
 
 ## Install and configure
 
@@ -40,7 +41,7 @@ npm run dev
 ```
 
 Open the printed local URL. Verify connection, autocomplete → search, complete
-servings, voice capture → transcript, photo scan, Food Logs, Water & weight,
-Glucose, and account/timezone changes. Browser
+servings, voice capture → transcript, photo scan, the Logs day view (meals,
+water, weight), Glucose, and account/timezone changes. Browser
 developer tools must not show server-side token-issuance credentials in source, network requests, or
 storage.
