@@ -33,7 +33,8 @@ test('Water log create day total and delete', async ({ page }) => {
 
   const requests = await fixtureRequests()
   const lists = requests.filter(({ method, path }) => method === 'GET' && path === '/v1.2/water-logs')
-  expect(lists[0]?.query.start_date).toBe(lists[0]?.query.end_date)
+  // The day total asks for one day; the chart below it asks for a range ending today.
+  expect(lists.some(({ query }) => query.start_date === query.end_date)).toBe(true)
   expect(lists.map(({ query }) => query.unit)).toContain('ml')
   expect(lists.map(({ query }) => query.unit)).toContain('cup')
   expect(requests.some(({ method, path }) => method === 'POST' && path === '/v1.2/water-logs')).toBe(true)

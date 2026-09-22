@@ -28,6 +28,50 @@ const localToday = () => {
   const now = new Date()
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
 }
+// Range history for the Tracking charts. A single-day request (start = end) keeps the fixed
+// answer above; a longer range gets a year of generated days ending today, with gaps, and
+// weights older than 45 days stored in kg so the demo has to convert them for display.
+const shiftLocal = (day, days) => {
+  const [year, month, date] = day.split('-').map(Number)
+  const next = new Date(year, month - 1, date + days, 12)
+  return `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}-${String(next.getDate()).padStart(2, '0')}`
+}
+const round1 = (value) => Math.round(value * 10) / 10
+function historyDays(start, end) {
+  const today = localToday()
+  const days = []
+  for (let offset = 0; offset <= 400; offset += 1) {
+    const date = shiftLocal(today, -offset)
+    if (date < start) break
+    if (date <= end) days.unshift({ date, offset })
+  }
+  return days
+}
+// The API answers with at most the 100 most recent days that have logs.
+const mostRecent = (items) => items.slice(-100)
+function waterHistory(start, end, unit) {
+  return mostRecent(historyDays(start, end)
+    .filter(({ offset }) => offset === 0 || offset % 7 !== 4)
+    .map(({ date, offset }) => {
+      const flOz = offset === 0 ? 24 : 16 + ((offset * 37) % 5) * 8
+      const value = { fl_oz: flOz, ml: round1(flOz * 29.5735295625), cup: flOz / 8 }[unit]
+      return { date, total: { value, unit } }
+    }))
+}
+function weightHistory(start, end) {
+  return mostRecent(historyDays(start, end)
+    .filter(({ offset }) => offset % 3 !== 2)
+    .map(({ date, offset }) => {
+      const pounds = offset === 0 ? 150 : round1(150 + offset * 0.02 + (((offset * 7) % 5) - 2) * 0.3)
+      return { date, weight: offset >= 45 ? { value: round1(pounds * 0.45359237), unit: 'kg' } : { value: pounds, unit: 'lb' } }
+    }))
+}
+const isRange = (url) => {
+  const start = url.searchParams.get('start_date')
+  const end = url.searchParams.get('end_date')
+  return Boolean(start && end && start !== end)
+}
+
 const waterLog = { id: 'water-1', amount: { value: 8, unit: 'fl_oz' }, get consumed_at() { return seededEatenAt() } }
 const weightLog = { weight: { value: 150, unit: 'lb' }, get measured_at() { return seededEatenAt() } }
 const directItems = [
@@ -141,12 +185,16 @@ createServer(async (request, response) => {
     const unit = requested === 'ml' || requested === 'cup' ? requested : 'fl_oz'
     // The seeded day holds 24 fl oz: 709.8 ml, or 3 US cups of 8 fl oz (236.588 ml each).
     const value = { fl_oz: 24, ml: 709.8, cup: 3 }[unit]
+    if (isRange(url)) return json(response, { items: rule.empty ? [] : waterHistory(url.searchParams.get('start_date'), url.searchParams.get('end_date'), unit) })
     return json(response, { items: rule.empty ? [] : [{ date: url.searchParams.get('start_date') ?? localToday(), total: { value, unit } }] })
   }
   if (url.pathname === '/v1.2/water-logs/water-1' && request.method === 'DELETE') {
     response.writeHead(204); return response.end()
   }
   if (url.pathname === '/v1.2/weight-logs' && request.method === 'POST') return json(response, weightLog, 201)
+  if (url.pathname === '/v1.2/weight-logs' && request.method === 'GET' && isRange(url)) return json(response, {
+    items: rule.empty ? [] : weightHistory(url.searchParams.get('start_date'), url.searchParams.get('end_date')),
+  })
   if (url.pathname === '/v1.2/weight-logs' && request.method === 'GET') return json(response, {
     items: rule.empty ? [] : [{ date: url.searchParams.get('start_date') ?? localToday(), weight: { value: 150, unit: 'lb' } }],
   })

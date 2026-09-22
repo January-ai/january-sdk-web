@@ -20,7 +20,9 @@ test('Weight log create and day value', async ({ page }) => {
 
   const requests = await fixtureRequests()
   const lists = requests.filter(({ method, path }) => method === 'GET' && path === '/v1.2/weight-logs')
-  expect(lists.length).toBeGreaterThanOrEqual(2)
-  expect(lists.every(({ query }) => query.start_date === query.end_date && Boolean(query.timezone))).toBe(true)
+  // Day requests ask for one day; the chart's range requests are covered by flow 29.
+  const dayLists = lists.filter(({ query }) => query.start_date === query.end_date)
+  expect(dayLists.length).toBeGreaterThanOrEqual(2)
+  expect(lists.every(({ query }) => Boolean(query.timezone))).toBe(true)
   expect(requests.some(({ method, path }) => method === 'POST' && path === '/v1.2/weight-logs')).toBe(true)
 })

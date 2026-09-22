@@ -8,6 +8,7 @@
 * `foodLogs.update` sends only the fields you set and rejects an empty update
 * `foodAnalysis.correct` forwards a scan field for field, including a serving weight when it has one
 * The React demo adds a Tracking tab (one day's meals and totals, water, and weight) beside the Logs meal history
+* The React demo's Tracking tab charts weight (line) and daily water (bars) over the last week, month, or year
 * Breaking: `DetectedFood` exposes `serving` and `quantity` instead of `servings`, matching the current Partner API; `0.1.x` fails to decode photo scans and description analyses
 * Food alternatives are `AlternativeFood` values with `servings: ServingSummary[]`
 * Food-log summaries per day or week with `foodLogs.getSummary`

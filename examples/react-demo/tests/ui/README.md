@@ -32,9 +32,10 @@ the settings sheet also do not exist on the web, so those steps are omitted
 from the flows that would otherwise include them. The older role-based specs
 (`authentication`, `foods`, `restaurants`, `scan`, `food-logs`, `glucose`)
 remain alongside for the relay and contract-shape checks they cover. Flows 26
-to 28 (water logs, weight logs, and their recovery states) were added on the
-web first; the native suites pick up the same numbers when they gain the
-feature. That makes 26 numbered specs plus 20 role-based ones, 46 in all.
+to 29 (water logs, weight logs, their recovery states, and the Tracking charts)
+were added on the web first; the native suites pick up the same numbers when
+they gain the feature. That makes 27 numbered specs plus 20 role-based ones, 48
+in all.
 
 ## Tracking and Logs
 
@@ -62,6 +63,18 @@ Tracking test ids:
 - Weight: `weight-day-value` or `weight-logs-empty` / `weight-logs-loading` /
   `weight-logs-error`, `weight-unit-lb`, `weight-unit-kg`, `weight-value`,
   `weight-log-add`, `weight-log-add-error`, `weight-log-last`.
+- Charts (ranges end today, whatever day is picked): `weight-chart` and
+  `water-chart` carry `data-range` (`week`, `month`, `year`), `data-unit` and
+  `data-count` (days, or months for Year, with a log); `water-chart` also has
+  `data-slots` (7, 30 or 12 bars). Range buttons are
+  `weight-chart-range-week|month|year` and `water-chart-range-week|month|year`
+  with `aria-pressed`. States: `weight-chart-empty`, `water-chart-empty`,
+  `*-chart-loading`, `*-chart-error` with `*-chart-retry`. Summaries:
+  `weight-chart-latest`, `water-chart-total`.
+
+For a range (start date before end date) the fixture answers the list routes
+with a generated year of history ending today, with gaps, and weights older
+than 45 days stored in kg; a single-day request keeps its fixed answer.
 
 Logs keeps its original ids: `logs-range-today`, `logs-range-week`,
 `logs-range-month`, `food-logs-refresh`, `food-log-list`, `food-log-N`,

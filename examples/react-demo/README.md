@@ -42,7 +42,11 @@ Open [http://localhost:3000](http://localhost:3000). The authentication card
 shows the local relay status and lets you mint a fresh client token. Search for
 `banana` to make the first SDK request. The Tracking screen shows one day at
 a time: the day's meals with their totals, water with the day's total, and the
-day's weight, each with a log action. The Logs screen lists meal history over
+day's weight, each with a log action. Below the water and weight cards, charts
+show the last week, month, or year ending today: daily water totals as bars
+(monthly totals for a year) and weight as a line in the card's unit. The Year
+view asks `waterLogs.list` / `weightLogs.list` in consecutive ranges of up to 90
+days, because each call returns at most 100 days. The Logs screen lists meal history over
 a date range.
 
 To use a hosted development relay instead, follow its

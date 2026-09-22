@@ -8,10 +8,12 @@ import { Dialog } from '~/components/dialog'
 import { FoodLogEditor } from '~/components/food-log-editor'
 import { NetworkImage } from '~/components/network-image'
 import { SegmentedControl } from '~/components/segmented-control'
+import { WaterChart, WeightChart, type WaterChartData, type WeightChartData } from '~/components/tracking-charts'
 import { UserContextCard } from '~/components/user-context-card'
 import { useUserSession } from '~/components/user-session'
 import { Button, Card, EmptyState, ErrorMessage, Page, PageHeader, SecondaryButton, SectionLabel, SkeletonList, TextField } from '~/components/ui'
 import { formatDay, shiftDay, todayLocalDate } from '~/lib/log-day'
+import { ChartRange, chunkDateRange, dailyBars, mergeDailyItems, monthlyBars, resolveChartRange, weightPoints } from '~/lib/tracking-charts'
 import { formatNumber } from '~/lib/utils'
 
 export const Route = createFileRoute('/tracking')({ component: TrackingPage })
@@ -43,6 +45,8 @@ function TrackingPage() {
   const [lastWaterLog, setLastWaterLog] = useState<WaterLog | null>(null)
   const [weightValue, setWeightValue] = useState(150)
   const [weightUnit, setWeightUnit] = useState<WeightUnitValue>(WeightUnit.pounds)
+  const [waterRange, setWaterRange] = useState<ChartRange>(ChartRange.week)
+  const [weightRange, setWeightRange] = useState<ChartRange>(ChartRange.week)
 
   const ready = Boolean(session.endUserId)
   const context = { endUserId: session.endUserId, endUserTimezone: session.endUserTimezone }
@@ -69,6 +73,32 @@ function TrackingPage() {
     queryFn: () => listWeightLogs({ data: { ...context, ...dayRange } }),
     enabled: ready,
   })
+
+  // The charts end today whatever day is picked above. Year spans more than one list call
+  // returns (100 days), so it is asked for in consecutive chunks of up to 90 days and merged.
+  const waterSpan = resolveChartRange(waterRange)
+  const waterChart = useQuery({
+    queryKey: ['water-logs', context, 'chart', waterRange, waterSpan, waterUnit],
+    queryFn: async (): Promise<WaterChartData> => {
+      const pages = await Promise.all(chunkDateRange(waterSpan).map((chunk) => listWaterLogs({ data: { ...context, ...chunk, unit: waterUnit } })))
+      const items = mergeDailyItems(pages.map((page) => page.items))
+      return { range: waterRange, span: waterSpan, unit: unitLabel(waterUnit), bars: waterRange === ChartRange.year ? monthlyBars(items, waterSpan) : dailyBars(items, waterSpan) }
+    },
+    enabled: ready,
+    placeholderData: keepPreviousData,
+  })
+  const weightSpan = resolveChartRange(weightRange)
+  const weightChart = useQuery({
+    queryKey: ['weight-logs', context, 'chart', weightRange, weightSpan],
+    queryFn: async () => {
+      const pages = await Promise.all(chunkDateRange(weightSpan).map((chunk) => listWeightLogs({ data: { ...context, ...chunk } })))
+      return { range: weightRange, span: weightSpan, items: mergeDailyItems(pages.map((page) => page.items)) }
+    },
+    enabled: ready,
+    placeholderData: keepPreviousData,
+  })
+  // Weight is converted for display only, so switching kg / lb redraws without a new request.
+  const weightChartQuery = { ...weightChart, data: weightChart.data && { range: weightChart.data.range, span: weightChart.data.span, points: weightPoints(weightChart.data.items, weightChart.data.span, weightUnit) } satisfies WeightChartData }
 
   const invalidateFood = () => {
     queryClient.invalidateQueries({ queryKey: ['food-logs'] })
@@ -190,6 +220,7 @@ function TrackingPage() {
                 <span className="font-semibold text-stone-700">Logged {formatNumber(lastWaterLog.amount.value)} {unitLabel(lastWaterLog.amount.unit)} at {timeOf(lastWaterLog.consumedAt)}</span>
                 <button className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 font-bold text-red-800 hover:bg-red-50" data-testid="water-log-delete" disabled={removeWater.isPending} onClick={() => removeWater.mutate(lastWaterLog.id)} type="button"><Trash2 aria-hidden="true" className="size-4" />Delete this entry</button>
               </div>}
+              {ready ? <div className="mt-6 border-t border-stone-200 pt-5"><WaterChart onRangeChange={setWaterRange} query={waterChart} range={waterRange} /></div> : null}
             </Card>
           </section>
 
@@ -216,6 +247,7 @@ function TrackingPage() {
               </div>
               {logWeight.isError ? <div className="mt-4"><ErrorMessage error={logWeight.error} testId="weight-log-add-error" /></div> : null}
               {logWeight.data && <p className="mt-5 rounded-2xl bg-[#f8f5ed] px-4 py-3 text-sm font-semibold text-stone-700" data-testid="weight-log-last">Logged {formatNumber(logWeight.data.weight.value)} {logWeight.data.weight.unit} at {timeOf(logWeight.data.measuredAt)}</p>}
+              {ready ? <div className="mt-6 border-t border-stone-200 pt-5"><WeightChart onRangeChange={setWeightRange} query={weightChartQuery} range={weightRange} unit={weightUnit} /></div> : null}
             </Card>
           </section>
         </div>
