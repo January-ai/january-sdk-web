@@ -7,3 +7,5 @@ export * from './FoodsApi.js';
 export * from './GlucoseApi.js';
 export * from './PhotoScanningApi.js';
 export * from './RestaurantsApi.js';
+export * from './WaterLogsApi.js';
+export * from './WeightLogsApi.js';
