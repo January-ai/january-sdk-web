@@ -6,6 +6,7 @@ import {
   JanuaryError,
   MedicalCondition,
   Sex,
+  VolumeUnit,
   WeightUnit,
   type FoodSelection,
   type FoodLog,
@@ -148,6 +149,57 @@ export const deleteFoodLog = createServerFn({ method: 'POST' })
   .handler(({ data }) => {
     const { endUserId, endUserTimezone, logId } = data
     return getJanuaryClient().forUser({ endUserId, endUserTimezone }).foodLogs.delete({ logId })
+  })
+
+const userContextSchema = {
+  endUserId: z.string().trim().min(1).max(256),
+  endUserTimezone: z.string().trim().min(1).max(100),
+}
+const dateRangeSchema = { start: z.iso.date(), end: z.iso.date() }
+const volumeUnitSchema = z.enum([VolumeUnit.fluidOunces, VolumeUnit.milliliters])
+const weightUnitSchema = z.enum([WeightUnit.pounds, WeightUnit.kilograms])
+
+export const createWaterLog = createServerFn({ method: 'POST' })
+  .validator(z.object({
+    value: z.number().positive().max(24_000),
+    unit: volumeUnitSchema,
+    ...userContextSchema,
+  }))
+  .handler(({ data }) => {
+    const { endUserId, endUserTimezone, value, unit } = data
+    return getJanuaryClient().forUser({ endUserId, endUserTimezone }).waterLogs.create({ amount: { value, unit } })
+  })
+
+export const listWaterLogs = createServerFn({ method: 'GET' })
+  .validator(z.object({ ...dateRangeSchema, unit: volumeUnitSchema, ...userContextSchema }))
+  .handler(({ data }) => {
+    const { endUserId, endUserTimezone, ...request } = data
+    return getJanuaryClient().forUser({ endUserId, endUserTimezone }).waterLogs.list(request)
+  })
+
+export const deleteWaterLog = createServerFn({ method: 'POST' })
+  .validator(z.object({ logId: z.string().trim().min(1).max(256), ...userContextSchema }))
+  .handler(({ data }) => {
+    const { endUserId, endUserTimezone, logId } = data
+    return getJanuaryClient().forUser({ endUserId, endUserTimezone }).waterLogs.delete({ logId })
+  })
+
+export const createWeightLog = createServerFn({ method: 'POST' })
+  .validator(z.object({
+    value: z.number().positive().max(1_000),
+    unit: weightUnitSchema,
+    ...userContextSchema,
+  }))
+  .handler(({ data }) => {
+    const { endUserId, endUserTimezone, value, unit } = data
+    return getJanuaryClient().forUser({ endUserId, endUserTimezone }).weightLogs.create({ weight: { value, unit } })
+  })
+
+export const listWeightLogs = createServerFn({ method: 'GET' })
+  .validator(z.object({ ...dateRangeSchema, ...userContextSchema }))
+  .handler(({ data }) => {
+    const { endUserId, endUserTimezone, ...request } = data
+    return getJanuaryClient().forUser({ endUserId, endUserTimezone }).weightLogs.list(request)
   })
 
 export const predictGlucose = createServerFn({ method: 'POST' })

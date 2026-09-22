@@ -31,7 +31,10 @@ alternatives feature). Scan correction, menu-item detail, health conditions and
 the settings sheet also do not exist on the web, so those steps are omitted
 from the flows that would otherwise include them. The older role-based specs
 (`authentication`, `foods`, `restaurants`, `scan`, `food-logs`, `glucose`)
-remain alongside for the relay and contract-shape checks they cover.
+remain alongside for the relay and contract-shape checks they cover. Flows 26
+to 28 (water logs, weight logs, and their recovery states) were added on the
+web first; the native suites pick up the same numbers when they gain the
+feature.
 
 ## Conventions
 

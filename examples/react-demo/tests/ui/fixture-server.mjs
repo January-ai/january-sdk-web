@@ -24,6 +24,12 @@ const foodLog = {
     quantity: 1, serving: { id: '11', quantity: 1, unit: 'bowl', weight_grams: null },
   }],
 }
+const localToday = () => {
+  const now = new Date()
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+}
+const waterLog = { id: 'water-1', amount: { value: 8, unit: 'fl_oz' }, get consumed_at() { return seededEatenAt() } }
+const weightLog = { weight: { value: 150, unit: 'lb' }, get measured_at() { return seededEatenAt() } }
 const directItems = [
   { id: '101', name: 'Fixture bowl', nutrients, glycemic_index: null, glycemic_load: null, servings },
   { id: '102', name: 'Fixture soup', nutrients, glycemic_index: null, glycemic_load: null, servings },
@@ -115,6 +121,18 @@ createServer(async (request, response) => {
   if (url.pathname === '/v1.2/food-logs/log-1' && request.method === 'DELETE') {
     response.writeHead(204); return response.end()
   }
+  if (url.pathname === '/v1.2/water-logs' && request.method === 'POST') return json(response, waterLog, 201)
+  if (url.pathname === '/v1.2/water-logs' && request.method === 'GET') {
+    const unit = url.searchParams.get('unit') === 'ml' ? 'ml' : 'fl_oz'
+    return json(response, { items: rule.empty ? [] : [{ date: localToday(), total: { value: unit === 'ml' ? 709.8 : 24, unit } }] })
+  }
+  if (url.pathname === '/v1.2/water-logs/water-1' && request.method === 'DELETE') {
+    response.writeHead(204); return response.end()
+  }
+  if (url.pathname === '/v1.2/weight-logs' && request.method === 'POST') return json(response, weightLog, 201)
+  if (url.pathname === '/v1.2/weight-logs' && request.method === 'GET') return json(response, {
+    items: rule.empty ? [] : [{ date: localToday(), weight: { value: 150, unit: 'lb' } }],
+  })
   if (url.pathname === '/v1.2/restaurants') return json(response, { items: rule.empty ? [] : [{
     type: 'restaurant', id: 'cafe', name: 'Fixture Cafe', is_chain: false,
     distance_meters: 100, city: 'San Francisco', address1: '123 Test Street', address2: null,
