@@ -56,6 +56,19 @@ test('water logs omit consumed_at when it is not given and default the timezone'
   assert.equal(requests[1].url.searchParams.get('unit'), 'ml');
 });
 
+test('water logs accept US cups on create and list', async () => {
+  const { client, requests } = makeClient((url, init) => init.method === 'POST'
+    ? { status: 201, body: { ...waterLog, amount: { value: 0.125, unit: 'cup' } } }
+    : { body: { items: [{ date: '2026-09-10', total: { value: 8, unit: 'cup' } }] } });
+  assert.equal(VolumeUnit.cups, 'cup');
+  const created = await client.waterLogs.create({ endUserId: 'fixture-user', amount: { value: 0.125, unit: VolumeUnit.cups } });
+  assert.deepEqual(requests[0].body, { amount: { value: 0.125, unit: 'cup' } });
+  assert.deepEqual(created.amount, { value: 0.125, unit: 'cup' });
+  const totals = await client.waterLogs.list({ endUserId: 'fixture-user', start: '2026-09-10', end: '2026-09-10', unit: VolumeUnit.cups });
+  assert.equal(requests[1].url.searchParams.get('unit'), 'cup');
+  assert.deepEqual(totals.items[0].total, { value: 8, unit: 'cup' });
+});
+
 test('weight logs create and list through the scoped client', async () => {
   const { client, requests } = makeClient((url, init) => init.method === 'POST' ? { status: 201, body: weightLog } : { body: weights });
   const user = client.forUser({ endUserId: 'fixture-user', endUserTimezone: 'America/Los_Angeles' });
@@ -79,10 +92,10 @@ test('a unit January adds later is passed through unchanged in responses', async
 
 test('water and weight inputs are validated before any request is sent', async () => {
   const { client, requests } = makeClient(() => ({ body: {} }));
-  await assert.rejects(client.waterLogs.create({ endUserId: 'u', amount: { value: 8, unit: 'cups' } }), /amount\.unit must be one of fl_oz, ml/);
+  await assert.rejects(client.waterLogs.create({ endUserId: 'u', amount: { value: 8, unit: 'cups' } }), /amount\.unit must be one of fl_oz, ml, cup/);
   await assert.rejects(client.waterLogs.create({ endUserId: 'u', amount: { value: 0, unit: 'ml' } }), /amount\.value must be a positive number/);
   await assert.rejects(client.waterLogs.create({ endUserId: 'u', amount: { value: 8, unit: 'ml' }, consumedAt: 'yesterday' }), /consumedAt must be an ISO-8601 date-time/);
-  await assert.rejects(client.waterLogs.list({ endUserId: 'u', start: '2026-09-01', end: '2026-09-10', unit: 'cups' }), /unit must be one of fl_oz, ml/);
+  await assert.rejects(client.waterLogs.list({ endUserId: 'u', start: '2026-09-01', end: '2026-09-10', unit: 'cups' }), /unit must be one of fl_oz, ml, cup/);
   await assert.rejects(client.waterLogs.list({ endUserId: 'u', start: '09/01/2026', end: '2026-09-10', unit: 'ml' }), /start must be an ISO-8601 date/);
   await assert.rejects(client.weightLogs.create({ endUserId: 'u', weight: { value: 150, unit: 'stone' } }), /weight\.unit must be one of lb, kg/);
   await assert.rejects(client.weightLogs.create({ endUserId: 'u', weight: { value: Number.NaN, unit: 'kg' } }), /weight\.value must be a positive number/);

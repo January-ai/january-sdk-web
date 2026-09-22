@@ -168,7 +168,7 @@ const userContextSchema = {
   endUserTimezone: z.string().trim().min(1).max(100),
 }
 const dateRangeSchema = { start: z.iso.date(), end: z.iso.date() }
-const volumeUnitSchema = z.enum([VolumeUnit.fluidOunces, VolumeUnit.milliliters])
+const volumeUnitSchema = z.enum([VolumeUnit.fluidOunces, VolumeUnit.milliliters, VolumeUnit.cups])
 const weightUnitSchema = z.enum([WeightUnit.pounds, WeightUnit.kilograms])
 
 export const createWaterLog = createServerFn({ method: 'POST' })

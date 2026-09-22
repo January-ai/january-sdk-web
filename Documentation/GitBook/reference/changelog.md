@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-* Water logs with `waterLogs.create`, `list` (daily totals in a chosen unit), and `delete`, plus `VolumeUnit`
+* Water logs with `waterLogs.create`, `list` (daily totals in a chosen unit), and `delete`, plus `VolumeUnit` (`fl_oz`, `ml`, and `cup`)
 * Weight logs with `weightLogs.create` and `list` (latest weight per day)
 * `ServingSummary` and `ServingDetails` carry `weightGrams` and non-null `id` and `quantity`; `DetectedFood.id` and `quantity` are non-null
 * `foodLogs.update` sends only the fields you set and rejects an empty update

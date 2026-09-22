@@ -130,10 +130,18 @@ createServer(async (request, response) => {
   if (url.pathname === '/v1.2/food-logs/log-1' && request.method === 'DELETE') {
     response.writeHead(204); return response.end()
   }
-  if (url.pathname === '/v1.2/water-logs' && request.method === 'POST') return json(response, waterLog, 201)
+  if (url.pathname === '/v1.2/water-logs' && request.method === 'POST') {
+    let source = ''
+    for await (const chunk of request) source += chunk
+    const amount = JSON.parse(source || '{}').amount ?? waterLog.amount
+    return json(response, { ...waterLog, amount, consumed_at: waterLog.consumed_at }, 201)
+  }
   if (url.pathname === '/v1.2/water-logs' && request.method === 'GET') {
-    const unit = url.searchParams.get('unit') === 'ml' ? 'ml' : 'fl_oz'
-    return json(response, { items: rule.empty ? [] : [{ date: url.searchParams.get('start_date') ?? localToday(), total: { value: unit === 'ml' ? 709.8 : 24, unit } }] })
+    const requested = url.searchParams.get('unit')
+    const unit = requested === 'ml' || requested === 'cup' ? requested : 'fl_oz'
+    // The seeded day holds 24 fl oz: 709.8 ml, or 3 US cups of 8 fl oz (236.588 ml each).
+    const value = { fl_oz: 24, ml: 709.8, cup: 3 }[unit]
+    return json(response, { items: rule.empty ? [] : [{ date: url.searchParams.get('start_date') ?? localToday(), total: { value, unit } }] })
   }
   if (url.pathname === '/v1.2/water-logs/water-1' && request.method === 'DELETE') {
     response.writeHead(204); return response.end()

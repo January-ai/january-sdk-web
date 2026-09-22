@@ -32,7 +32,7 @@ is the catalog serving a detected, alternative, or logged food refers to;
 
 ## Water and weight logs
 
-* `VolumeUnit`: `fluidOunces` (`'fl_oz'`), `milliliters` (`'ml'`)
+* `VolumeUnit`: `fluidOunces` (`'fl_oz'`), `milliliters` (`'ml'`), `cups` (`'cup'`, a US cup of 8 fl oz)
 * `WeightUnit`: `pounds` (`'lb'`), `kilograms` (`'kg'`)
 
 `WaterAmount` and `Weight` are `{ value: number; unit }` inputs restricted to

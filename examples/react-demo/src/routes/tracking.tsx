@@ -22,6 +22,7 @@ type WeightUnitValue = (typeof WeightUnit)[keyof typeof WeightUnit]
 const volumeUnits = [
   { value: VolumeUnit.fluidOunces, label: 'fl oz', testId: 'water-unit-fl-oz' },
   { value: VolumeUnit.milliliters, label: 'ml', testId: 'water-unit-ml' },
+  { value: VolumeUnit.cups, label: 'cup', testId: 'water-unit-cup' },
 ] as const
 const weightUnits = [
   { value: WeightUnit.pounds, label: 'lb', testId: 'weight-unit-lb' },
@@ -177,10 +178,10 @@ function TrackingPage() {
                         : waterTotal ? <p className="data-number mt-1 text-2xl font-bold" data-testid="water-day-total">{formatNumber(waterTotal.total.value)} {unitLabel(waterTotal.total.unit)}</p>
                           : <p className="mt-1 text-sm font-semibold text-stone-500" data-testid="water-logs-empty">Nothing logged yet</p>}
                 </div>
-                <SegmentedControl<VolumeUnitValue> className="w-40" label="Water unit" name="water-unit" onChange={setWaterUnit} options={volumeUnits} value={waterUnit} />
+                <SegmentedControl<VolumeUnitValue> className="w-56" label="Water unit" name="water-unit" onChange={setWaterUnit} options={volumeUnits} value={waterUnit} />
               </div>
               <div className="mt-5 grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
-                <TextField data-testid="water-amount" inputMode="decimal" label={`Amount (${unitLabel(waterUnit)})`} min={1} onChange={(event) => { if (Number.isFinite(event.currentTarget.valueAsNumber)) setWaterValue(event.currentTarget.valueAsNumber) }} step="0.5" type="number" value={waterValue} />
+                <TextField data-testid="water-amount" inputMode="decimal" label={`Amount (${unitLabel(waterUnit)})`} min={waterUnit === VolumeUnit.cups ? 0.125 : 1} onChange={(event) => { if (Number.isFinite(event.currentTarget.valueAsNumber)) setWaterValue(event.currentTarget.valueAsNumber) }} step={waterUnit === VolumeUnit.cups ? 0.125 : 0.5} type="number" value={waterValue} />
                 <Button busy={logWater.isPending} data-testid="water-log-add" disabled={!ready || logWater.isPending || waterValue <= 0} onClick={() => logWater.mutate()} type="button">Log water</Button>
               </div>
               {logWater.isError ? <div className="mt-4"><ErrorMessage error={logWater.error} testId="water-log-add-error" /></div> : null}

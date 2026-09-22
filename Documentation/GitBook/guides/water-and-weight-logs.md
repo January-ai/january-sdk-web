@@ -14,7 +14,8 @@ const user = january.forUser({
 
 ## Water
 
-Log one amount at a time in fluid ounces or milliliters. `consumedAt` is any
+Log one amount at a time in fluid ounces (1–811.5), milliliters (30–24,000), or
+US cups of 8 fl oz (0.125–101.4). `consumedAt` is any
 ISO-8601 date-time and defaults to now; its local day is the one the daily cap
 of 24 liters counts it against. Keep the returned `id` to delete the entry.
 

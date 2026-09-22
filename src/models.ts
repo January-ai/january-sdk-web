@@ -454,9 +454,9 @@ export interface GlucosePrediction {
   chart: GlucoseChart;
 }
 
-export const VolumeUnit = { fluidOunces: 'fl_oz', milliliters: 'ml' } as const;
+export const VolumeUnit = { fluidOunces: 'fl_oz', milliliters: 'ml', cups: 'cup' } as const;
 export type VolumeUnit = typeof VolumeUnit[keyof typeof VolumeUnit];
-/** An amount of water to log: 1–811.5 fl oz or 30–24,000 ml. */
+/** An amount of water to log: 1–811.5 fl oz, 30–24,000 ml, or 0.125–101.4 US cups (8 fl oz each). */
 export interface WaterAmount { value: number; unit: VolumeUnit }
 /** A volume as January reports it. `unit` is a `VolumeUnit` today; a value added later is passed through as a string. */
 export interface Volume { value: number; unit: VolumeUnit | (string & {}) }
