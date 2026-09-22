@@ -1,5 +1,4 @@
 import type {
-  CompleteScanNutritionFacts,
   CorrectPhotoScanRequest,
   FoodScan,
   ScanFoodPhotoRequest,
@@ -63,25 +62,19 @@ function mapFoodScan(scan: import('../internal/transport/models/FoodScan.js').Fo
   };
 }
 
-// Nutrient units are forwarded exactly as January returned them; the public type keeps them
-// as plain strings so a unit added later still round-trips.
-function forwardNutrients(value: CompleteScanNutritionFacts): import('../internal/transport/models/NutritionFacts.js').NutritionFacts {
-  return value as import('../internal/transport/models/NutritionFacts.js').NutritionFacts;
-}
-
 // A correction sends the prior scan back field for field; only the wrapper type differs, so
 // nothing may be dropped or defaulted here. A missing serving weight is sent as unknown.
 function toCorrectionAnalysis(scan: FoodScan): import('../internal/transport/models/CorrectionAnalysis.js').CorrectionAnalysis {
   return {
     mealName: scan.mealName,
-    totalNutrients: forwardNutrients(scan.totalNutrients),
+    totalNutrients: scan.totalNutrients,
     detections: scan.detections.map((detection) => ({
       confidence: detection.confidenceScore ?? null,
       food: {
         id: detection.food.id,
         name: detection.food.name,
         brandName: detection.food.brandName ?? null,
-        nutrients: forwardNutrients(detection.food.nutrients),
+        nutrients: detection.food.nutrients,
         quantity: detection.food.quantity,
         serving: {
           id: detection.food.serving.id,
