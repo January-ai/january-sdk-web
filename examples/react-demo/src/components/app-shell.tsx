@@ -60,7 +60,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <nav
         aria-label="Primary navigation"
-        className="fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-30 grid grid-cols-4 rounded-3xl border border-stone-300 bg-[var(--app-surface)] p-1.5 shadow-lg lg:hidden"
+        className="fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-30 grid grid-cols-5 rounded-3xl border border-stone-300 bg-[var(--app-surface)] p-1.5 shadow-lg lg:hidden"
       >
         {navigation.map((item) => <MobileNavItem key={item.to} {...item} />)}
       </nav>

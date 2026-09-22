@@ -6,7 +6,13 @@ test.beforeEach(async () => {
 })
 
 test('Water log create day total and delete', async ({ page }) => {
-  await openDemo(page, '/food-logs')
+  await openDemo(page, '/tracking')
+  await expect(byId(page, 'tracking-meal-0')).toContainText('Fixture lunch')
+  await expect(byId(page, 'food-day-totals')).toContainText('100')
+  await byId(page, 'tracking-meal-0').getByTestId('tracking-meal-open').click()
+  await expect(page.getByText('Edit meal')).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(byId(page, 'food-log-editor')).toBeHidden()
   await expect(byId(page, 'water-day-total')).toContainText('24 fl oz')
   await byId(page, 'water-amount').fill('8')
   await byId(page, 'water-unit-fl-oz').click()

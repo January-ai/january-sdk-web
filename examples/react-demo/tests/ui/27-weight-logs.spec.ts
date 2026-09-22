@@ -6,7 +6,7 @@ test.beforeEach(async () => {
 })
 
 test('Weight log create and day value', async ({ page }) => {
-  await openDemo(page, '/food-logs')
+  await openDemo(page, '/tracking')
   await expect(byId(page, 'weight-day-value')).toContainText('150 lb')
   await byId(page, 'weight-value').fill('150')
   await byId(page, 'weight-unit-lb').click()

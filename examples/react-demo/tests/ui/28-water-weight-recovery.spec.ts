@@ -7,7 +7,7 @@ test.beforeEach(async () => {
 
 test('Water and weight loading empty failure and retry', async ({ page }) => {
   await control('/v1.2/water-logs', { delay: 2 })
-  await openDemo(page, '/food-logs')
+  await openDemo(page, '/tracking')
   await expect(byId(page, 'water-logs-loading')).toBeVisible()
   await expect(byId(page, 'water-day-total')).toBeVisible({ timeout: 15_000 })
 
