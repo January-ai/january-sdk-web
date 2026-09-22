@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+* Water logs with `waterLogs.create`, `list` (daily totals in a chosen unit), and `delete`, plus `VolumeUnit`
+* Weight logs with `weightLogs.create` and `list` (latest weight per day)
+* `ServingSummary` and `ServingDetails` carry `weightGrams` and non-null `id` and `quantity`; `DetectedFood.id` and `quantity` are non-null
+* `foodLogs.update` sends only the fields you set and rejects an empty update
+* `foodAnalysis.correct` forwards a scan field for field, including a serving weight when it has one
+* The React demo logs water and weight
 * Breaking: `DetectedFood` exposes `serving` and `quantity` instead of `servings`, matching the current Partner API; `0.1.x` fails to decode photo scans and description analyses
 * Food alternatives are `AlternativeFood` values with `servings: ServingSummary[]`
 * Food-log summaries per day or week with `foodLogs.getSummary`

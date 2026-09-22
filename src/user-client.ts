@@ -3,6 +3,16 @@ import type {
   AutocompleteFoodsRequest,
   CorrectPhotoScanRequest,
   CreateFoodLogRequest,
+  CreateWaterLogRequest,
+  CreateWeightLogRequest,
+  DeleteWaterLogRequest,
+  DeleteWaterLogResponse,
+  ListWaterLogsRequest,
+  ListWaterLogsResponse,
+  ListWeightLogsRequest,
+  ListWeightLogsResponse,
+  WaterLog,
+  WeightLog,
   DeleteFoodLogResponse,
   DeleteFoodLogRequest,
   FoodLog,
@@ -36,6 +46,8 @@ import type { FoodLogsResource } from './resources/food-logs.js';
 import type { GlucoseResource } from './resources/glucose.js';
 import type { FoodAnalysisResource } from './resources/photo-scanning.js';
 import type { RestaurantsResource } from './resources/restaurants.js';
+import type { WaterLogsResource } from './resources/water-logs.js';
+import type { WeightLogsResource } from './resources/weight-logs.js';
 
 type WithoutUserContext<T> = Omit<T, keyof PartnerUserContext>;
 type WithoutUserId<T> = Omit<T, 'endUserId'>;
@@ -57,6 +69,11 @@ export type UserGetFoodLogSummaryRequest = WithoutUserContext<GetFoodLogSummaryR
 export type UserUpdateFoodLogRequest = WithoutUserContext<UpdateFoodLogRequest>;
 export type UserDeleteFoodLogRequest = WithoutUserContext<DeleteFoodLogRequest>;
 export type UserPredictGlucoseRequest = WithoutUserContext<PredictGlucoseRequest>;
+export type UserCreateWaterLogRequest = WithoutUserContext<CreateWaterLogRequest>;
+export type UserListWaterLogsRequest = WithoutUserContext<ListWaterLogsRequest>;
+export type UserDeleteWaterLogRequest = WithoutUserContext<DeleteWaterLogRequest>;
+export type UserCreateWeightLogRequest = WithoutUserContext<CreateWeightLogRequest>;
+export type UserListWeightLogsRequest = WithoutUserContext<ListWeightLogsRequest>;
 
 /** Food operations bound to one partner-owned end-user identity. */
 export interface UserFoodsResource {
@@ -222,6 +239,58 @@ class DefaultUserGlucoseResource implements UserGlucoseResource {
   }
 }
 
+/** Water-log operations bound to one user and optional timezone. */
+export interface UserWaterLogsResource {
+  /** Logs one amount of water. */
+  create(request: UserCreateWaterLogRequest): Promise<WaterLog>;
+  /** Lists daily water totals in an inclusive calendar-date range, in the requested unit. */
+  list(request: UserListWaterLogsRequest): Promise<ListWaterLogsResponse>;
+  /** Deletes a water log; deleting an unknown log also succeeds. */
+  delete(request: UserDeleteWaterLogRequest): Promise<DeleteWaterLogResponse>;
+}
+
+class DefaultUserWaterLogsResource implements UserWaterLogsResource {
+  constructor(
+    private readonly resource: WaterLogsResource,
+    private readonly context: Readonly<PartnerUserContext>,
+  ) {}
+
+  create(request: UserCreateWaterLogRequest) {
+    return this.resource.create({ ...request, ...this.context });
+  }
+
+  list(request: UserListWaterLogsRequest) {
+    return this.resource.list({ ...request, ...this.context });
+  }
+
+  delete(request: UserDeleteWaterLogRequest) {
+    return this.resource.delete({ ...request, ...this.context });
+  }
+}
+
+/** Weight-log operations bound to one user and optional timezone. */
+export interface UserWeightLogsResource {
+  /** Logs one weight measurement. */
+  create(request: UserCreateWeightLogRequest): Promise<WeightLog>;
+  /** Lists the latest weight per day in an inclusive calendar-date range. */
+  list(request: UserListWeightLogsRequest): Promise<ListWeightLogsResponse>;
+}
+
+class DefaultUserWeightLogsResource implements UserWeightLogsResource {
+  constructor(
+    private readonly resource: WeightLogsResource,
+    private readonly context: Readonly<PartnerUserContext>,
+  ) {}
+
+  create(request: UserCreateWeightLogRequest) {
+    return this.resource.create({ ...request, ...this.context });
+  }
+
+  list(request: UserListWeightLogsRequest) {
+    return this.resource.list({ ...request, ...this.context });
+  }
+}
+
 /** A lightweight, immutable client scoped to one signed-in application user. */
 export interface JanuaryPartnerUserClient {
   readonly context: Readonly<PartnerUserContext>;
@@ -230,6 +299,18 @@ export interface JanuaryPartnerUserClient {
   readonly foodAnalysis: UserFoodAnalysisResource;
   readonly foodLogs: UserFoodLogsResource;
   readonly glucose: UserGlucoseResource;
+  readonly waterLogs: UserWaterLogsResource;
+  readonly weightLogs: UserWeightLogsResource;
+}
+
+interface UserClientResources {
+  foods: FoodsResource;
+  restaurants: RestaurantsResource;
+  foodAnalysis: FoodAnalysisResource;
+  foodLogs: FoodLogsResource;
+  glucose: GlucoseResource;
+  waterLogs: WaterLogsResource;
+  weightLogs: WeightLogsResource;
 }
 
 class DefaultJanuaryPartnerUserClient implements JanuaryPartnerUserClient {
@@ -239,17 +320,10 @@ class DefaultJanuaryPartnerUserClient implements JanuaryPartnerUserClient {
   readonly foodAnalysis: UserFoodAnalysisResource;
   readonly foodLogs: UserFoodLogsResource;
   readonly glucose: UserGlucoseResource;
+  readonly waterLogs: UserWaterLogsResource;
+  readonly weightLogs: UserWeightLogsResource;
 
-  constructor(
-    resources: {
-      foods: FoodsResource;
-      restaurants: RestaurantsResource;
-      foodAnalysis: FoodAnalysisResource;
-      foodLogs: FoodLogsResource;
-      glucose: GlucoseResource;
-    },
-    context: PartnerUserContext,
-  ) {
+  constructor(resources: UserClientResources, context: PartnerUserContext) {
     const endUserId = context.endUserId.trim();
     if (!endUserId) throw new TypeError('A partner end-user ID is required.');
     const endUserTimezone = context.endUserTimezone?.trim();
@@ -262,18 +336,14 @@ class DefaultJanuaryPartnerUserClient implements JanuaryPartnerUserClient {
     this.foodAnalysis = new DefaultUserFoodAnalysisResource(resources.foodAnalysis, this.context);
     this.foodLogs = new DefaultUserFoodLogsResource(resources.foodLogs, this.context);
     this.glucose = new DefaultUserGlucoseResource(resources.glucose, this.context);
+    this.waterLogs = new DefaultUserWaterLogsResource(resources.waterLogs, this.context);
+    this.weightLogs = new DefaultUserWeightLogsResource(resources.weightLogs, this.context);
   }
 }
 
 /** @internal Creates the scoped client returned by JanuaryPartnerClient.forUser. */
 export function createJanuaryPartnerUserClient(
-  resources: {
-    foods: FoodsResource;
-    restaurants: RestaurantsResource;
-    foodAnalysis: FoodAnalysisResource;
-    foodLogs: FoodLogsResource;
-    glucose: GlucoseResource;
-  },
+  resources: UserClientResources,
   context: PartnerUserContext,
 ): JanuaryPartnerUserClient {
   return new DefaultJanuaryPartnerUserClient(resources, context);

@@ -17,6 +17,8 @@ export type {
   UserFoodAnalysisResource,
   UserFoodLogsResource,
   UserGlucoseResource,
+  UserWaterLogsResource,
+  UserWeightLogsResource,
   UserAutocompleteFoodsRequest,
   UserCorrectPhotoScanRequest,
   UserCreateFoodLogRequest,
@@ -34,6 +36,11 @@ export type {
   UserSearchRestaurantsRequest,
   UserSuggestFoodAlternativesRequest,
   UserUpdateFoodLogRequest,
+  UserCreateWaterLogRequest,
+  UserListWaterLogsRequest,
+  UserDeleteWaterLogRequest,
+  UserCreateWeightLogRequest,
+  UserListWeightLogsRequest,
 } from './user-client.js';
 export { JanuaryError } from './errors.js';
 export type { JanuaryErrorCategory } from './errors.js';
@@ -63,3 +70,5 @@ export { RestaurantsResource } from './resources/restaurants.js';
 export { FoodAnalysisResource } from './resources/photo-scanning.js';
 export { FoodLogsResource } from './resources/food-logs.js';
 export { GlucoseResource } from './resources/glucose.js';
+export { WaterLogsResource } from './resources/water-logs.js';
+export { WeightLogsResource } from './resources/weight-logs.js';

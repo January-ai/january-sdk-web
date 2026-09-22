@@ -104,6 +104,7 @@ export class FoodsResource {
         id: serving.id,
         quantity: serving.quantity,
         unit: serving.unit,
+        weightGrams: serving.weightGrams ?? null,
       })),
     })) };
   }

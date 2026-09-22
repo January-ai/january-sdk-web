@@ -1,4 +1,5 @@
 import type {
+  CompleteScanNutritionFacts,
   CorrectPhotoScanRequest,
   FoodScan,
   ScanFoodPhotoRequest,
@@ -32,7 +33,7 @@ export class FoodAnalysisResource {
   async correct(request: CorrectPhotoScanRequest): Promise<FoodScan> {
     return mapFoodScan(await executeRequest(() => this.api.correctPhotoScan({
       correctPhotoScanBody: {
-        analysis: toTransportFoodScan(request.analysis),
+        analysis: toCorrectionAnalysis(request.analysis),
         instruction: request.instruction,
       },
     }, request.signal ? { signal: request.signal } : undefined)));
@@ -50,29 +51,43 @@ function mapFoodScan(scan: import('../internal/transport/models/FoodScan.js').Fo
         name: detection.food.name,
         brandName: detection.food.brandName,
         nutrients: detection.food.nutrients,
-        serving: { ...detection.food.serving },
+        serving: {
+          id: detection.food.serving.id,
+          quantity: detection.food.serving.quantity,
+          unit: detection.food.serving.unit,
+          weightGrams: detection.food.serving.weightGrams ?? null,
+        },
         quantity: detection.food.quantity,
       },
     })),
   };
 }
 
-function toTransportFoodScan(scan: FoodScan): import('../internal/transport/models/FoodScan.js').FoodScan {
+// Nutrient units are forwarded exactly as January returned them; the public type keeps them
+// as plain strings so a unit added later still round-trips.
+function forwardNutrients(value: CompleteScanNutritionFacts): import('../internal/transport/models/NutritionFacts.js').NutritionFacts {
+  return value as import('../internal/transport/models/NutritionFacts.js').NutritionFacts;
+}
+
+// A correction sends the prior scan back field for field; only the wrapper type differs, so
+// nothing may be dropped or defaulted here. A missing serving weight is sent as unknown.
+function toCorrectionAnalysis(scan: FoodScan): import('../internal/transport/models/CorrectionAnalysis.js').CorrectionAnalysis {
   return {
     mealName: scan.mealName,
-    totalNutrients: scan.totalNutrients,
+    totalNutrients: forwardNutrients(scan.totalNutrients),
     detections: scan.detections.map((detection) => ({
       confidence: detection.confidenceScore ?? null,
       food: {
-        id: detection.food.id ?? null,
+        id: detection.food.id,
         name: detection.food.name,
         brandName: detection.food.brandName ?? null,
-        nutrients: detection.food.nutrients,
-        quantity: detection.food.quantity ?? null,
+        nutrients: forwardNutrients(detection.food.nutrients),
+        quantity: detection.food.quantity,
         serving: {
           id: detection.food.serving.id,
-          quantity: detection.food.serving.quantity ?? null,
+          quantity: detection.food.serving.quantity,
           unit: detection.food.serving.unit,
+          weightGrams: detection.food.serving.weightGrams ?? null,
         },
       },
     })),

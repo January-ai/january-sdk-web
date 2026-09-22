@@ -26,6 +26,21 @@ and is accepted by Food Logs and Glucose.
 * `WeekStart`: `monday`, `sunday`
 * `AnalysisEffort`: `none`, `xhigh`
 
+`ServingSummary` (`{ id: string; quantity: number; unit: string | null; weightGrams: number | null }`)
+is the catalog serving a detected, alternative, or logged food refers to;
+`quantity` is the size of one serving and `weightGrams` is null when unknown.
+
+## Water and weight logs
+
+* `VolumeUnit`: `fluidOunces` (`'fl_oz'`), `milliliters` (`'ml'`)
+* `WeightUnit`: `pounds` (`'lb'`), `kilograms` (`'kg'`)
+
+`WaterAmount` and `Weight` are `{ value: number; unit }` inputs restricted to
+those enums. `Volume` and `WeightMeasurement` are the same shape in responses
+(`WaterLog.amount`, `DailyWaterTotal.total`, `WeightLog.weight`,
+`DailyWeight.weight`); their `unit` is one of the enum values today and a value
+January adds later is passed through as a string.
+
 ## Glucose profile
 
 ```ts
