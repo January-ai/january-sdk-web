@@ -9,9 +9,3 @@ export function formatNumber(value: number | null | undefined, maximumFractionDi
   if (value == null || !Number.isFinite(value)) return '—'
   return new Intl.NumberFormat('en-US', { maximumFractionDigits }).format(value)
 }
-
-export function todayInputValue(offsetDays = 0) {
-  const date = new Date()
-  date.setDate(date.getDate() + offsetDays)
-  return date.toISOString().slice(0, 10)
-}
