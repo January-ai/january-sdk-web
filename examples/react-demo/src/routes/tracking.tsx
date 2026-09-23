@@ -10,7 +10,7 @@ import { NetworkImage } from '~/components/network-image'
 import { SegmentedControl } from '~/components/segmented-control'
 import { WaterChart, WeightChart, type WaterChartData, type WeightChartData } from '~/components/tracking-charts'
 import { UserContextCard } from '~/components/user-context-card'
-import { useUserSession } from '~/components/user-session'
+import { useUserScopeKey, useUserSession } from '~/components/user-session'
 import { Button, Card, EmptyState, ErrorMessage, Page, PageHeader, SecondaryButton, SectionLabel, SkeletonList, TextField } from '~/components/ui'
 import { formatDay, shiftDay, timestampForDay, todayLocalDate } from '~/lib/log-day'
 import { ChartRange, chunkDateRange, dailyBars, mergeDailyItems, monthlyBars, resolveChartRange, weightPoints } from '~/lib/tracking-charts'
@@ -39,6 +39,14 @@ const whenOf = (iso: string, day: string) => day === todayLocalDate()
   : `on ${new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(new Date(iso))} at ${timeOf(iso)}`
 
 function TrackingPage() {
+  // Everything on this screen belongs to one end user. Remounting on a user change drops the
+  // previous user's results, pending actions, and the data shown while the next user's loads.
+  const session = useUserSession()
+  const scope = useUserScopeKey(session.endUserId)
+  return <TrackingScreen key={scope} />
+}
+
+function TrackingScreen() {
   const queryClient = useQueryClient()
   const session = useUserSession()
   const [day, setDay] = useState(() => todayLocalDate())

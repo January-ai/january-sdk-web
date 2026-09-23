@@ -9,7 +9,7 @@ import { FoodLogEditor } from '~/components/food-log-editor'
 import { NetworkImage } from '~/components/network-image'
 import { SegmentedControl } from '~/components/segmented-control'
 import { UserContextCard } from '~/components/user-context-card'
-import { useUserSession } from '~/components/user-session'
+import { useUserScopeKey, useUserSession } from '~/components/user-session'
 import { Button, Card, EmptyState, ErrorMessage, Page, PageHeader, SectionLabel, SkeletonList } from '~/components/ui'
 import { FoodLogTimeSpan, resolveFoodLogTimeSpan, type FoodLogTimeSpan as FoodLogTimeSpanValue } from '~/lib/food-log-time-span'
 import { formatNumber, formatQuantity } from '~/lib/utils'
@@ -23,6 +23,14 @@ const spans = [
 ] as const
 
 function FoodLogsPage() {
+  // Everything on this screen belongs to one end user. Remounting on a user change drops the
+  // previous user's results, pending actions, and the data shown while the next user's loads.
+  const session = useUserSession()
+  const scope = useUserScopeKey(session.endUserId)
+  return <FoodLogsScreen key={scope} />
+}
+
+function FoodLogsScreen() {
   const queryClient = useQueryClient()
   const session = useUserSession()
   const [span, setSpan] = useState<FoodLogTimeSpanValue>(FoodLogTimeSpan.today)
