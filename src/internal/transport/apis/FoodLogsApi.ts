@@ -490,7 +490,7 @@ export class FoodLogsApi extends runtime.BaseAPI {
     }
 
     /**
-     * **API key or client token.**  Replaces any subset of the log: `foods`, `eaten_at`, `name`. Omitted fields are left unchanged.  Callable with a client token carrying the `food_logs:write` scope.
+     * **API key or client token.**  Replaces any subset of the log: `foods`, `created_at`, `name`. Omitted fields are left unchanged.  Callable with a client token carrying the `food_logs:write` scope.
      * Update a food log
      */
     async updateFoodLogRaw(requestParameters: UpdateFoodLogRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FoodLog>> {
@@ -501,7 +501,7 @@ export class FoodLogsApi extends runtime.BaseAPI {
     }
 
     /**
-     * **API key or client token.**  Replaces any subset of the log: `foods`, `eaten_at`, `name`. Omitted fields are left unchanged.  Callable with a client token carrying the `food_logs:write` scope.
+     * **API key or client token.**  Replaces any subset of the log: `foods`, `created_at`, `name`. Omitted fields are left unchanged.  Callable with a client token carrying the `food_logs:write` scope.
      * Update a food log
      */
     async updateFoodLog(requestParameters: UpdateFoodLogRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<FoodLog> {

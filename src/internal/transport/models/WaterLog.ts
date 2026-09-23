@@ -44,7 +44,7 @@ export interface WaterLog {
      * @type {Date}
      * @memberof WaterLog
      */
-    consumedAt: Date;
+    createdAt: Date;
 }
 
 /**
@@ -53,7 +53,7 @@ export interface WaterLog {
 export function instanceOfWaterLog(value: object): value is WaterLog {
     if (!('id' in value) || value['id'] === undefined) return false;
     if (!('amount' in value) || value['amount'] === undefined) return false;
-    if ((!('consumedAt' in (value as Record<string, any>)) && !('consumed_at' in (value as Record<string, any>))) || ((value as Record<string, any>)['consumedAt'] === undefined && (value as Record<string, any>)['consumed_at'] === undefined)) return false;
+    if ((!('createdAt' in (value as Record<string, any>)) && !('created_at' in (value as Record<string, any>))) || ((value as Record<string, any>)['createdAt'] === undefined && (value as Record<string, any>)['created_at'] === undefined)) return false;
     return true;
 }
 
@@ -69,7 +69,7 @@ export function WaterLogFromJSONTyped(json: any, ignoreDiscriminator: boolean): 
 
         'id': json['id'],
         'amount': WaterAmountFromJSON(json['amount']),
-        'consumedAt': (new Date(json['consumed_at'])),
+        'createdAt': (new Date(json['created_at'])),
     };
 }
 
@@ -86,6 +86,6 @@ export function WaterLogToJSONTyped(value?: WaterLog | null, ignoreDiscriminator
 
         'id': value['id'],
         'amount': WaterAmountToJSON(value['amount']),
-        'consumed_at': value['consumedAt'].toISOString(),
+        'created_at': value['createdAt'].toISOString(),
     };
 }

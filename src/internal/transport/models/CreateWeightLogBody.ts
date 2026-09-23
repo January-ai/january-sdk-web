@@ -38,7 +38,7 @@ export interface CreateWeightLogBody {
      * @type {Date}
      * @memberof CreateWeightLogBody
      */
-    measuredAt?: Date;
+    createdAt?: Date;
 }
 
 /**
@@ -60,7 +60,7 @@ export function CreateWeightLogBodyFromJSONTyped(json: any, ignoreDiscriminator:
     return {
 
         'weight': WeightFromJSON(json['weight']),
-        'measuredAt': json['measured_at'] == null ? undefined : (new Date(json['measured_at'])),
+        'createdAt': json['created_at'] == null ? undefined : (new Date(json['created_at'])),
     };
 }
 
@@ -76,6 +76,6 @@ export function CreateWeightLogBodyToJSONTyped(value?: CreateWeightLogBody | nul
     return {
 
         'weight': WeightToJSON(value['weight']),
-        'measured_at': value['measuredAt'] == null ? value['measuredAt'] : value['measuredAt'].toISOString(),
+        'created_at': value['createdAt'] == null ? value['createdAt'] : value['createdAt'].toISOString(),
     };
 }

@@ -44,7 +44,7 @@ export interface FoodLog {
      * @type {Date}
      * @memberof FoodLog
      */
-    eatenAt: Date;
+    createdAt: Date;
     /**
      * Null when no name was given.
      * @type {string}
@@ -59,7 +59,7 @@ export interface FoodLog {
 export function instanceOfFoodLog(value: object): value is FoodLog {
     if (!('id' in value) || value['id'] === undefined) return false;
     if (!('foods' in value) || value['foods'] === undefined) return false;
-    if ((!('eatenAt' in (value as Record<string, any>)) && !('eaten_at' in (value as Record<string, any>))) || ((value as Record<string, any>)['eatenAt'] === undefined && (value as Record<string, any>)['eaten_at'] === undefined)) return false;
+    if ((!('createdAt' in (value as Record<string, any>)) && !('created_at' in (value as Record<string, any>))) || ((value as Record<string, any>)['createdAt'] === undefined && (value as Record<string, any>)['created_at'] === undefined)) return false;
     if (!('name' in value) || value['name'] === undefined) return false;
     return true;
 }
@@ -76,7 +76,7 @@ export function FoodLogFromJSONTyped(json: any, ignoreDiscriminator: boolean): F
 
         'id': json['id'],
         'foods': ((json['foods'] as Array<any>).map(LoggedFoodFromJSON)),
-        'eatenAt': (new Date(json['eaten_at'])),
+        'createdAt': (new Date(json['created_at'])),
         'name': json['name'],
     };
 }
@@ -94,7 +94,7 @@ export function FoodLogToJSONTyped(value?: FoodLog | null, ignoreDiscriminator: 
 
         'id': value['id'],
         'foods': ((value['foods'] as Array<any>).map(LoggedFoodToJSON)),
-        'eaten_at': value['eatenAt'].toISOString(),
+        'created_at': value['createdAt'].toISOString(),
         'name': value['name'],
     };
 }

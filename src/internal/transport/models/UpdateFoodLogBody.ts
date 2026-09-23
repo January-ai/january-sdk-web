@@ -38,7 +38,7 @@ export interface UpdateFoodLogBody {
      * @type {Date}
      * @memberof UpdateFoodLogBody
      */
-    eatenAt?: Date;
+    createdAt?: Date;
     /**
      *
      * @type {string}
@@ -65,7 +65,7 @@ export function UpdateFoodLogBodyFromJSONTyped(json: any, ignoreDiscriminator: b
     return {
 
         'foods': json['foods'] == null ? undefined : ((json['foods'] as Array<any>).map(FoodLogInputFoodFromJSON)),
-        'eatenAt': json['eaten_at'] == null ? undefined : (new Date(json['eaten_at'])),
+        'createdAt': json['created_at'] == null ? undefined : (new Date(json['created_at'])),
         'name': json['name'] == null ? undefined : json['name'],
     };
 }
@@ -82,7 +82,7 @@ export function UpdateFoodLogBodyToJSONTyped(value?: UpdateFoodLogBody | null, i
     return {
 
         'foods': value['foods'] == null ? undefined : ((value['foods'] as Array<any>).map(FoodLogInputFoodToJSON)),
-        'eaten_at': value['eatenAt'] == null ? value['eatenAt'] : value['eatenAt'].toISOString(),
+        'created_at': value['createdAt'] == null ? value['createdAt'] : value['createdAt'].toISOString(),
         'name': value['name'],
     };
 }

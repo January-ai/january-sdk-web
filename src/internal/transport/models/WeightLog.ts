@@ -38,7 +38,7 @@ export interface WeightLog {
      * @type {Date}
      * @memberof WeightLog
      */
-    measuredAt: Date;
+    createdAt: Date;
 }
 
 /**
@@ -46,7 +46,7 @@ export interface WeightLog {
  */
 export function instanceOfWeightLog(value: object): value is WeightLog {
     if (!('weight' in value) || value['weight'] === undefined) return false;
-    if ((!('measuredAt' in (value as Record<string, any>)) && !('measured_at' in (value as Record<string, any>))) || ((value as Record<string, any>)['measuredAt'] === undefined && (value as Record<string, any>)['measured_at'] === undefined)) return false;
+    if ((!('createdAt' in (value as Record<string, any>)) && !('created_at' in (value as Record<string, any>))) || ((value as Record<string, any>)['createdAt'] === undefined && (value as Record<string, any>)['created_at'] === undefined)) return false;
     return true;
 }
 
@@ -61,7 +61,7 @@ export function WeightLogFromJSONTyped(json: any, ignoreDiscriminator: boolean):
     return {
 
         'weight': WeightFromJSON(json['weight']),
-        'measuredAt': (new Date(json['measured_at'])),
+        'createdAt': (new Date(json['created_at'])),
     };
 }
 
@@ -77,6 +77,6 @@ export function WeightLogToJSONTyped(value?: WeightLog | null, ignoreDiscriminat
     return {
 
         'weight': WeightToJSON(value['weight']),
-        'measured_at': value['measuredAt'].toISOString(),
+        'created_at': value['createdAt'].toISOString(),
     };
 }

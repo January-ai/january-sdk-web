@@ -99,7 +99,7 @@ export class WaterLogsApi extends runtime.BaseAPI {
     }
 
     /**
-     * **API key or client token.**  Records one amount of water, in `fl_oz`, `ml` or `cup` (1–811.5 fl_oz, 30–24000 ml, 0.125–101.4 cup). An end user\'s total is capped at 24 L (about 811 fl oz) per day: a log that would take the day of its `consumed_at` past it is refused with `daily_water_limit_exceeded`. Save the returned `id` to delete the log. Not idempotent: verify with the list endpoint before retrying a timed-out create, since a retry records the water twice and counts twice toward the cap.  Callable with a client token carrying the `water_logs:write` scope.
+     * **API key or client token.**  Records one amount of water, in `fl_oz`, `ml` or `cup` (1–811.5 fl_oz, 30–24000 ml, 0.1–101.4 cup). An end user\'s total is capped at 24 L (about 811 fl oz) per day: a log that would take the day of its `created_at` past it is refused with `daily_water_limit_exceeded`. Save the returned `id` to delete the log. Not idempotent: verify with the list endpoint before retrying a timed-out create, since a retry records the water twice and counts twice toward the cap.  Callable with a client token carrying the `water_logs:write` scope.
      * Log water for a user
      */
     async createWaterLogRaw(requestParameters: CreateWaterLogRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<WaterLog>> {
@@ -110,7 +110,7 @@ export class WaterLogsApi extends runtime.BaseAPI {
     }
 
     /**
-     * **API key or client token.**  Records one amount of water, in `fl_oz`, `ml` or `cup` (1–811.5 fl_oz, 30–24000 ml, 0.125–101.4 cup). An end user\'s total is capped at 24 L (about 811 fl oz) per day: a log that would take the day of its `consumed_at` past it is refused with `daily_water_limit_exceeded`. Save the returned `id` to delete the log. Not idempotent: verify with the list endpoint before retrying a timed-out create, since a retry records the water twice and counts twice toward the cap.  Callable with a client token carrying the `water_logs:write` scope.
+     * **API key or client token.**  Records one amount of water, in `fl_oz`, `ml` or `cup` (1–811.5 fl_oz, 30–24000 ml, 0.1–101.4 cup). An end user\'s total is capped at 24 L (about 811 fl oz) per day: a log that would take the day of its `created_at` past it is refused with `daily_water_limit_exceeded`. Save the returned `id` to delete the log. Not idempotent: verify with the list endpoint before retrying a timed-out create, since a retry records the water twice and counts twice toward the cap.  Callable with a client token carrying the `water_logs:write` scope.
      * Log water for a user
      */
     async createWaterLog(requestParameters: CreateWaterLogRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<WaterLog> {

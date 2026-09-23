@@ -38,7 +38,7 @@ export interface CreateWaterLogBody {
      * @type {Date}
      * @memberof CreateWaterLogBody
      */
-    consumedAt?: Date;
+    createdAt?: Date;
 }
 
 /**
@@ -60,7 +60,7 @@ export function CreateWaterLogBodyFromJSONTyped(json: any, ignoreDiscriminator: 
     return {
 
         'amount': WaterAmountFromJSON(json['amount']),
-        'consumedAt': json['consumed_at'] == null ? undefined : (new Date(json['consumed_at'])),
+        'createdAt': json['created_at'] == null ? undefined : (new Date(json['created_at'])),
     };
 }
 
@@ -76,6 +76,6 @@ export function CreateWaterLogBodyToJSONTyped(value?: CreateWaterLogBody | null,
     return {
 
         'amount': WaterAmountToJSON(value['amount']),
-        'consumed_at': value['consumedAt'] == null ? value['consumedAt'] : value['consumedAt'].toISOString(),
+        'created_at': value['createdAt'] == null ? value['createdAt'] : value['createdAt'].toISOString(),
     };
 }

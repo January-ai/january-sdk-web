@@ -93,7 +93,7 @@ export class WeightLogsApi extends runtime.BaseAPI {
     }
 
     /**
-     * **API key or client token.**  Records one weight measurement, in `lb` (10–1000) or `kg` (4.5–453.6). Every measurement is kept; listing shows one per local day — the latest by `measured_at` — so logging again later the same day replaces what that day shows. Not idempotent: a retried create records the measurement twice, which listing then shows once.  Callable with a client token carrying the `weight_logs:write` scope.
+     * **API key or client token.**  Records one weight measurement, in `lb` (10–1000) or `kg` (4.5–453.6). Every measurement is kept; listing shows one per local day — the latest by `created_at` — so logging again later the same day replaces what that day shows. Not idempotent: a retried create records the measurement twice, which listing then shows once.  Callable with a client token carrying the `weight_logs:write` scope.
      * Log a weight for a user
      */
     async createWeightLogRaw(requestParameters: CreateWeightLogRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<WeightLog>> {
@@ -104,7 +104,7 @@ export class WeightLogsApi extends runtime.BaseAPI {
     }
 
     /**
-     * **API key or client token.**  Records one weight measurement, in `lb` (10–1000) or `kg` (4.5–453.6). Every measurement is kept; listing shows one per local day — the latest by `measured_at` — so logging again later the same day replaces what that day shows. Not idempotent: a retried create records the measurement twice, which listing then shows once.  Callable with a client token carrying the `weight_logs:write` scope.
+     * **API key or client token.**  Records one weight measurement, in `lb` (10–1000) or `kg` (4.5–453.6). Every measurement is kept; listing shows one per local day — the latest by `created_at` — so logging again later the same day replaces what that day shows. Not idempotent: a retried create records the measurement twice, which listing then shows once.  Callable with a client token carrying the `weight_logs:write` scope.
      * Log a weight for a user
      */
     async createWeightLog(requestParameters: CreateWeightLogRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<WeightLog> {
@@ -177,7 +177,7 @@ export class WeightLogsApi extends runtime.BaseAPI {
     }
 
     /**
-     * **API key or client token.**  Returns one weight per day between `start_date` and `end_date` (both inclusive local calendar dates in `timezone`), oldest first. Only days with a logged weight appear; when several were logged on one day, the one with the latest `measured_at` is returned, in the unit it was logged in. At most 100 days are returned — when more match, the most recent 100. `start_date` may reach back at most 5 years from today in `timezone`. An empty list is a valid result.  Callable with a client token carrying the `weight_logs:read` scope.
+     * **API key or client token.**  Returns one weight per day between `start_date` and `end_date` (both inclusive local calendar dates in `timezone`), oldest first. Only days with a logged weight appear; when several were logged on one day, the one with the latest `created_at` is returned, in the unit it was logged in. At most 100 days are returned — when more match, the most recent 100. `start_date` may reach back at most 5 years from today in `timezone`. An empty list is a valid result.  Callable with a client token carrying the `weight_logs:read` scope.
      * List a user\'s daily weights in a date range
      */
     async listWeightLogsRaw(requestParameters: ListWeightLogsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ListWeightLogsResponse>> {
@@ -188,7 +188,7 @@ export class WeightLogsApi extends runtime.BaseAPI {
     }
 
     /**
-     * **API key or client token.**  Returns one weight per day between `start_date` and `end_date` (both inclusive local calendar dates in `timezone`), oldest first. Only days with a logged weight appear; when several were logged on one day, the one with the latest `measured_at` is returned, in the unit it was logged in. At most 100 days are returned — when more match, the most recent 100. `start_date` may reach back at most 5 years from today in `timezone`. An empty list is a valid result.  Callable with a client token carrying the `weight_logs:read` scope.
+     * **API key or client token.**  Returns one weight per day between `start_date` and `end_date` (both inclusive local calendar dates in `timezone`), oldest first. Only days with a logged weight appear; when several were logged on one day, the one with the latest `created_at` is returned, in the unit it was logged in. At most 100 days are returned — when more match, the most recent 100. `start_date` may reach back at most 5 years from today in `timezone`. An empty list is a valid result.  Callable with a client token carrying the `weight_logs:read` scope.
      * List a user\'s daily weights in a date range
      */
     async listWeightLogs(requestParameters: ListWeightLogsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ListWeightLogsResponse> {
