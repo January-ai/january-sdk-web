@@ -183,7 +183,7 @@ export interface DetectedFood {
 
 /** A healthier alternative to a food, with the servings its nutrition can be read against. */
 export interface AlternativeFood {
-  id?: string | null;
+  id: string;
   name: string | null;
   brandName?: string | null;
   nutrients: CompleteScanNutritionFacts;
@@ -253,7 +253,7 @@ export interface RestaurantMenuItem {
 export interface SearchRestaurantMenuItemsResponse { totalCount: number; items: RestaurantMenuItem[] }
 
 export interface RestaurantMenuEntry {
-  id: string | null;
+  id: string;
   name: string | null;
   energy?: number | null;
   protein?: number | null;
@@ -392,7 +392,7 @@ export interface ConsumedServing { id: string; quantity: number | null }
 /** The catalog serving a logged food refers to; `weightGrams` is null when unknown. */
 export interface ServingDetails { id: string; quantity: number; unit: string | null; weightGrams: number | null }
 export interface LoggedFood {
-  id: string | null;
+  id: string;
   name: string | null;
   brandName?: string | null;
   imageUrl?: string | null;
