@@ -34,8 +34,9 @@ export const getDemoConfiguration = createServerFn({ method: 'GET' })
   .handler(() => getDemoConfigurationDetails())
 
 export const refreshDemoClientToken = createServerFn({ method: 'POST' })
-  .handler(async () => {
-    await mintFreshDemoClientToken()
+  .validator(z.object({ endUserId: optionalUserId }))
+  .handler(async ({ data }) => {
+    await mintFreshDemoClientToken(data.endUserId)
     return getDemoConfigurationDetails()
   })
 
@@ -47,7 +48,7 @@ const foodSearchSchema = z.object({
 
 export const searchFoods = createServerFn({ method: 'GET' })
   .validator(foodSearchSchema)
-  .handler(({ data }) => getJanuaryClient().foods.search({ ...data, limit: 20 }))
+  .handler(({ data }) => getJanuaryClient(data.endUserId).foods.search({ ...data, limit: 20 }))
 
 export const autocompleteFoods = createServerFn({ method: 'GET' })
   .validator(z.object({
@@ -56,14 +57,14 @@ export const autocompleteFoods = createServerFn({ method: 'GET' })
     limit: z.number().int().min(1).max(20).default(8),
     endUserId: optionalUserId,
   }))
-  .handler(({ data }) => getJanuaryClient().foods.autocomplete(data))
+  .handler(({ data }) => getJanuaryClient(data.endUserId).foods.autocomplete(data))
 
 export const getFoodDetails = createServerFn({ method: 'GET' })
   .validator(z.object({
     foodId: foodIdSchema,
     endUserId: optionalUserId,
   }))
-  .handler(({ data }) => getJanuaryClient().foods.get(data))
+  .handler(({ data }) => getJanuaryClient(data.endUserId).foods.get(data))
 
 export const searchFoodCatalog = createServerFn({ method: 'GET' })
   .validator(z.object({
@@ -73,7 +74,7 @@ export const searchFoodCatalog = createServerFn({ method: 'GET' })
     endUserId: optionalUserId,
   }))
   .handler(async ({ data }) => {
-    const client = getJanuaryClient()
+    const client = getJanuaryClient(data.endUserId)
     if (data.mode === 'barcode') {
       try {
         return await client.foods.lookupBarcode({ upc: data.query, endUserId: data.endUserId })
@@ -100,19 +101,19 @@ const restaurantSearchSchema = z.object({
 
 export const searchRestaurants = createServerFn({ method: 'GET' })
   .validator(restaurantSearchSchema)
-  .handler(({ data }) => getJanuaryClient().restaurants.search({ ...data, radius: 8_000, limit: 20 }))
+  .handler(({ data }) => getJanuaryClient(data.endUserId).restaurants.search({ ...data, radius: 8_000, limit: 20 }))
 
 export const searchRestaurantMenuItems = createServerFn({ method: 'GET' })
   .validator(restaurantSearchSchema)
-  .handler(({ data }) => getJanuaryClient().restaurants.searchMenuItems({ ...data, radius: 8_000, limit: 20 }))
+  .handler(({ data }) => getJanuaryClient(data.endUserId).restaurants.searchMenuItems({ ...data, radius: 8_000, limit: 20 }))
 
 export const analyzeFoodPhoto = createServerFn({ method: 'POST' })
   .validator(z.object({ image: z.string().min(1), endUserId: optionalUserId }))
-  .handler(({ data }) => getJanuaryClient().foodAnalysis.analyzePhoto(data))
+  .handler(({ data }) => getJanuaryClient(data.endUserId).foodAnalysis.analyzePhoto(data))
 
 export const analyzeFoodDescription = createServerFn({ method: 'POST' })
   .validator(z.object({ description: z.string().trim().min(1).max(512), endUserId: optionalUserId }))
-  .handler(({ data }) => getJanuaryClient().foodAnalysis.analyzeDescription({
+  .handler(({ data }) => getJanuaryClient(data.endUserId).foodAnalysis.analyzeDescription({
     query: data.description,
     ...(data.endUserId ? { endUserId: data.endUserId } : {}),
   }))
@@ -128,7 +129,7 @@ export const correctFoodScan = createServerFn({ method: 'POST' })
     instruction: z.string().trim().min(1).max(1_000),
     endUserId: optionalUserId,
   }))
-  .handler(({ data }) => getJanuaryClient().foodAnalysis.correct({
+  .handler(({ data }) => getJanuaryClient(data.endUserId).foodAnalysis.correct({
     analysis: data.analysis,
     instruction: data.instruction,
     ...(data.endUserId ? { endUserId: data.endUserId } : {}),
@@ -141,7 +142,7 @@ export const suggestFoodAlternatives = createServerFn({ method: 'POST' })
     dietPreferences: z.array(z.enum(Object.values(DietPreference) as [DietPreference, ...DietPreference[]])),
     endUserId: optionalUserId,
   }))
-  .handler(({ data }) => getJanuaryClient().foods.suggestAlternatives({
+  .handler(({ data }) => getJanuaryClient(data.endUserId).foods.suggestAlternatives({
     foodId: data.foodId,
     dietRestrictions: data.dietRestrictions,
     dietPreferences: data.dietPreferences,
@@ -157,7 +158,7 @@ export const getFoodLogSummary = createServerFn({ method: 'GET' })
   }))
   .handler(({ data }) => {
     const { endUserId, endUserTimezone, ...request } = data
-    return getJanuaryClient().forUser({ endUserId, endUserTimezone }).foodLogs.getSummary({ ...request, groupBy: 'day' })
+    return getJanuaryClient(data.endUserId).forUser({ endUserId, endUserTimezone }).foodLogs.getSummary({ ...request, groupBy: 'day' })
   })
 
 export const listFoodLogs = createServerFn({ method: 'GET' })
@@ -169,7 +170,7 @@ export const listFoodLogs = createServerFn({ method: 'GET' })
   }))
   .handler(({ data }) => {
     const { endUserId, endUserTimezone, ...request } = data
-    return getJanuaryClient().forUser({ endUserId, endUserTimezone }).foodLogs.list(request)
+    return getJanuaryClient(data.endUserId).forUser({ endUserId, endUserTimezone }).foodLogs.list(request)
   })
 
 const foodSelectionSchema = z.object({
@@ -188,7 +189,7 @@ export const saveFoodLog = createServerFn({ method: 'POST' })
   }))
   .handler(({ data }) => {
     const { endUserId, endUserTimezone, logId, ...request } = data
-    const foodLogs = getJanuaryClient().forUser({ endUserId, endUserTimezone }).foodLogs
+    const foodLogs = getJanuaryClient(data.endUserId).forUser({ endUserId, endUserTimezone }).foodLogs
     return logId ? foodLogs.update({ ...request, logId }) : foodLogs.create(request)
   })
 
@@ -200,7 +201,7 @@ export const deleteFoodLog = createServerFn({ method: 'POST' })
   }))
   .handler(({ data }) => {
     const { endUserId, endUserTimezone, logId } = data
-    return getJanuaryClient().forUser({ endUserId, endUserTimezone }).foodLogs.delete({ logId })
+    return getJanuaryClient(data.endUserId).forUser({ endUserId, endUserTimezone }).foodLogs.delete({ logId })
   })
 
 const userContextSchema = {
@@ -220,7 +221,7 @@ export const createWaterLog = createServerFn({ method: 'POST' })
   }))
   .handler(({ data }) => {
     const { endUserId, endUserTimezone, value, unit, consumedAt } = data
-    return getJanuaryClient().forUser({ endUserId, endUserTimezone }).waterLogs.create({
+    return getJanuaryClient(data.endUserId).forUser({ endUserId, endUserTimezone }).waterLogs.create({
       amount: { value, unit },
       ...(consumedAt ? { consumedAt } : {}),
     })
@@ -230,14 +231,14 @@ export const listWaterLogs = createServerFn({ method: 'GET' })
   .validator(z.object({ ...dateRangeSchema, unit: volumeUnitSchema, ...userContextSchema }))
   .handler(({ data }) => {
     const { endUserId, endUserTimezone, ...request } = data
-    return getJanuaryClient().forUser({ endUserId, endUserTimezone }).waterLogs.list(request)
+    return getJanuaryClient(data.endUserId).forUser({ endUserId, endUserTimezone }).waterLogs.list(request)
   })
 
 export const deleteWaterLog = createServerFn({ method: 'POST' })
   .validator(z.object({ logId: z.string().trim().min(1).max(256), ...userContextSchema }))
   .handler(({ data }) => {
     const { endUserId, endUserTimezone, logId } = data
-    return getJanuaryClient().forUser({ endUserId, endUserTimezone }).waterLogs.delete({ logId })
+    return getJanuaryClient(data.endUserId).forUser({ endUserId, endUserTimezone }).waterLogs.delete({ logId })
   })
 
 export const createWeightLog = createServerFn({ method: 'POST' })
@@ -249,7 +250,7 @@ export const createWeightLog = createServerFn({ method: 'POST' })
   }))
   .handler(({ data }) => {
     const { endUserId, endUserTimezone, value, unit, measuredAt } = data
-    return getJanuaryClient().forUser({ endUserId, endUserTimezone }).weightLogs.create({
+    return getJanuaryClient(data.endUserId).forUser({ endUserId, endUserTimezone }).weightLogs.create({
       weight: { value, unit },
       ...(measuredAt ? { measuredAt } : {}),
     })
@@ -259,7 +260,7 @@ export const listWeightLogs = createServerFn({ method: 'GET' })
   .validator(z.object({ ...dateRangeSchema, ...userContextSchema }))
   .handler(({ data }) => {
     const { endUserId, endUserTimezone, ...request } = data
-    return getJanuaryClient().forUser({ endUserId, endUserTimezone }).weightLogs.list(request)
+    return getJanuaryClient(data.endUserId).forUser({ endUserId, endUserTimezone }).weightLogs.list(request)
   })
 
 export const predictGlucose = createServerFn({ method: 'POST' })
@@ -295,7 +296,7 @@ export const predictGlucose = createServerFn({ method: 'POST' })
       foods: [{ id: data.foodId, serving: { id: data.servingId, quantity: data.quantity } }],
       startTime: new Date(data.startTime),
     }
-    const client = getJanuaryClient()
+    const client = getJanuaryClient(data.endUserId)
     return data.endUserId
       ? client.forUser({ endUserId: data.endUserId, endUserTimezone: data.endUserTimezone }).glucose.predict(request)
       : client.glucose.predict({ ...request, endUserTimezone: data.endUserTimezone })
@@ -339,7 +340,7 @@ export const predictMealGlucose = createServerFn({ method: 'POST' })
       })),
       startTime: new Date(data.startTime),
     }
-    const client = getJanuaryClient()
+    const client = getJanuaryClient(data.endUserId)
     return data.endUserId
       ? client.forUser({ endUserId: data.endUserId, endUserTimezone: data.endUserTimezone }).glucose.predict(request)
       : client.glucose.predict({ ...request, endUserTimezone: data.endUserTimezone })
@@ -354,7 +355,7 @@ export const getRestaurantMenuItems = createServerFn({ method: 'GET' })
     endUserId: optionalUserId,
   }))
   .handler(async ({ data }) => {
-    const client = getJanuaryClient()
+    const client = getJanuaryClient(data.endUserId)
     try {
       const items: import('@januaryai/web-sdk').RestaurantMenuItem[] = []
       while (true) {

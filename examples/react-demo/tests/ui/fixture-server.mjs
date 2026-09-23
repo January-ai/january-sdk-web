@@ -147,6 +147,7 @@ createServer(async (request, response) => {
     authorization: Array.isArray(request.headers.authorization)
       ? request.headers.authorization[0] ?? null
       : request.headers.authorization ?? null,
+    endUserId: request.headers['january-end-user-id'] ?? null,
   })
   const rule = rules.get(url.pathname) ?? { status: 200, empty: false, delay: 0 }
   if (rule.delay) await new Promise((resolve) => setTimeout(resolve, rule.delay * 1000))

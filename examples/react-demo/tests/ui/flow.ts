@@ -37,6 +37,8 @@ export interface FixtureRequest {
   query: Record<string, string>
   body?: any
   authorization: string | null
+  /** The `January-End-User-ID` header, which the relay mints a client token for. */
+  endUserId: string | null
 }
 
 /** The requests the fixture server has received since the last reset. */

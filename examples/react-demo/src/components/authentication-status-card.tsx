@@ -12,16 +12,19 @@ import {
 } from '~/api/january.functions'
 import { cn } from '~/lib/utils'
 import { appBrand } from './app-brand'
+import { useUserSession } from './user-session'
 
 export function AuthenticationStatusCard() {
   const queryClient = useQueryClient()
+  const session = useUserSession()
   const configuration = useQuery({
     queryKey: ['demo-configuration'],
     queryFn: () => getDemoConfiguration(),
     refetchInterval: 3_000,
   })
   const refresh = useMutation({
-    mutationFn: () => refreshDemoClientToken(),
+    // Minted for the active user, whose data the token will read and write.
+    mutationFn: () => refreshDemoClientToken({ data: { endUserId: session.endUserId || undefined } }),
     onSuccess: (data) => queryClient.setQueryData(['demo-configuration'], data),
   })
   const data = configuration.data

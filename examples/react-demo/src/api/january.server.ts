@@ -27,7 +27,10 @@ export function hasJanuaryConfiguration() {
 
 let cachedClient: JanuaryClient | undefined
 let cachedClientConfiguration: string | undefined
-let prefetchedClientToken: JanuaryClientTokenResponse | undefined
+// A client token is bound to the end user it was minted for, so client-token mode keeps one client
+// per end user, each minting for its own user.
+const clientTokenClients = new Map<string, JanuaryClient>()
+let prefetchedClientToken: { endUserId: string; token: JanuaryClientTokenResponse } | undefined
 let tokenState:
   | { status: 'idle' }
   | { status: 'ready'; mintedAt: string; expiresAt: string; expiresIn: number }
@@ -60,52 +63,60 @@ export async function getDemoConfigurationDetails() {
   } as const
 }
 
-export async function mintFreshDemoClientToken() {
+/** Mints a token for `endUserId` (the configured default user when omitted) and hands it to that user's client. */
+export async function mintFreshDemoClientToken(endUserId?: string) {
   const partnerTokenUrl = requirePartnerTokenUrl()
-  const endUserId = requireEndUserId()
+  const user = endUserId?.trim() || requireEndUserId()
   const partnerAppSessionToken = process.env.PARTNER_APP_SESSION_TOKEN?.trim()
   if (!isLocalTokenRelay(partnerTokenUrl) && !partnerAppSessionToken) {
     throw new Error('PARTNER_APP_SESSION_TOKEN is required for a non-local PARTNER_TOKEN_URL.')
   }
-  const token = await fetchPartnerClientToken(partnerTokenUrl, endUserId, partnerAppSessionToken)
-  prefetchedClientToken = token
-  resetCachedClient()
+  const token = await fetchPartnerClientToken(partnerTokenUrl, user, partnerAppSessionToken)
+  prefetchedClientToken = { endUserId: user, token }
+  clientTokenClients.delete(clientTokenKey(partnerTokenUrl, partnerAppSessionToken, user))
   return tokenState
 }
 
-export function getJanuaryClient() {
+/**
+ * The SDK client for a request. In client-token mode the token decides whose data the API reads and
+ * writes (the SDK sends no end-user header with a client token), so the client must be the one whose
+ * tokens are minted for `endUserId`; without one, the configured default user is used.
+ */
+export function getJanuaryClient(endUserId?: string) {
   const partnerTokenUrl = process.env.PARTNER_TOKEN_URL?.trim()
   const partnerAppSessionToken = process.env.PARTNER_APP_SESSION_TOKEN?.trim()
-  const endUserId = getDefaultEndUserId()
   const apiKey = process.env.JANUARY_API_KEY ?? process.env.JANUARY_PROD_API_KEY ?? process.env.JANUARY_DEV_API_KEY
   const testApiUrl = process.env.JANUARY_TEST_API_URL?.trim()
-  const configuration = partnerTokenUrl
-    ? `token:${partnerTokenUrl}:${partnerAppSessionToken ?? ''}:${endUserId}`
-    : `key:${apiKey?.trim() ?? ''}:${testApiUrl ?? ''}`
-  if (cachedClient && cachedClientConfiguration === configuration) return cachedClient
 
   if (partnerTokenUrl) {
-    if (!endUserId) {
+    const user = endUserId?.trim() || getDefaultEndUserId()
+    if (!user) {
       throw new Error('JANUARY_END_USER_ID is required when PARTNER_TOKEN_URL is configured.')
     }
     const localRelay = isLocalTokenRelay(partnerTokenUrl)
     if (!localRelay && !partnerAppSessionToken) {
       throw new Error('PARTNER_APP_SESSION_TOKEN is required for a non-local PARTNER_TOKEN_URL.')
     }
-    cachedClient = new JanuaryClient({
+    const key = clientTokenKey(partnerTokenUrl, partnerAppSessionToken, user)
+    const existing = clientTokenClients.get(key)
+    if (existing) return existing
+    const client = new JanuaryClient({
       clientTokenProvider: async () => {
-        if (prefetchedClientToken) {
-          const token = prefetchedClientToken
+        if (prefetchedClientToken?.endUserId === user) {
+          const { token } = prefetchedClientToken
           prefetchedClientToken = undefined
           return token
         }
-        return fetchPartnerClientToken(partnerTokenUrl, endUserId, partnerAppSessionToken)
+        return fetchPartnerClientToken(partnerTokenUrl, user, partnerAppSessionToken)
       },
       ...(testApiUrl ? { fetch: createTestApiFetch(testApiUrl) } : {}),
     })
-    cachedClientConfiguration = configuration
-    return cachedClient
+    clientTokenClients.set(key, client)
+    return client
   }
+
+  const configuration = `key:${apiKey?.trim() ?? ''}:${testApiUrl ?? ''}`
+  if (cachedClient && cachedClientConfiguration === configuration) return cachedClient
 
   if (!apiKey?.trim()) {
     throw new Error(
@@ -209,9 +220,8 @@ function requireEndUserId() {
   return value
 }
 
-function resetCachedClient() {
-  cachedClient = undefined
-  cachedClientConfiguration = undefined
+function clientTokenKey(partnerTokenUrl: string, partnerAppSessionToken: string | undefined, endUserId: string) {
+  return `${partnerTokenUrl}:${partnerAppSessionToken ?? ''}:${endUserId}`
 }
 
 function createTestApiFetch(baseUrl: string): typeof fetch {
