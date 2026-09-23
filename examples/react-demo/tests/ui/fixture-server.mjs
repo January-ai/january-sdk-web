@@ -72,6 +72,20 @@ const isRange = (url) => {
   return Boolean(start && end && start !== end)
 }
 
+// Suggested instead of Fixture Pizza; the first one opens as its own food.
+const alternativeFood = {
+  id: 'food-2', type: 'generic', name: 'Fixture Salad', brand_name: null,
+  nutrients: { calories: { value: 60, unit: 'kcal' }, protein: { value: 2, unit: 'g' } },
+  glycemic_index: 15, glycemic_load: 2, image_url: null, barcode: null,
+  servings: [{ id: '21', quantity: 1, unit: 'plate', scaling_factor: 1, weight_grams: 150, is_primary: true }],
+}
+const alternatives = [
+  { id: alternativeFood.id, name: alternativeFood.name, brand_name: null, nutrients: alternativeFood.nutrients,
+    servings: [{ id: '21', quantity: 1, unit: 'plate', weight_grams: 150 }] },
+  { id: 'food-3', name: 'Fixture Soup', brand_name: 'Fixture Kitchen', nutrients: { calories: { value: 80, unit: 'kcal' } },
+    servings: [{ id: '31', quantity: 1, unit: 'cup', weight_grams: null }] },
+]
+
 const waterLog = { id: 'water-1', amount: { value: 8, unit: 'fl_oz' }, get consumed_at() { return seededEatenAt() } }
 const weightLog = { weight: { value: 150, unit: 'lb' }, get measured_at() { return seededEatenAt() } }
 const directItems = [
@@ -91,6 +105,14 @@ const searchItems = directItems.map((item) => ({
   glycemic_load: item.glycemic_load,
   servings: item.servings,
 }))
+
+/** A request's JSON body, with long strings (a scanned image) shortened for the request log. */
+async function readJson(request) {
+  let source = ''
+  for await (const chunk of request) source += chunk
+  return source ? JSON.parse(source) : undefined
+}
+const shorten = (value) => JSON.parse(JSON.stringify(value ?? null, (_, item) => typeof item === 'string' && item.length > 200 ? `${item.slice(0, 40)}…` : item))
 
 function json(response, value, status = 200) {
   response.writeHead(status, { 'content-type': 'application/json' })
@@ -112,10 +134,12 @@ createServer(async (request, response) => {
   }
   if (url.pathname === '/__requests') return json(response, requests)
 
+  const body = request.method === 'POST' || request.method === 'PATCH' ? await readJson(request) : undefined
   requests.push({
     method: request.method,
     path: url.pathname,
     query: Object.fromEntries(url.searchParams),
+    body: shorten(body),
     authorization: Array.isArray(request.headers.authorization)
       ? request.headers.authorization[0] ?? null
       : request.headers.authorization ?? null,
@@ -138,7 +162,15 @@ createServer(async (request, response) => {
   }] })
   if (url.pathname === '/v1.2/foods') return json(response, { items: rule.empty ? [] : [food] })
   if (url.pathname === '/v1.2/foods/barcode/012345678905') return json(response, food)
+  // Any other UPC is not in the catalog, as the API answers it.
+  if (url.pathname.startsWith('/v1.2/foods/barcode/')) return json(response, {
+    code: 'not_found', message: `No food found for barcode ${url.pathname.split('/').pop()}.`,
+  }, 404)
   if (url.pathname === '/v1.2/foods/food-1') return json(response, food)
+  if (url.pathname === '/v1.2/foods/food-2') return json(response, alternativeFood)
+  if (url.pathname === '/v1.2/foods/food-1/alternatives' && request.method === 'POST') {
+    return json(response, { alternatives: rule.empty ? [] : alternatives })
+  }
   if (url.pathname === '/v1.2/food-analysis/text') return json(response, {
     meal_name: 'Fixture meal', total_nutrients: nutrients,
     detections: rule.empty ? [] : [{ confidence: 'high', food: {
@@ -153,6 +185,17 @@ createServer(async (request, response) => {
       serving: { id: servings[0].id, quantity: servings[0].quantity, unit: servings[0].unit },
     } }],
   })
+  if (url.pathname === '/v1.2/food-analysis/corrections' && request.method === 'POST') {
+    // Answers with the corrected meal: the scan it was sent, renamed, and twice the quantity.
+    const detections = (body?.analysis?.detections ?? []).map((detection) => ({
+      ...detection, food: { ...detection.food, quantity: (detection.food.quantity ?? 1) * 2 },
+    }))
+    return json(response, {
+      meal_name: `Corrected ${body?.analysis?.meal_name ?? 'meal'}`,
+      total_nutrients: { calories: { value: 200, unit: 'kcal' }, protein: { value: 8, unit: 'g' } },
+      detections,
+    })
+  }
   if (url.pathname === '/v1.2/glucose/predictions') return json(response, {
     impact_score: 'medium', chart: { min: 90, max: 140 },
     points: [{ minutes: 0, value: 95 }, { minutes: 45, value: 132 }, { minutes: 120, value: 98 }],
@@ -175,10 +218,7 @@ createServer(async (request, response) => {
     response.writeHead(204); return response.end()
   }
   if (url.pathname === '/v1.2/water-logs' && request.method === 'POST') {
-    let source = ''
-    for await (const chunk of request) source += chunk
-    const amount = JSON.parse(source || '{}').amount ?? waterLog.amount
-    return json(response, { ...waterLog, amount, consumed_at: waterLog.consumed_at }, 201)
+    return json(response, { ...waterLog, amount: body?.amount ?? waterLog.amount, consumed_at: body?.consumed_at ?? waterLog.consumed_at }, 201)
   }
   if (url.pathname === '/v1.2/water-logs' && request.method === 'GET') {
     const requested = url.searchParams.get('unit')
@@ -191,7 +231,9 @@ createServer(async (request, response) => {
   if (url.pathname === '/v1.2/water-logs/water-1' && request.method === 'DELETE') {
     response.writeHead(204); return response.end()
   }
-  if (url.pathname === '/v1.2/weight-logs' && request.method === 'POST') return json(response, weightLog, 201)
+  if (url.pathname === '/v1.2/weight-logs' && request.method === 'POST') {
+    return json(response, { weight: body?.weight ?? weightLog.weight, measured_at: body?.measured_at ?? weightLog.measured_at }, 201)
+  }
   if (url.pathname === '/v1.2/weight-logs' && request.method === 'GET' && isRange(url)) return json(response, {
     items: rule.empty ? [] : weightHistory(url.searchParams.get('start_date'), url.searchParams.get('end_date')),
   })

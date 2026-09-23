@@ -9,3 +9,8 @@ export function formatNumber(value: number | null | undefined, maximumFractionDi
   if (value == null || !Number.isFinite(value)) return '—'
   return new Intl.NumberFormat('en-US', { maximumFractionDigits }).format(value)
 }
+
+/** A serving quantity, which moves in quarters: 1.25 stays 1.25 rather than rounding to 1.3. */
+export function formatQuantity(value: number | null | undefined) {
+  return formatNumber(value, 2)
+}

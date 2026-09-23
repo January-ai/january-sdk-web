@@ -82,7 +82,7 @@ export function AuthenticationStatusCard() {
             <div className="space-y-2 rounded-2xl bg-stone-100/80 p-3">
               <div className="flex items-center justify-between gap-3 text-xs">
                 <span className="font-semibold text-stone-600">Token relay</span>
-                <span className="flex items-center gap-1.5 font-bold text-stone-900">
+                <span className="flex items-center gap-1.5 font-bold text-stone-900" data-testid="relay-status">
                   <span
                     aria-hidden="true"
                     className={cn(
@@ -115,6 +115,7 @@ export function AuthenticationStatusCard() {
               <div className="grid gap-2">
                 <button
                   className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-stone-950 px-3 text-xs font-bold text-white hover:bg-stone-800 disabled:cursor-not-allowed disabled:opacity-50"
+                  data-testid="token-mint"
                   disabled={refresh.isPending}
                   onClick={() => refresh.mutate()}
                   type="button"
@@ -126,7 +127,7 @@ export function AuthenticationStatusCard() {
             ) : null}
 
             {actionError && (
-              <p role="alert" className="rounded-xl bg-red-50 px-3 py-2 text-xs leading-5 text-red-800">
+              <p role="alert" className="rounded-xl bg-red-50 px-3 py-2 text-xs leading-5 text-red-800" data-testid="token-mint-error">
                 {errorMessage(actionError)}
               </p>
             )}
@@ -157,16 +158,16 @@ function StatusLine({ tone, label }: { tone: 'positive' | 'warning' | 'neutral';
 function TokenState({ token }: { token: Awaited<ReturnType<typeof getDemoConfiguration>>['token'] }) {
   if (token.status === 'ready') {
     return (
-      <div className="border-t border-stone-200 pt-2 text-xs leading-5 text-stone-600">
+      <div className="border-t border-stone-200 pt-2 text-xs leading-5 text-stone-600" data-testid="token-status">
         <strong className="text-stone-900">Token ready</strong>
         <span className="block">Expires {formatTime(token.expiresAt)}</span>
       </div>
     )
   }
   if (token.status === 'error') {
-    return <p className="border-t border-stone-200 pt-2 text-xs leading-5 text-red-700">{token.message}</p>
+    return <p className="border-t border-stone-200 pt-2 text-xs leading-5 text-red-700" data-testid="token-status">{token.message}</p>
   }
-  return <p className="border-t border-stone-200 pt-2 text-xs leading-5 text-stone-500">No client token minted in this server session yet.</p>
+  return <p className="border-t border-stone-200 pt-2 text-xs leading-5 text-stone-500" data-testid="token-status">No client token minted in this server session yet.</p>
 }
 
 function RelayInstructions() {

@@ -31,7 +31,10 @@ export function BarcodeCamera({ onDetected }: { onDetected(value: string): void 
     try {
       const media = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false })
       stream.current = media
-      if (!video.current) return
+      if (!video.current) {
+        stop()
+        return
+      }
       video.current.srcObject = media
       await video.current.play()
       setActive(true)
@@ -58,17 +61,19 @@ export function BarcodeCamera({ onDetected }: { onDetected(value: string): void 
   }
 
   if (supported === false) {
-    return <div className="flex items-start gap-3 rounded-2xl bg-[#eee8dc] p-4 text-sm leading-6 text-stone-700"><CameraOff aria-hidden="true" className="mt-0.5 size-5 shrink-0" /><span>Live barcode detection is not available in this browser. Enter the printed UPC below.</span></div>
+    return <div className="flex items-start gap-3 rounded-2xl bg-[#eee8dc] p-4 text-sm leading-6 text-stone-700" data-testid="scan-barcode-unsupported"><CameraOff aria-hidden="true" className="mt-0.5 size-5 shrink-0" /><span>Live barcode detection is not available in this browser. Enter the printed UPC below.</span></div>
   }
 
+  // The video element stays mounted (hidden until the camera starts): `start` attaches the
+  // stream to it before `active` is set, so it has to exist first.
   return (
     <div>
-      {active && <div className="relative mb-4 h-56 overflow-hidden rounded-2xl bg-stone-950"><video aria-label="Live barcode camera" className="size-full object-cover" muted playsInline ref={video} /><div aria-hidden="true" className="pointer-events-none absolute inset-8 rounded-2xl border-2 border-[#f5c842]" /></div>}
+      <div className={active ? 'relative mb-4 h-56 overflow-hidden rounded-2xl bg-stone-950' : 'hidden'} data-testid="scan-barcode-camera"><video aria-label="Live barcode camera" className="size-full object-cover" muted playsInline ref={video} /><div aria-hidden="true" className="pointer-events-none absolute inset-8 rounded-2xl border-2 border-[#f5c842]" /></div>
       <SecondaryButton className="w-full" data-testid="scan-barcode-button" onClick={active ? stop : start} type="button">
         {active ? <CameraOff aria-hidden="true" className="size-5" /> : <Camera aria-hidden="true" className="size-5" />}
         {active ? 'Stop camera' : 'Scan barcode with camera'}
       </SecondaryButton>
-      {error && <p className="mt-3 flex gap-2 text-sm text-amber-900"><Barcode aria-hidden="true" className="size-4 shrink-0" />{error}</p>}
+      {error && <p className="mt-3 flex gap-2 text-sm text-amber-900" data-testid="scan-barcode-error" role="alert"><Barcode aria-hidden="true" className="size-4 shrink-0" />{error}</p>}
     </div>
   )
 }

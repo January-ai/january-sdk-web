@@ -20,10 +20,11 @@ interface SelectedFood {
   servings: ServingChoice[]
 }
 
-export function FoodLogEditor({ log, onSaved }: { log?: FoodLog; onSaved(): void }) {
+/** `defaultTimestamp` is when a new meal was eaten unless changed; it defaults to now. */
+export function FoodLogEditor({ log, defaultTimestamp, onSaved }: { log?: FoodLog; defaultTimestamp?: string; onSaved(): void }) {
   const session = useUserSession()
   const [name, setName] = useState(log?.name ?? '')
-  const [timestamp, setTimestamp] = useState(toLocalInput(log?.timestampUtc ? new Date(log.timestampUtc) : new Date()))
+  const [timestamp, setTimestamp] = useState(toLocalInput(new Date(log?.timestampUtc ?? defaultTimestamp ?? Date.now())))
   const [query, setQuery] = useState('')
   const [submittedQuery, setSubmittedQuery] = useState('')
   const [acceptedSuggestion, setAcceptedSuggestion] = useState<string | null>(null)
@@ -82,7 +83,7 @@ export function FoodLogEditor({ log, onSaved }: { log?: FoodLog; onSaved(): void
     <div className="space-y-5" data-testid="food-log-editor">
       <div className="grid gap-4 sm:grid-cols-2">
         <TextField data-testid="food-log-name" label="Meal name (optional)" onChange={(event) => setName(event.target.value)} placeholder="Lunch" value={name} />
-        <TextField label="When it was eaten" onChange={(event) => setTimestamp(event.target.value)} type="datetime-local" value={timestamp} />
+        <TextField data-testid="food-log-time" label="When it was eaten" onChange={(event) => setTimestamp(event.target.value)} type="datetime-local" value={timestamp} />
       </div>
       <Card className="p-5">
         <SectionLabel>Foods in this meal</SectionLabel>
@@ -91,9 +92,13 @@ export function FoodLogEditor({ log, onSaved }: { log?: FoodLog; onSaved(): void
           {foods.map((food, index) => <div className="flex flex-wrap items-center gap-3 rounded-2xl bg-[#f8f5ed] p-3" data-testid={`food-log-food-${index}`} key={food.id}>
             <div className="grid size-10 place-items-center rounded-xl bg-[#eee8dc]"><Utensils aria-hidden="true" className="size-4" /></div>
             <div className="min-w-40 flex-1"><div className="truncate font-bold">{food.name}</div><div className="text-xs text-stone-500">{food.servingUnit}</div></div>
-            <div className="min-w-40"><ServingSelector label="Serving" onChange={(servingId) => setFoods((current) => current.map((item) => item.id === food.id ? { ...item, servingId, servingUnit: item.servings.find((serving) => serving.id === servingId)?.unit ?? item.servingUnit } : item))} servings={food.servings} value={food.servingId} /></div>
-            <label className="flex items-center gap-2 text-sm font-semibold"><span>Qty</span><input aria-label={`Quantity for ${food.name}`} className="h-10 w-20 rounded-xl border border-stone-300 bg-white px-3 outline-none transition-colors focus:bg-stone-50" min="0.25" onChange={(event) => setFoods((current) => current.map((item) => item.id === food.id ? { ...item, quantity: event.currentTarget.valueAsNumber } : item))} step="0.25" type="number" value={food.quantity} /></label>
-            <button aria-label={`Remove ${food.name}`} className="grid size-10 place-items-center rounded-full hover:bg-white" onClick={() => setFoods((current) => current.filter((item) => item.id !== food.id))} type="button"><Trash2 aria-hidden="true" className="size-4" /></button>
+            <div className="min-w-40"><ServingSelector label="Serving" testId="food-log-food-serving" onChange={(servingId) => setFoods((current) => current.map((item) => item.id === food.id ? { ...item, servingId, servingUnit: item.servings.find((serving) => serving.id === servingId)?.unit ?? item.servingUnit } : item))} servings={food.servings} value={food.servingId} /></div>
+            <label className="flex items-center gap-2 text-sm font-semibold"><span>Qty</span><input aria-label={`Quantity for ${food.name}`} data-testid="food-log-food-quantity" className="h-10 w-20 rounded-xl border border-stone-300 bg-white px-3 outline-none transition-colors focus:bg-stone-50" min="0.25" onChange={(event) => {
+              // Read the value now: React clears currentTarget before a state updater runs.
+              const quantity = event.currentTarget.valueAsNumber
+              setFoods((current) => current.map((item) => item.id === food.id ? { ...item, quantity } : item))
+            }} step="0.25" type="number" value={Number.isFinite(food.quantity) ? food.quantity : ''} /></label>
+            <button aria-label={`Remove ${food.name}`} data-testid="food-log-food-remove" className="grid size-10 place-items-center rounded-full hover:bg-white" onClick={() => setFoods((current) => current.filter((item) => item.id !== food.id))} type="button"><Trash2 aria-hidden="true" className="size-4" /></button>
           </div>)}
           {!foods.length && <p className="rounded-2xl border border-dashed border-stone-300 p-4 text-sm text-stone-500" data-testid="food-log-editor-empty">No foods added yet.</p>}
         </div>
@@ -116,7 +121,7 @@ export function FoodLogEditor({ log, onSaved }: { log?: FoodLog; onSaved(): void
       {search.isPending && submittedQuery ? <SkeletonList testId="food-picker-loading" /> : search.isError ? <ErrorMessage error={search.error} testId="food-picker-error" /> : search.data?.items.length ? <Card className="max-h-64 overflow-y-auto" data-testid="food-picker-results">{search.data.items.map((food, index) => <ResultRow busy={hydratedFood.isPending && hydratedFood.variables?.id === food.id} disabled={hydratedFood.isPending || foods.some((item) => item.id === food.id)} key={food.id} media={<NetworkImage alt="" className="size-full" fallback={<Utensils aria-hidden="true" className="size-5" />} src={food.photoUrl} />} meta={`${formatNumber(food.calories, 0)} cal · ${food.servings[0]?.unit ?? 'No serving'}`} onClick={() => addFood(food)} testId={`food-picker-result-${index}`} title={foods.some((item) => item.id === food.id) ? `${food.name ?? 'Unnamed food'} · Added` : food.name ?? 'Unnamed food'} />)}</Card> : null}
       {hydratedFood.isError && <ErrorMessage error={hydratedFood.error} testId="food-picker-error" />}
       {save.isError && <ErrorMessage error={save.error} testId="food-log-save-error" />}
-      <Button busy={save.isPending} busyTestId="food-log-save-loading" className="w-full" data-testid="food-log-save" disabled={!foods.length || !session.endUserId || !timestamp} onClick={() => save.mutate()} type="button">{log ? 'Update meal' : 'Create meal'}</Button>
+      <Button busy={save.isPending} busyTestId="food-log-save-loading" className="w-full" data-testid="food-log-save" disabled={!foods.length || foods.some((food) => !(food.quantity > 0)) || !session.endUserId || !timestamp} onClick={() => save.mutate()} type="button">{log ? 'Update meal' : 'Create meal'}</Button>
     </div>
   )
 }

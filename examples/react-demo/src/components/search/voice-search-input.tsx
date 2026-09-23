@@ -79,12 +79,12 @@ export function VoiceSearchInput({ disabled = false, id, onChange, placeholder, 
         />
         {recording ? (
           <>
-            <button aria-label="Cancel voice capture" className="grid size-9 shrink-0 place-items-center rounded-full border border-white/15 text-stone-300 transition-colors hover:bg-white/10 hover:text-white" onClick={cancelCapture} type="button">
+            <button aria-label="Cancel voice capture" className="grid size-9 shrink-0 place-items-center rounded-full border border-white/15 text-stone-300 transition-colors hover:bg-white/10 hover:text-white" data-testid="voice-cancel" onClick={cancelCapture} type="button">
               <X aria-hidden="true" className="size-4" />
             </button>
             <VoiceWaveform level={snapshot.audioLevel} />
             <span className="data-number min-w-10 text-right text-xs font-bold text-stone-300">{formatDuration(snapshot.durationMs)}</span>
-            <button aria-label="Stop voice capture" className="grid size-9 shrink-0 place-items-center rounded-full bg-lime-300 text-stone-950 transition-colors hover:bg-lime-200" onClick={() => void toggleCapture()} title="Finish and transcribe" type="button">
+            <button aria-label="Stop voice capture" className="grid size-9 shrink-0 place-items-center rounded-full bg-lime-300 text-stone-950 transition-colors hover:bg-lime-200" data-testid="voice-stop" onClick={() => void toggleCapture()} title="Finish and transcribe" type="button">
               <Check aria-hidden="true" className="size-4 stroke-[2.5]" />
             </button>
           </>
@@ -117,9 +117,9 @@ export function VoiceSearchInput({ disabled = false, id, onChange, placeholder, 
         )}
       </div>
 
-      {error ? <p aria-live="polite" className="mt-2 text-pretty text-sm text-red-700">{error}</p> : null}
-      {mounted && !session.isSupported ? <p className="mt-2 text-sm text-stone-500">Voice capture needs a browser with microphone recording support.</p> : null}
-      {mounted && session.isSupported && !session.isTranscriptionSupported ? <p className="mt-2 text-sm text-stone-500">Voice search needs browser speech-recognition support. You can still type your query.</p> : null}
+      {error ? <p aria-live="polite" className="mt-2 text-pretty text-sm text-red-700" data-testid="voice-error">{error}</p> : null}
+      {mounted && !session.isSupported ? <p className="mt-2 text-sm text-stone-500" data-testid="voice-unsupported">Voice capture needs a browser with microphone recording support.</p> : null}
+      {mounted && session.isSupported && !session.isTranscriptionSupported ? <p className="mt-2 text-sm text-stone-500" data-testid="voice-no-transcription">Voice search needs browser speech-recognition support. You can still type your query.</p> : null}
     </div>
   )
 }

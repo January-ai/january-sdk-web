@@ -20,12 +20,12 @@ export function UserContextCard({ description }: { description: string }) {
         <div><SectionLabel>Active partner user</SectionLabel><p className="mt-2 text-sm leading-6 text-stone-600">{description}</p></div>
       </div>
       <div className="mt-5 grid gap-4 sm:grid-cols-2">
-        <TextField label="Stable user ID" onChange={(event) => setUserId(event.target.value)} placeholder="partner-user-123" value={userId} />
-        <TextField label="IANA timezone" onChange={(event) => setTimezone(event.target.value)} placeholder="America/New_York" value={timezone} />
+        <TextField data-testid="settings-user-input" label="Stable user ID" onChange={(event) => setUserId(event.target.value)} placeholder="partner-user-123" value={userId} />
+        <TextField data-testid="settings-timezone-input" label="IANA timezone" onChange={(event) => setTimezone(event.target.value)} placeholder="America/New_York" value={timezone} />
       </div>
       <div className="mt-4 flex flex-wrap gap-3">
-        <Button disabled={!userId.trim()} onClick={() => session.setUser(userId, timezone)} type="button">Save active user</Button>
-        {session.endUserId && <SecondaryButton onClick={session.clearUser} type="button"><X aria-hidden="true" className="size-4" />Clear user</SecondaryButton>}
+        <Button data-testid="settings-save" disabled={!userId.trim()} onClick={() => session.setUser(userId, timezone)} type="button">Save active user</Button>
+        {session.endUserId && <SecondaryButton data-testid="settings-clear" onClick={session.clearUser} type="button"><X aria-hidden="true" className="size-4" />Clear user</SecondaryButton>}
       </div>
       {session.endUserId && <p className="mt-4 rounded-2xl bg-[#f8f5ed] px-4 py-3 text-sm font-semibold text-stone-700" data-testid="settings-user-id"><span className="break-all">{session.endUserId}</span> · {session.endUserTimezone}</p>}
     </Card>

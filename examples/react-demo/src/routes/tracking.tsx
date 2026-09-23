@@ -12,9 +12,9 @@ import { WaterChart, WeightChart, type WaterChartData, type WeightChartData } fr
 import { UserContextCard } from '~/components/user-context-card'
 import { useUserSession } from '~/components/user-session'
 import { Button, Card, EmptyState, ErrorMessage, Page, PageHeader, SecondaryButton, SectionLabel, SkeletonList, TextField } from '~/components/ui'
-import { formatDay, shiftDay, todayLocalDate } from '~/lib/log-day'
+import { formatDay, shiftDay, timestampForDay, todayLocalDate } from '~/lib/log-day'
 import { ChartRange, chunkDateRange, dailyBars, mergeDailyItems, monthlyBars, resolveChartRange, weightPoints } from '~/lib/tracking-charts'
-import { formatNumber } from '~/lib/utils'
+import { formatNumber, formatQuantity } from '~/lib/utils'
 
 export const Route = createFileRoute('/tracking')({ component: TrackingPage })
 
@@ -33,6 +33,10 @@ const weightUnits = [
 
 const unitLabel = (unit: string) => (unit === VolumeUnit.fluidOunces ? 'fl oz' : unit)
 const timeOf = (iso: string) => new Intl.DateTimeFormat('en-US', { timeStyle: 'short' }).format(new Date(iso))
+/** "at 8:15 PM" for today, "on Sep 21 at 12:00 PM" for another day. */
+const whenOf = (iso: string, day: string) => day === todayLocalDate()
+  ? `at ${timeOf(iso)}`
+  : `on ${new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(new Date(iso))} at ${timeOf(iso)}`
 
 function TrackingPage() {
   const queryClient = useQueryClient()
@@ -40,6 +44,7 @@ function TrackingPage() {
   const [day, setDay] = useState(() => todayLocalDate())
   const [editorOpen, setEditorOpen] = useState(false)
   const [editingLog, setEditingLog] = useState<FoodLog | undefined>()
+  const [editorSession, setEditorSession] = useState(0)
   const [waterValue, setWaterValue] = useState(8)
   const [waterUnit, setWaterUnit] = useState<VolumeUnitValue>(VolumeUnit.fluidOunces)
   const [lastWaterLog, setLastWaterLog] = useState<WaterLog | null>(null)
@@ -109,7 +114,8 @@ function TrackingPage() {
     onSuccess: invalidateFood,
   })
   const logWater = useMutation({
-    mutationFn: () => createWaterLog({ data: { ...context, value: waterValue, unit: waterUnit } }),
+    // Logged on the day being viewed: now for today, noon for an earlier day.
+    mutationFn: () => createWaterLog({ data: { ...context, value: waterValue, unit: waterUnit, consumedAt: timestampForDay(day) } }),
     onSuccess: (log) => {
       setLastWaterLog(log)
       queryClient.invalidateQueries({ queryKey: ['water-logs'] })
@@ -123,18 +129,22 @@ function TrackingPage() {
     },
   })
   const logWeight = useMutation({
-    mutationFn: () => createWeightLog({ data: { ...context, value: weightValue, unit: weightUnit } }),
+    mutationFn: () => createWeightLog({ data: { ...context, value: weightValue, unit: weightUnit, measuredAt: timestampForDay(day) } }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['weight-logs'] }),
   })
 
   function changeDay(next: string) {
-    setDay(next)
+    // Nothing can be logged ahead of today, so the picker stops there.
+    const today = todayLocalDate()
+    setDay(next > today ? today : next)
     setLastWaterLog(null)
     logWater.reset()
     logWeight.reset()
   }
 
   function openEditor(log?: FoodLog) {
+    // A fresh editor each time, so a new meal never starts from the last one's foods.
+    setEditorSession((session) => session + 1)
     setEditingLog(log)
     setEditorOpen(true)
   }
@@ -160,9 +170,9 @@ function TrackingPage() {
             <div className="mt-4 flex items-center gap-2">
               <SecondaryButton aria-label="Previous day" className="min-h-11 px-3" data-testid="logs-day-previous" onClick={() => changeDay(shiftDay(day, -1))} type="button"><ChevronLeft aria-hidden="true" className="size-4" /></SecondaryButton>
               <p className="flex-1 text-center font-semibold text-stone-800" data-testid="logs-day-label">{formatDay(day)}</p>
-              <SecondaryButton aria-label="Next day" className="min-h-11 px-3" data-testid="logs-day-next" onClick={() => changeDay(shiftDay(day, 1))} type="button"><ChevronRight aria-hidden="true" className="size-4" /></SecondaryButton>
+              <SecondaryButton aria-label="Next day" className="min-h-11 px-3" data-testid="logs-day-next" disabled={day >= todayLocalDate()} onClick={() => changeDay(shiftDay(day, 1))} type="button"><ChevronRight aria-hidden="true" className="size-4" /></SecondaryButton>
             </div>
-            <TextField className="mt-4" data-testid="logs-day-input" label="Date" onChange={(event) => { if (event.currentTarget.value) changeDay(event.currentTarget.value) }} type="date" value={day} />
+            <TextField className="mt-4" data-testid="logs-day-input" label="Date" max={todayLocalDate()} onChange={(event) => { if (event.currentTarget.value) changeDay(event.currentTarget.value) }} type="date" value={day} />
             <p className="data-number mt-3 text-xs text-stone-500">API: start and end {day}, in {session.endUserTimezone}</p>
             <div className="mt-5 flex flex-wrap gap-3">
               <SecondaryButton data-testid="logs-day-today" disabled={day === todayLocalDate()} onClick={() => changeDay(todayLocalDate())} type="button"><CalendarDays aria-hidden="true" className="size-4" />Today</SecondaryButton>
@@ -188,7 +198,7 @@ function TrackingPage() {
                 : logs.isError ? <ErrorMessage error={logs.error} testId="tracking-meals-error" />
                   : logs.data?.items.length ? <div className="space-y-4" data-testid="tracking-meal-list">{logs.data.items.map((log, index) => <Card className="overflow-hidden" data-testid={`tracking-meal-${index}`} key={log.id ?? `log-${index}`}>
                     <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-200 px-5 py-4 sm:px-6"><div><h3 className="text-lg font-bold">{log.name || 'Logged meal'}</h3><p className="data-number mt-1 text-sm text-stone-500">{new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(log.timestampUtc))}</p></div><div className="flex items-center gap-2"><span className="rounded-full bg-[#eee8dc] px-3 py-1.5 text-xs font-bold text-stone-600">{log.foods.length} food{log.foods.length === 1 ? '' : 's'}</span><button aria-label={`Edit ${log.name || 'meal'}`} className="grid size-10 place-items-center rounded-full hover:bg-stone-100" data-testid="tracking-meal-open" disabled={!log.id} onClick={() => openEditor(log)} type="button"><Pencil aria-hidden="true" className="size-4" /></button><button aria-label={`Delete ${log.name || 'meal'}`} className="grid size-10 place-items-center rounded-full text-red-800 hover:bg-red-50" data-testid="tracking-meal-delete" disabled={removeFood.isPending || !log.id} onClick={() => log.id && removeFood.mutate(log.id)} type="button"><Trash2 aria-hidden="true" className="size-4" /></button></div></div>
-                    {log.foods.map((food, foodIndex) => <div className="flex items-center gap-4 border-b border-stone-200 px-5 py-4 last:border-0 sm:px-6" key={`${log.id ?? index}-${food.id ?? foodIndex}`}><NetworkImage alt="" className="size-12 shrink-0 rounded-xl" fallback={<Utensils aria-hidden="true" className="size-5 text-stone-600" />} src={food.imageUrl} /><div className="min-w-0 flex-1"><div className="truncate font-bold">{food.name ?? 'Unnamed food'}</div><div className="data-number mt-1 text-sm text-stone-500">{formatNumber(food.nutrients.calories?.value, 0)} cal · {formatNumber(food.consumedServing.quantity)} {food.servingDetails.unit ?? 'serving'}</div></div></div>)}
+                    {log.foods.map((food, foodIndex) => <div className="flex items-center gap-4 border-b border-stone-200 px-5 py-4 last:border-0 sm:px-6" key={`${log.id ?? index}-${food.id ?? foodIndex}`}><NetworkImage alt="" className="size-12 shrink-0 rounded-xl" fallback={<Utensils aria-hidden="true" className="size-5 text-stone-600" />} src={food.imageUrl} /><div className="min-w-0 flex-1"><div className="truncate font-bold">{food.name ?? 'Unnamed food'}</div><div className="data-number mt-1 text-sm text-stone-500">{formatNumber(food.nutrients.calories?.value, 0)} cal · {formatQuantity(food.consumedServing.quantity)} {food.servingDetails.unit ?? 'serving'}</div></div></div>)}
                   </Card>)}</div>
                     : <EmptyState description="No meals were logged for this person on this day." icon={<NotebookPen aria-hidden="true" className="size-6" />} testId="tracking-meals-empty" title="No food logs found" />}
           </section>
@@ -217,7 +227,7 @@ function TrackingPage() {
               {logWater.isError ? <div className="mt-4"><ErrorMessage error={logWater.error} testId="water-log-add-error" /></div> : null}
               {removeWater.isError ? <div className="mt-4"><ErrorMessage error={removeWater.error} testId="water-log-delete-error" /></div> : null}
               {lastWaterLog && <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-[#f8f5ed] px-4 py-3 text-sm" data-testid="water-log-last">
-                <span className="font-semibold text-stone-700">Logged {formatNumber(lastWaterLog.amount.value)} {unitLabel(lastWaterLog.amount.unit)} at {timeOf(lastWaterLog.consumedAt)}</span>
+                <span className="font-semibold text-stone-700">Logged {formatNumber(lastWaterLog.amount.value)} {unitLabel(lastWaterLog.amount.unit)} {whenOf(lastWaterLog.consumedAt, day)}</span>
                 <button className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 font-bold text-red-800 hover:bg-red-50" data-testid="water-log-delete" disabled={removeWater.isPending} onClick={() => removeWater.mutate(lastWaterLog.id)} type="button"><Trash2 aria-hidden="true" className="size-4" />Delete this entry</button>
               </div>}
               {ready ? <div className="mt-6 border-t border-stone-200 pt-5"><WaterChart onRangeChange={setWaterRange} query={waterChart} range={waterRange} /></div> : null}
@@ -246,14 +256,14 @@ function TrackingPage() {
                 <Button busy={logWeight.isPending} data-testid="weight-log-add" disabled={!ready || logWeight.isPending || weightValue <= 0} onClick={() => logWeight.mutate()} type="button">Log weight</Button>
               </div>
               {logWeight.isError ? <div className="mt-4"><ErrorMessage error={logWeight.error} testId="weight-log-add-error" /></div> : null}
-              {logWeight.data && <p className="mt-5 rounded-2xl bg-[#f8f5ed] px-4 py-3 text-sm font-semibold text-stone-700" data-testid="weight-log-last">Logged {formatNumber(logWeight.data.weight.value)} {logWeight.data.weight.unit} at {timeOf(logWeight.data.measuredAt)}</p>}
+              {logWeight.data && <p className="mt-5 rounded-2xl bg-[#f8f5ed] px-4 py-3 text-sm font-semibold text-stone-700" data-testid="weight-log-last">Logged {formatNumber(logWeight.data.weight.value)} {logWeight.data.weight.unit} {whenOf(logWeight.data.measuredAt, day)}</p>}
               {ready ? <div className="mt-6 border-t border-stone-200 pt-5"><WeightChart onRangeChange={setWeightRange} query={weightChartQuery} range={weightRange} unit={weightUnit} /></div> : null}
             </Card>
           </section>
         </div>
       </div>
       <Dialog onClose={() => setEditorOpen(false)} open={editorOpen} title={editingLog ? 'Edit meal' : 'Add a meal'}>
-        <FoodLogEditor key={editingLog?.id ?? 'new'} log={editingLog} onSaved={editorSaved} />
+        <FoodLogEditor defaultTimestamp={timestampForDay(day)} key={editorSession} log={editingLog} onSaved={editorSaved} />
       </Dialog>
     </Page>
   )

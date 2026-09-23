@@ -1,6 +1,8 @@
 import {
   ActivityLevel,
   AutocompleteFoodCategory,
+  DietPreference,
+  DietRestriction,
   FoodCategory,
   HeightUnit,
   JanuaryError,
@@ -8,6 +10,7 @@ import {
   Sex,
   VolumeUnit,
   WeightUnit,
+  type FoodScan,
   type FoodSelection,
   type FoodLog,
   type GetFoodRequest,
@@ -72,7 +75,13 @@ export const searchFoodCatalog = createServerFn({ method: 'GET' })
   .handler(async ({ data }) => {
     const client = getJanuaryClient()
     if (data.mode === 'barcode') {
-      return client.foods.lookupBarcode({ upc: data.query, endUserId: data.endUserId })
+      try {
+        return await client.foods.lookupBarcode({ upc: data.query, endUserId: data.endUserId })
+      } catch (error) {
+        // An unknown UPC is a 404: show it as "no match" rather than as a failed request.
+        if (error instanceof JanuaryError && error.status === 404) return { totalCount: 0, items: [] }
+        throw error
+      }
     }
     return client.foods.search({
       query: data.query,
@@ -105,6 +114,37 @@ export const analyzeFoodDescription = createServerFn({ method: 'POST' })
   .validator(z.object({ description: z.string().trim().min(1).max(512), endUserId: optionalUserId }))
   .handler(({ data }) => getJanuaryClient().foodAnalysis.analyzeDescription({
     query: data.description,
+    ...(data.endUserId ? { endUserId: data.endUserId } : {}),
+  }))
+
+// The scan goes back exactly as the SDK returned it; the SDK forwards it field for field.
+const foodScanSchema = z.custom<FoodScan>((value) => typeof value === 'object'
+  && value !== null
+  && Array.isArray((value as { detections?: unknown }).detections), 'Send the scan exactly as it was returned.')
+
+export const correctFoodScan = createServerFn({ method: 'POST' })
+  .validator(z.object({
+    analysis: foodScanSchema,
+    instruction: z.string().trim().min(1).max(1_000),
+    endUserId: optionalUserId,
+  }))
+  .handler(({ data }) => getJanuaryClient().foodAnalysis.correct({
+    analysis: data.analysis,
+    instruction: data.instruction,
+    ...(data.endUserId ? { endUserId: data.endUserId } : {}),
+  }))
+
+export const suggestFoodAlternatives = createServerFn({ method: 'POST' })
+  .validator(z.object({
+    foodId: foodIdSchema,
+    dietRestrictions: z.array(z.enum(Object.values(DietRestriction) as [DietRestriction, ...DietRestriction[]])),
+    dietPreferences: z.array(z.enum(Object.values(DietPreference) as [DietPreference, ...DietPreference[]])),
+    endUserId: optionalUserId,
+  }))
+  .handler(({ data }) => getJanuaryClient().foods.suggestAlternatives({
+    foodId: data.foodId,
+    dietRestrictions: data.dietRestrictions,
+    dietPreferences: data.dietPreferences,
     ...(data.endUserId ? { endUserId: data.endUserId } : {}),
   }))
 
@@ -175,11 +215,15 @@ export const createWaterLog = createServerFn({ method: 'POST' })
   .validator(z.object({
     value: z.number().positive().max(24_000),
     unit: volumeUnitSchema,
+    consumedAt: z.iso.datetime().optional(),
     ...userContextSchema,
   }))
   .handler(({ data }) => {
-    const { endUserId, endUserTimezone, value, unit } = data
-    return getJanuaryClient().forUser({ endUserId, endUserTimezone }).waterLogs.create({ amount: { value, unit } })
+    const { endUserId, endUserTimezone, value, unit, consumedAt } = data
+    return getJanuaryClient().forUser({ endUserId, endUserTimezone }).waterLogs.create({
+      amount: { value, unit },
+      ...(consumedAt ? { consumedAt } : {}),
+    })
   })
 
 export const listWaterLogs = createServerFn({ method: 'GET' })
@@ -200,11 +244,15 @@ export const createWeightLog = createServerFn({ method: 'POST' })
   .validator(z.object({
     value: z.number().positive().max(1_000),
     unit: weightUnitSchema,
+    measuredAt: z.iso.datetime().optional(),
     ...userContextSchema,
   }))
   .handler(({ data }) => {
-    const { endUserId, endUserTimezone, value, unit } = data
-    return getJanuaryClient().forUser({ endUserId, endUserTimezone }).weightLogs.create({ weight: { value, unit } })
+    const { endUserId, endUserTimezone, value, unit, measuredAt } = data
+    return getJanuaryClient().forUser({ endUserId, endUserTimezone }).weightLogs.create({
+      weight: { value, unit },
+      ...(measuredAt ? { measuredAt } : {}),
+    })
   })
 
 export const listWeightLogs = createServerFn({ method: 'GET' })

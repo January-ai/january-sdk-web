@@ -16,6 +16,15 @@ export function shiftDay(day: string, days: number): string {
   return localDate(date)
 }
 
+/**
+ * When something logged on the Tracking day happened: now for today, local noon for any other
+ * day, so the entry lands on the day being viewed rather than on today.
+ */
+export function timestampForDay(day: string, now = new Date()): string {
+  if (day === localDate(now)) return now.toISOString()
+  return dayAtNoon(day).toISOString()
+}
+
 export function formatDay(day: string, now = new Date()): string {
   if (day === localDate(now)) return 'Today'
   if (day === shiftDay(localDate(now), -1)) return 'Yesterday'

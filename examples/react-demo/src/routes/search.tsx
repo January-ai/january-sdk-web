@@ -234,7 +234,7 @@ function SearchPage() {
                   onCityChange={selectCity}
                   onCurrentLocation={requestLocation}
                 />
-                {locationError && <p className="mt-2 text-pretty text-sm text-red-700">{locationError}</p>}
+                {locationError && <p className="mt-2 text-pretty text-sm text-red-700" data-testid="location-error" role="alert">{locationError}</p>}
               </div>
             )}
 
@@ -284,9 +284,11 @@ function SearchPage() {
                 <EmptyState description="Try a broader food name or check the barcode." icon={<Utensils aria-hidden="true" className="size-6" />} testId="empty-results" title="No foods matched" />
               )}
             </div>
+          ) : restaurants.data && !restaurants.data.items.length ? (
+            <EmptyState description="Try a broader name or cuisine, or search from another city." icon={<Building2 aria-hidden="true" className="size-6" />} testId="restaurants-empty" title="No restaurants nearby" />
           ) : restaurants.data ? (
             <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_minmax(320px,0.85fr)]">
-              <Card className="overflow-hidden" data-testid={restaurants.data.items.length ? 'restaurant-results' : 'restaurants-empty'}>
+              <Card className="overflow-hidden" data-testid="restaurant-results">
                 {restaurants.data.items.map((restaurant, index) => (
                   <ResultRow
                     key={restaurant.id}

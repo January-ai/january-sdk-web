@@ -40,7 +40,10 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000). The authentication card
 shows the local relay status and lets you mint a fresh client token. Search for
-`banana` to make the first SDK request. The Tracking screen shows one day at
+`banana` to make the first SDK request, open it, and choose **Find food
+alternatives** for suggestions shaped by dietary restrictions and preferences.
+A photo or description scan can be corrected with a short note, such as "it was
+two eggs, not three". The Tracking screen shows one day at
 a time: the day's meals with their totals, water with the day's total, and the
 day's weight, each with a log action. Below the water and weight cards, charts
 show the last week, month, or year ending today: daily water totals as bars

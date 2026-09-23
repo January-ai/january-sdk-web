@@ -4,12 +4,13 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { Activity, ArrowLeft, Utensils } from 'lucide-react'
 import { useState } from 'react'
 import { getDemoConfiguration, getFoodDetails, predictGlucose } from '~/api/january.functions'
+import { FoodAlternatives } from '~/components/food-alternatives'
 import { FoodMacroGrid, FoodNutritionFacts } from '~/components/food-detail-nutrition'
 import { FoodPredictionPanel } from '~/components/food-prediction-panel'
 import { NetworkImage } from '~/components/network-image'
 import { QuantityControl } from '~/components/quantity-control'
 import { Button, Card, ErrorMessage, Page, SectionLabel, SkeletonList } from '~/components/ui'
-import { formatNumber } from '~/lib/utils'
+import { formatNumber, formatQuantity } from '~/lib/utils'
 
 interface FoodDetailSearch {
   q: string
@@ -44,8 +45,9 @@ function FoodDetailPage() {
       <Link className="inline-flex min-h-11 items-center gap-2 rounded-full border border-stone-300 bg-white px-4 text-sm font-bold text-stone-700 hover:bg-stone-50" data-testid="food-detail-back" search={upc ? {} : { q }} to={upc ? '/scan' : '/search'}>
         <ArrowLeft aria-hidden="true" className="size-4" /> Back to results
       </Link>
-      {food.isPending ? <div className="mt-6"><SkeletonList testId="food-detail-loading" /></div> : food.isError ? <div className="mt-6"><ErrorMessage error={food.error} testId="food-detail-error" /></div> : (
-        <FoodDetailContent configuration={configuration} food={food.data} />
+      {food.isPending ? <div className="mt-6"><SkeletonList testId="food-detail-loading" /></div> : food.isError ? <div className="mt-6"><ErrorMessage error={food.error} onRetry={() => void food.refetch()} retryTestId="food-detail-retry" testId="food-detail-error" /></div> : (
+        // Keyed by food, so opening an alternative starts from that food's own serving.
+        <FoodDetailContent configuration={configuration} food={food.data} key={food.data.id} />
       )}
     </Page>
   )
@@ -110,9 +112,9 @@ function FoodDetailContent({ food, configuration }: { food: FoodSearchItem; conf
           <div className="mt-5 flex items-center justify-between gap-4 border-t border-stone-200 pt-5">
             <div>
               <SectionLabel>Quantity</SectionLabel>
-              <div className="data-number mt-1 text-3xl font-bold">{formatNumber(quantity)} <span className="text-base font-medium text-stone-500">{serving?.unit}</span></div>
+              <div className="data-number mt-1 text-3xl font-bold">{formatQuantity(quantity)} <span className="text-base font-medium text-stone-500">{serving?.unit}</span></div>
             </div>
-            <QuantityControl decreaseDisabled={quantity <= 0.25} onDecrease={() => changeQuantity(quantity - 0.25)} onIncrease={() => changeQuantity(quantity + 0.25)} testId="food-serving-controls" value={formatNumber(quantity)} />
+            <QuantityControl decreaseDisabled={quantity <= 0.25} onDecrease={() => changeQuantity(quantity - 0.25)} onIncrease={() => changeQuantity(quantity + 0.25)} testId="food-serving-controls" value={formatQuantity(quantity)} />
           </div>
         </Card>
       </div>
@@ -125,6 +127,7 @@ function FoodDetailContent({ food, configuration }: { food: FoodSearchItem; conf
         </Button>
         {prediction.isError && <ErrorMessage error={prediction.error} testId="food-glucose-error" />}
         {prediction.data && <FoodPredictionPanel food={food} quantity={quantity} serving={serving!} result={prediction.data} />}
+        <FoodAlternatives food={food} {...(configuration.defaultEndUserId ? { endUserId: configuration.defaultEndUserId } : {})} />
       </div>
     </div>
   )
