@@ -1,4 +1,4 @@
-import { localDate, shiftDay } from './log-day.ts'
+import { firstOfMonth, shiftDay, todayIn } from './log-day.ts'
 import { kilogramsToPounds, poundsToKilograms } from './weight-units.ts'
 
 /** The Tracking charts' ranges. Each one ends today, whatever day the Tracking picker shows. */
@@ -17,15 +17,15 @@ export const rangePhrase: Record<ChartRange, string> = {
 }
 
 /**
- * The inclusive local dates a range covers. Week is the last 7 days and Month the last 30,
- * both including today; Year is the last 12 calendar months, from the first of the month
- * eleven months back through today.
+ * The inclusive dates a range covers, in the end user's timezone. Week is the last 7 days and
+ * Month the last 30, both including today; Year is the last 12 calendar months, from the first of
+ * the month eleven months back through today.
  */
-export function resolveChartRange(range: ChartRange, now = new Date()): DateRange {
-  const end = localDate(now)
+export function resolveChartRange(range: ChartRange, timeZone: string, now = new Date()): DateRange {
+  const end = todayIn(timeZone, now)
   if (range === ChartRange.week) return { start: shiftDay(end, -6), end }
   if (range === ChartRange.month) return { start: shiftDay(end, -29), end }
-  return { start: localDate(new Date(now.getFullYear(), now.getMonth() - 11, 1, 12)), end }
+  return { start: firstOfMonth(end, -11), end }
 }
 
 /** Every local date from `start` through `end`, inclusive. */

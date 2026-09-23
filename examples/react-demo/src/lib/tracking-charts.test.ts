@@ -5,24 +5,26 @@ import {
   niceCeiling, resolveChartRange, waterSummary, weightPoints, weightSummary,
 } from './tracking-charts.ts'
 
-const september22 = new Date(2026, 8, 22, 9)
+const september22 = new Date(Date.UTC(2026, 8, 22, 9))
 
 test('every range ends today and covers 7 days, 30 days or 12 calendar months', () => {
-  assert.deepEqual(resolveChartRange(ChartRange.week, september22), { start: '2026-09-16', end: '2026-09-22' })
-  assert.deepEqual(resolveChartRange(ChartRange.month, september22), { start: '2026-08-24', end: '2026-09-22' })
-  assert.deepEqual(resolveChartRange(ChartRange.year, september22), { start: '2025-10-01', end: '2026-09-22' })
-  assert.equal(daysIn(resolveChartRange(ChartRange.week, september22)).length, 7)
-  assert.equal(daysIn(resolveChartRange(ChartRange.month, september22)).length, 30)
+  assert.deepEqual(resolveChartRange(ChartRange.week, 'UTC', september22), { start: '2026-09-16', end: '2026-09-22' })
+  assert.deepEqual(resolveChartRange(ChartRange.month, 'UTC', september22), { start: '2026-08-24', end: '2026-09-22' })
+  assert.deepEqual(resolveChartRange(ChartRange.year, 'UTC', september22), { start: '2025-10-01', end: '2026-09-22' })
+  assert.equal(daysIn(resolveChartRange(ChartRange.week, 'UTC', september22)).length, 7)
+  assert.equal(daysIn(resolveChartRange(ChartRange.month, 'UTC', september22)).length, 30)
 })
 
-test('ranges cross month and year boundaries in local time', () => {
-  const january3 = new Date(2026, 0, 3, 23, 30)
-  assert.deepEqual(resolveChartRange(ChartRange.week, january3), { start: '2025-12-28', end: '2026-01-03' })
-  assert.deepEqual(resolveChartRange(ChartRange.year, january3), { start: '2025-02-01', end: '2026-01-03' })
+test('ranges cross month and year boundaries and end on the user’s today', () => {
+  const january3 = new Date(Date.UTC(2026, 0, 3, 23, 30))
+  assert.deepEqual(resolveChartRange(ChartRange.week, 'UTC', january3), { start: '2025-12-28', end: '2026-01-03' })
+  assert.deepEqual(resolveChartRange(ChartRange.year, 'UTC', january3), { start: '2025-02-01', end: '2026-01-03' })
+  // Already Jan 4 in Tokyo.
+  assert.deepEqual(resolveChartRange(ChartRange.week, 'Asia/Tokyo', january3), { start: '2025-12-29', end: '2026-01-04' })
 })
 
 test('a year splits into consecutive chunks of at most 90 days with no gap or overlap', () => {
-  const year = resolveChartRange(ChartRange.year, september22)
+  const year = resolveChartRange(ChartRange.year, 'UTC', september22)
   const chunks = chunkDateRange(year)
   assert.deepEqual(chunks, [
     { start: '2025-10-01', end: '2025-12-29' },
@@ -37,8 +39,8 @@ test('a year splits into consecutive chunks of at most 90 days with no gap or ov
 })
 
 test('a week or a month is one request', () => {
-  assert.equal(chunkDateRange(resolveChartRange(ChartRange.week, september22)).length, 1)
-  assert.equal(chunkDateRange(resolveChartRange(ChartRange.month, september22)).length, 1)
+  assert.equal(chunkDateRange(resolveChartRange(ChartRange.week, 'UTC', september22)).length, 1)
+  assert.equal(chunkDateRange(resolveChartRange(ChartRange.month, 'UTC', september22)).length, 1)
   assert.deepEqual(chunkDateRange({ start: '2026-09-22', end: '2026-09-22' }), [{ start: '2026-09-22', end: '2026-09-22' }])
 })
 
@@ -58,7 +60,7 @@ test('days with no water are empty slots', () => {
 })
 
 test('the year view sums daily totals per calendar month', () => {
-  const range = resolveChartRange(ChartRange.year, september22)
+  const range = resolveChartRange(ChartRange.year, 'UTC', september22)
   const bars = monthlyBars([
     { date: '2025-10-01', total: { value: 10 } },
     { date: '2025-10-31', total: { value: 5.5 } },
@@ -95,7 +97,7 @@ test('chart summaries read as sentences', () => {
     'Weight, last 7 days: 3 entries, from 70.2 kg to 69.8 kg, lowest 69.8 kg, highest 70.4 kg',
   )
   assert.equal(weightSummary([], ChartRange.month, 'lb'), 'Weight, last 30 days: no entries')
-  const bars = dailyBars([{ date: '2026-09-19', total: { value: 32 } }, { date: '2026-09-22', total: { value: 24 } }], resolveChartRange(ChartRange.week, september22))
+  const bars = dailyBars([{ date: '2026-09-19', total: { value: 32 } }, { date: '2026-09-22', total: { value: 24 } }], resolveChartRange(ChartRange.week, 'UTC', september22))
   assert.equal(waterSummary(bars, ChartRange.week, 'fl oz'), 'Water, last 7 days: 2 of 7 days logged, 56 fl oz in total, most 32 fl oz on Sat, Sep 19')
 })
 

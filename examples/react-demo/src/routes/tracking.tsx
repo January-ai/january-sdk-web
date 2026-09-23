@@ -2,7 +2,7 @@ import { VolumeUnit, WeightUnit, type FoodLog, type WaterLog } from '@januaryai/
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { Activity, CalendarDays, ChevronLeft, ChevronRight, Droplets, NotebookPen, Pencil, Plus, RefreshCw, Scale, Trash2, Utensils } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createWaterLog, createWeightLog, deleteFoodLog, deleteWaterLog, getFoodLogSummary, listFoodLogs, listWaterLogs, listWeightLogs } from '~/api/january.functions'
 import { Dialog } from '~/components/dialog'
 import { FoodLogEditor } from '~/components/food-log-editor'
@@ -12,7 +12,7 @@ import { WaterChart, WeightChart, type WaterChartData, type WeightChartData } fr
 import { UserContextCard } from '~/components/user-context-card'
 import { useUserScopeKey, useUserSession } from '~/components/user-session'
 import { Button, Card, EmptyState, ErrorMessage, Page, PageHeader, SecondaryButton, SectionLabel, SkeletonList, TextField } from '~/components/ui'
-import { formatDay, shiftDay, timestampForDay, todayLocalDate } from '~/lib/log-day'
+import { formatDay, shiftDay, timestampForDay, todayIn, zoneOption } from '~/lib/log-day'
 import { ChartRange, chunkDateRange, dailyBars, mergeDailyItems, monthlyBars, resolveChartRange, weightPoints } from '~/lib/tracking-charts'
 import { convertWaterDraft, convertWeightDraft } from '~/lib/unit-drafts'
 import { formatNumber, formatQuantity } from '~/lib/utils'
@@ -33,11 +33,13 @@ const weightUnits = [
 ] as const
 
 const unitLabel = (unit: string) => (unit === VolumeUnit.fluidOunces ? 'fl oz' : unit)
-const timeOf = (iso: string) => new Intl.DateTimeFormat('en-US', { timeStyle: 'short' }).format(new Date(iso))
-/** "at 8:15 PM" for today, "on Sep 21 at 12:00 PM" for another day. */
-const whenOf = (iso: string, day: string) => day === todayLocalDate()
-  ? `at ${timeOf(iso)}`
-  : `on ${new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(new Date(iso))} at ${timeOf(iso)}`
+/** "at 8:15 PM" for today, "on Sep 21 at 12:00 PM" for another day, on the end user's clock. */
+const whenOf = (iso: string, day: string, timeZone: string) => {
+  const time = new Intl.DateTimeFormat('en-US', { timeStyle: 'short', ...zoneOption(timeZone) }).format(new Date(iso))
+  return day === todayIn(timeZone)
+    ? `at ${time}`
+    : `on ${new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', ...zoneOption(timeZone) }).format(new Date(iso))} at ${time}`
+}
 
 function TrackingPage() {
   // Everything on this screen belongs to one end user. Remounting on a user change drops the
@@ -50,7 +52,9 @@ function TrackingPage() {
 function TrackingScreen() {
   const queryClient = useQueryClient()
   const session = useUserSession()
-  const [day, setDay] = useState(() => todayLocalDate())
+  // Days are the end user's calendar days: the API files every log in their timezone.
+  const timeZone = session.endUserTimezone
+  const [day, setDay] = useState(() => todayIn(timeZone))
   const [editorOpen, setEditorOpen] = useState(false)
   const [editingLog, setEditingLog] = useState<FoodLog | undefined>()
   const [editorSession, setEditorSession] = useState(0)
@@ -90,7 +94,7 @@ function TrackingScreen() {
 
   // The charts end today whatever day is picked above. Year spans more than one list call
   // returns (100 days), so it is asked for in consecutive chunks of up to 90 days and merged.
-  const waterSpan = resolveChartRange(waterRange)
+  const waterSpan = resolveChartRange(waterRange, timeZone)
   const waterChart = useQuery({
     queryKey: ['water-logs', context, 'chart', waterRange, waterSpan, waterUnit],
     queryFn: async (): Promise<WaterChartData> => {
@@ -101,7 +105,7 @@ function TrackingScreen() {
     enabled: ready,
     placeholderData: keepPreviousData,
   })
-  const weightSpan = resolveChartRange(weightRange)
+  const weightSpan = resolveChartRange(weightRange, timeZone)
   const weightChart = useQuery({
     queryKey: ['weight-logs', context, 'chart', weightRange, weightSpan],
     queryFn: async () => {
@@ -124,7 +128,7 @@ function TrackingScreen() {
   })
   const logWater = useMutation({
     // Logged on the day being viewed: now for today, noon for an earlier day.
-    mutationFn: () => createWaterLog({ data: { ...context, value: waterValue, unit: waterUnit, consumedAt: timestampForDay(day) } }),
+    mutationFn: () => createWaterLog({ data: { ...context, value: waterValue, unit: waterUnit, consumedAt: timestampForDay(day, timeZone) } }),
     onSuccess: (log) => {
       setLastWaterLog(log)
       queryClient.invalidateQueries({ queryKey: ['water-logs'] })
@@ -138,13 +142,16 @@ function TrackingScreen() {
     },
   })
   const logWeight = useMutation({
-    mutationFn: () => createWeightLog({ data: { ...context, value: weightValue, unit: weightUnit, measuredAt: timestampForDay(day) } }),
+    mutationFn: () => createWeightLog({ data: { ...context, value: weightValue, unit: weightUnit, measuredAt: timestampForDay(day, timeZone) } }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['weight-logs'] }),
   })
 
+  // A different timezone has a different today: start the picker there rather than on the old zone's day.
+  useEffect(() => { changeDay(todayIn(timeZone)) }, [timeZone])
+
   function changeDay(next: string) {
     // Nothing can be logged ahead of today, so the picker stops there.
-    const today = todayLocalDate()
+    const today = todayIn(timeZone)
     setDay(next > today ? today : next)
     setLastWaterLog(null)
     logWater.reset()
@@ -178,13 +185,13 @@ function TrackingScreen() {
             <SectionLabel>Day</SectionLabel>
             <div className="mt-4 flex items-center gap-2">
               <SecondaryButton aria-label="Previous day" className="min-h-11 px-3" data-testid="logs-day-previous" onClick={() => changeDay(shiftDay(day, -1))} type="button"><ChevronLeft aria-hidden="true" className="size-4" /></SecondaryButton>
-              <p className="flex-1 text-center font-semibold text-stone-800" data-testid="logs-day-label">{formatDay(day)}</p>
-              <SecondaryButton aria-label="Next day" className="min-h-11 px-3" data-testid="logs-day-next" disabled={day >= todayLocalDate()} onClick={() => changeDay(shiftDay(day, 1))} type="button"><ChevronRight aria-hidden="true" className="size-4" /></SecondaryButton>
+              <p className="flex-1 text-center font-semibold text-stone-800" data-testid="logs-day-label">{formatDay(day, timeZone)}</p>
+              <SecondaryButton aria-label="Next day" className="min-h-11 px-3" data-testid="logs-day-next" disabled={day >= todayIn(timeZone)} onClick={() => changeDay(shiftDay(day, 1))} type="button"><ChevronRight aria-hidden="true" className="size-4" /></SecondaryButton>
             </div>
-            <TextField className="mt-4" data-testid="logs-day-input" label="Date" max={todayLocalDate()} onChange={(event) => { if (event.currentTarget.value) changeDay(event.currentTarget.value) }} type="date" value={day} />
+            <TextField className="mt-4" data-testid="logs-day-input" label="Date" max={todayIn(timeZone)} onChange={(event) => { if (event.currentTarget.value) changeDay(event.currentTarget.value) }} type="date" value={day} />
             <p className="data-number mt-3 text-xs text-stone-500">API: start and end {day}, in {session.endUserTimezone}</p>
             <div className="mt-5 flex flex-wrap gap-3">
-              <SecondaryButton data-testid="logs-day-today" disabled={day === todayLocalDate()} onClick={() => changeDay(todayLocalDate())} type="button"><CalendarDays aria-hidden="true" className="size-4" />Today</SecondaryButton>
+              <SecondaryButton data-testid="logs-day-today" disabled={day === todayIn(timeZone)} onClick={() => changeDay(todayIn(timeZone))} type="button"><CalendarDays aria-hidden="true" className="size-4" />Today</SecondaryButton>
               <SecondaryButton data-testid="logs-day-refresh" disabled={!ready} onClick={() => { invalidateFood(); queryClient.invalidateQueries({ queryKey: ['water-logs'] }); queryClient.invalidateQueries({ queryKey: ['weight-logs'] }) }} type="button"><RefreshCw aria-hidden="true" className="size-4" />Reload day</SecondaryButton>
             </div>
           </Card>
@@ -236,7 +243,7 @@ function TrackingScreen() {
               {logWater.isError ? <div className="mt-4"><ErrorMessage error={logWater.error} testId="water-log-add-error" /></div> : null}
               {removeWater.isError ? <div className="mt-4"><ErrorMessage error={removeWater.error} testId="water-log-delete-error" /></div> : null}
               {lastWaterLog && <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-[#f8f5ed] px-4 py-3 text-sm" data-log-id={lastWaterLog.id} data-testid="water-log-last">
-                <span className="font-semibold text-stone-700">Logged {formatNumber(lastWaterLog.amount.value)} {unitLabel(lastWaterLog.amount.unit)} {whenOf(lastWaterLog.consumedAt, day)}</span>
+                <span className="font-semibold text-stone-700">Logged {formatNumber(lastWaterLog.amount.value)} {unitLabel(lastWaterLog.amount.unit)} {whenOf(lastWaterLog.consumedAt, day, timeZone)}</span>
                 <button className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 font-bold text-red-800 hover:bg-red-50" data-testid="water-log-delete" disabled={removeWater.isPending} onClick={() => removeWater.mutate(lastWaterLog.id)} type="button"><Trash2 aria-hidden="true" className="size-4" />Delete this entry</button>
               </div>}
               {ready ? <div className="mt-6 border-t border-stone-200 pt-5"><WaterChart onRangeChange={setWaterRange} query={waterChart} range={waterRange} /></div> : null}
@@ -265,14 +272,14 @@ function TrackingScreen() {
                 <Button busy={logWeight.isPending} data-testid="weight-log-add" disabled={!ready || logWeight.isPending || weightValue <= 0} onClick={() => logWeight.mutate()} type="button">Log weight</Button>
               </div>
               {logWeight.isError ? <div className="mt-4"><ErrorMessage error={logWeight.error} testId="weight-log-add-error" /></div> : null}
-              {logWeight.data && <p className="mt-5 rounded-2xl bg-[#f8f5ed] px-4 py-3 text-sm font-semibold text-stone-700" data-testid="weight-log-last">Logged {formatNumber(logWeight.data.weight.value)} {logWeight.data.weight.unit} {whenOf(logWeight.data.measuredAt, day)}</p>}
+              {logWeight.data && <p className="mt-5 rounded-2xl bg-[#f8f5ed] px-4 py-3 text-sm font-semibold text-stone-700" data-testid="weight-log-last">Logged {formatNumber(logWeight.data.weight.value)} {logWeight.data.weight.unit} {whenOf(logWeight.data.measuredAt, day, timeZone)}</p>}
               {ready ? <div className="mt-6 border-t border-stone-200 pt-5"><WeightChart onRangeChange={setWeightRange} query={weightChartQuery} range={weightRange} unit={weightUnit} /></div> : null}
             </Card>
           </section>
         </div>
       </div>
       <Dialog onClose={() => setEditorOpen(false)} open={editorOpen} title={editingLog ? 'Edit meal' : 'Add a meal'}>
-        <FoodLogEditor defaultTimestamp={timestampForDay(day)} key={editorSession} log={editingLog} onSaved={editorSaved} />
+        <FoodLogEditor defaultTimestamp={timestampForDay(day, timeZone)} key={editorSession} log={editingLog} onSaved={editorSaved} />
       </Dialog>
     </Page>
   )

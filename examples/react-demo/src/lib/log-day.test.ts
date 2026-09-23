@@ -1,32 +1,38 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { formatDay, localDate, shiftDay, timestampForDay } from './log-day.ts'
+import { dayIn, formatDay, shiftDay, timestampForDay, todayIn } from './log-day.ts'
 
-const august25 = new Date(2026, 7, 25, 12)
+// 9:30 PM on Aug 25 in New York is already Aug 26 in UTC and in Tokyo.
+const newYorkEvening = new Date(Date.UTC(2026, 7, 26, 1, 30))
 
-test('a log day is a local calendar date', () => {
-  assert.equal(localDate(august25), '2026-08-25')
-  assert.equal(localDate(new Date(2026, 0, 5, 0, 30)), '2026-01-05')
+test('a log day is the calendar date in the end user’s timezone, not the browser’s', () => {
+  assert.equal(dayIn(newYorkEvening, 'America/New_York'), '2026-08-25')
+  assert.equal(dayIn(newYorkEvening, 'UTC'), '2026-08-26')
+  assert.equal(todayIn('Asia/Tokyo', newYorkEvening), '2026-08-26')
 })
 
-test('shifting a day crosses month and year boundaries in local time', () => {
+test('an unknown timezone name falls back to the browser’s instead of throwing', () => {
+  assert.match(todayIn('Not/AZone', newYorkEvening), /^\d{4}-\d{2}-\d{2}$/)
+})
+
+test('shifting a day crosses month and year boundaries', () => {
   assert.equal(shiftDay('2026-08-25', 1), '2026-08-26')
   assert.equal(shiftDay('2026-09-01', -1), '2026-08-31')
   assert.equal(shiftDay('2026-01-01', -1), '2025-12-31')
+  assert.equal(shiftDay('2028-02-28', 1), '2028-02-29')
 })
 
-test('an entry for today is stamped now, an entry for another day at that day\'s local noon', () => {
-  // 9:30 PM local is already the next day in UTC for any timezone west of UTC-2:30.
-  const evening = new Date(2026, 7, 25, 21, 30)
-  assert.equal(timestampForDay('2026-08-25', evening), evening.toISOString())
-  const yesterday = new Date(timestampForDay('2026-08-24', evening))
-  assert.equal(localDate(yesterday), '2026-08-24')
-  assert.equal(yesterday.getHours(), 12)
-  assert.equal(localDate(new Date(timestampForDay('2026-02-28', evening))), '2026-02-28')
+test('an entry for today is stamped now, an entry for another day at noon in the user’s timezone', () => {
+  assert.equal(timestampForDay('2026-08-25', 'America/New_York', newYorkEvening), newYorkEvening.toISOString())
+  assert.equal(timestampForDay('2026-08-24', 'America/New_York', newYorkEvening), '2026-08-24T16:00:00.000Z')
+  assert.equal(timestampForDay('2026-08-25', 'Asia/Tokyo', newYorkEvening), '2026-08-25T03:00:00.000Z')
+  // Noon keeps the zone's offset on either side of a daylight-saving change.
+  assert.equal(timestampForDay('2026-03-08', 'America/New_York', newYorkEvening), '2026-03-08T16:00:00.000Z')
+  assert.equal(timestampForDay('2026-11-01', 'America/New_York', newYorkEvening), '2026-11-01T17:00:00.000Z')
 })
 
-test('today and yesterday are named, other days are spelled out', () => {
-  assert.equal(formatDay('2026-08-25', august25), 'Today')
-  assert.equal(formatDay('2026-08-24', august25), 'Yesterday')
-  assert.equal(formatDay('2026-08-20', august25), 'Thursday, Aug 20, 2026')
+test('today and yesterday are named in the user’s timezone, other days are spelled out', () => {
+  assert.equal(formatDay('2026-08-25', 'America/New_York', newYorkEvening), 'Today')
+  assert.equal(formatDay('2026-08-25', 'Asia/Tokyo', newYorkEvening), 'Yesterday')
+  assert.equal(formatDay('2026-08-20', 'America/New_York', newYorkEvening), 'Thursday, Aug 20, 2026')
 })

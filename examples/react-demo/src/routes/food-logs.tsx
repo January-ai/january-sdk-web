@@ -34,7 +34,7 @@ function FoodLogsScreen() {
   const queryClient = useQueryClient()
   const session = useUserSession()
   const [span, setSpan] = useState<FoodLogTimeSpanValue>(FoodLogTimeSpan.today)
-  const range = useMemo(() => resolveFoodLogTimeSpan(span), [span])
+  const range = useMemo(() => resolveFoodLogTimeSpan(span, session.endUserTimezone), [span, session.endUserTimezone])
   const [request, setRequest] = useState<{ endUserId: string; endUserTimezone: string; start: string; end: string } | null>(null)
   const [editorOpen, setEditorOpen] = useState(false)
   const [editingLog, setEditingLog] = useState<FoodLog | undefined>()
