@@ -35,6 +35,20 @@ test('The relay mints a token, and a relay failure is shown', async ({ page }) =
   await expect(card.getByTestId('token-status')).toContainText('Token ready')
 })
 
+test('A user ID typed before the configuration arrives is kept', async ({ page }) => {
+  // The configuration waits on the relay's health check; hold it back so the
+  // default user arrives after typing has started.
+  await control('/', { delay: 1.5 })
+  await openDemo(page, '/food-logs')
+  await byId(page, 'settings-user-input').fill('typed-early')
+  await expect(byId(page, 'settings-user-id')).toContainText('fixture-user')
+  await expect(byId(page, 'settings-user-input')).toHaveValue('typed-early')
+  await control('/', { delay: 0 })
+  await byId(page, 'settings-save').click()
+  await expect(byId(page, 'settings-user-id')).toContainText('typed-early')
+  await expect(byId(page, 'settings-user-input')).toHaveValue('typed-early')
+})
+
 test('The active user is kept in this browser across pages', async ({ page }) => {
   await openDemo(page, '/food-logs')
   // The default user arrives with the demo's configuration; type once it is shown.
