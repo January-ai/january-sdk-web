@@ -14,6 +14,7 @@
     "test": "node --experimental-strip-types --test src/lib/*.test.ts",
     "test:ui": "playwright test",
     "test:ui:ids": "node scripts/ui-coverage.mjs",
+    "test:ui:live": "playwright test --config playwright.live.config.ts",
     "check:static": "npm run typecheck && npm test && vite build"
   },
   "dependencies": {

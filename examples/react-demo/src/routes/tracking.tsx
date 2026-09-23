@@ -218,7 +218,7 @@ function TrackingPage() {
                         : waterTotal ? <p className="data-number mt-1 text-2xl font-bold" data-testid="water-day-total">{formatNumber(waterTotal.total.value)} {unitLabel(waterTotal.total.unit)}</p>
                           : <p className="mt-1 text-sm font-semibold text-stone-500" data-testid="water-logs-empty">Nothing logged yet</p>}
                 </div>
-                <SegmentedControl<VolumeUnitValue> className="w-56" label="Water unit" name="water-unit" onChange={setWaterUnit} options={volumeUnits} value={waterUnit} />
+                <SegmentedControl<VolumeUnitValue> className="w-56" label="Water unit" name="water-unit" onChange={(unit) => { setWaterUnit(unit); if (logWater.isError) logWater.reset() }} options={volumeUnits} value={waterUnit} />
               </div>
               <div className="mt-5 grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
                 <TextField data-testid="water-amount" inputMode="decimal" label={`Amount (${unitLabel(waterUnit)})`} min={waterUnit === VolumeUnit.cups ? 0.125 : 1} onChange={(event) => { if (Number.isFinite(event.currentTarget.valueAsNumber)) setWaterValue(event.currentTarget.valueAsNumber) }} step={waterUnit === VolumeUnit.cups ? 0.125 : 0.5} type="number" value={waterValue} />
@@ -226,7 +226,7 @@ function TrackingPage() {
               </div>
               {logWater.isError ? <div className="mt-4"><ErrorMessage error={logWater.error} testId="water-log-add-error" /></div> : null}
               {removeWater.isError ? <div className="mt-4"><ErrorMessage error={removeWater.error} testId="water-log-delete-error" /></div> : null}
-              {lastWaterLog && <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-[#f8f5ed] px-4 py-3 text-sm" data-testid="water-log-last">
+              {lastWaterLog && <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-[#f8f5ed] px-4 py-3 text-sm" data-log-id={lastWaterLog.id} data-testid="water-log-last">
                 <span className="font-semibold text-stone-700">Logged {formatNumber(lastWaterLog.amount.value)} {unitLabel(lastWaterLog.amount.unit)} {whenOf(lastWaterLog.consumedAt, day)}</span>
                 <button className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 font-bold text-red-800 hover:bg-red-50" data-testid="water-log-delete" disabled={removeWater.isPending} onClick={() => removeWater.mutate(lastWaterLog.id)} type="button"><Trash2 aria-hidden="true" className="size-4" />Delete this entry</button>
               </div>}
@@ -249,7 +249,7 @@ function TrackingPage() {
                         : dayWeight ? <p className="data-number mt-1 text-2xl font-bold" data-testid="weight-day-value">{formatNumber(dayWeight.weight.value)} {dayWeight.weight.unit}</p>
                           : <p className="mt-1 text-sm font-semibold text-stone-500" data-testid="weight-logs-empty">Nothing logged yet</p>}
                 </div>
-                <SegmentedControl<WeightUnitValue> className="w-40" label="Weight unit" name="weight-unit" onChange={setWeightUnit} options={weightUnits} value={weightUnit} />
+                <SegmentedControl<WeightUnitValue> className="w-40" label="Weight unit" name="weight-unit" onChange={(unit) => { setWeightUnit(unit); if (logWeight.isError) logWeight.reset() }} options={weightUnits} value={weightUnit} />
               </div>
               <div className="mt-5 grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
                 <TextField data-testid="weight-value" inputMode="decimal" label={`Weight (${weightUnit})`} min={1} onChange={(event) => { if (Number.isFinite(event.currentTarget.valueAsNumber)) setWeightValue(event.currentTarget.valueAsNumber) }} step="0.1" type="number" value={weightValue} />

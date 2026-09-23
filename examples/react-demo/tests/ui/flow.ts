@@ -5,16 +5,21 @@ export const fixtureApi = 'http://127.0.0.1:18767'
 
 /**
  * Configures how the fixture server answers one route for the rest of the test:
- * an HTTP status, an empty collection, or a delay in seconds before answering.
+ * an HTTP status (with an optional error code and message), an empty collection,
+ * or a delay in seconds before answering.
  */
 export async function control(
   route: string,
-  options: { status?: number; empty?: boolean; delay?: number } = {},
+  options: { status?: number; empty?: boolean; delay?: number; code?: string; message?: string; when?: string } = {},
 ) {
   const params = new URLSearchParams({ route })
   if (options.status !== undefined) params.set('status', String(options.status))
   if (options.empty !== undefined) params.set('empty', String(options.empty))
   if (options.delay !== undefined) params.set('delay', String(options.delay))
+  // The error body's code and message, and `when` (`unit=cup`) to fail only matching requests.
+  if (options.code !== undefined) params.set('code', options.code)
+  if (options.message !== undefined) params.set('message', options.message)
+  if (options.when !== undefined) params.set('when', options.when)
   const response = await fetch(`${fixtureApi}/__control?${params}`)
   if (!response.ok) throw new Error(`Fixture control failed for ${route}: HTTP ${response.status}`)
 }

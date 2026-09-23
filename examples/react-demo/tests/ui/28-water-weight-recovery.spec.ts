@@ -22,6 +22,10 @@ test('Water and weight loading empty failure and retry', async ({ page }) => {
   await byId(page, 'water-log-add').click()
   await expect(byId(page, 'water-log-add-error')).toBeVisible()
   await expect(byId(page, 'water-log-last')).toHaveCount(0)
+  // Choosing another unit starts over: the failed entry's error goes away.
+  await byId(page, 'water-unit-ml').click()
+  await expect(byId(page, 'water-log-add-error')).toHaveCount(0)
+  await byId(page, 'water-unit-fl-oz').click()
 
   await control('/v1.2/water-logs', { status: 200 })
   await byId(page, 'logs-day-today').click()

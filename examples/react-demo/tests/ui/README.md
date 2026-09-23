@@ -47,8 +47,9 @@ first; the native suites pick up the same numbers when they gain the flow:
 | 37 | The meal editor: foods, serving, quantity, time, save states |
 | 38 | Glucose profile, food suggestions, and loading |
 | 39 | Token minting through the relay, and the active user |
+| 40 | Water in cups rejected by the API (400 `invalid_request`), shown and recovered from |
 
-That makes 63 tests in 37 numbered specs plus 20 role-based ones, 83 in all.
+That makes 64 tests in 38 numbered specs plus 20 role-based ones, 84 in all.
 
 ## Every test ID is exercised
 

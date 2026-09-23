@@ -18,6 +18,8 @@ test('Water log create day total and delete', async ({ page }) => {
   await byId(page, 'water-unit-fl-oz').click()
   await byId(page, 'water-log-add').click()
   await expect(byId(page, 'water-log-last')).toContainText('Logged 8 fl oz')
+  // The entry carries the log's ID, the one "Delete this entry" deletes.
+  await expect(byId(page, 'water-log-last')).toHaveAttribute('data-log-id', 'water-1')
 
   await byId(page, 'water-unit-ml').click()
   await expect(byId(page, 'water-day-total')).toContainText('709.8 ml')

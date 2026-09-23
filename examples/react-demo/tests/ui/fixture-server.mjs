@@ -129,6 +129,10 @@ createServer(async (request, response) => {
       status: Number(url.searchParams.get('status') ?? 200),
       empty: url.searchParams.get('empty') === 'true',
       delay: Number(url.searchParams.get('delay') ?? 0),
+      code: url.searchParams.get('code'),
+      message: url.searchParams.get('message'),
+      // Only requests with this query value answer with the status, e.g. unit=cup.
+      when: url.searchParams.get('when'),
     })
     return json(response, {})
   }
@@ -146,11 +150,13 @@ createServer(async (request, response) => {
   })
   const rule = rules.get(url.pathname) ?? { status: 200, empty: false, delay: 0 }
   if (rule.delay) await new Promise((resolve) => setTimeout(resolve, rule.delay * 1000))
-  if (rule.status !== 200) {
-    const message = rule.status === 404
+  const [whenKey, whenValue] = rule.when ? rule.when.split('=') : []
+  const applies = !rule.when || url.searchParams.get(whenKey) === whenValue || body?.[whenKey] === whenValue || body?.amount?.[whenKey] === whenValue
+  if (rule.status !== 200 && applies) {
+    const message = rule.message ?? (rule.status === 404
       ? 'No restaurant with id cafe. Use an id from a GET /v1.2/restaurants result.'
-      : 'The test request could not be completed.'
-    return json(response, { code: rule.status === 404 ? 'not_found' : 'fixture_error', message }, rule.status)
+      : 'The test request could not be completed.')
+    return json(response, { code: rule.code ?? (rule.status === 404 ? 'not_found' : 'fixture_error'), message }, rule.status)
   }
   if (url.pathname === '/') return json(response, { ok: true })
   if (url.pathname === '/api/january/client-token' && request.method === 'POST') return json(response, {
