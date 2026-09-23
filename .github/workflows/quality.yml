@@ -75,6 +75,11 @@ jobs:
         env:
           npm_config_ignore_scripts: "true"
 
+      # Fails unless every test ID the demo declares is clicked, filled, or asserted
+      # by a spec in examples/react-demo/tests/ui.
+      - name: Check that the UI suite exercises every demo test ID
+        run: npm --prefix examples/react-demo run test:ui:ids
+
       - name: Install the packed SDK in a clean ESM project
         run: |
           archive="$(npm pack --silent)"

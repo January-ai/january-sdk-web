@@ -14,6 +14,7 @@ npx playwright test
 npx playwright test tests/ui/09-glucose.spec.ts      # one flow
 npx playwright test --shard=2/3                      # the slice CI runs as "2 of 3"
 npx playwright test --ui                             # step through interactively
+npm run test:ui:ids                                  # every test ID exercised?
 ```
 
 The dev server is started with `JANUARY_TEST_API_URL` pointing at the fixture
@@ -24,18 +25,51 @@ inherits another's configuration.
 
 ## Coverage against the shared catalog
 
-The numbered specs follow the React Native flow numbers. Two have no web
-counterpart and are left out on purpose: 16 (food picker above the keyboard;
-no soft keyboard on the web) and 24 (food alternatives; the web demo has no
-alternatives feature). Scan correction, menu-item detail, health conditions and
-the settings sheet also do not exist on the web, so those steps are omitted
-from the flows that would otherwise include them. The older role-based specs
-(`authentication`, `foods`, `restaurants`, `scan`, `food-logs`, `glucose`)
-remain alongside for the relay and contract-shape checks they cover. Flows 26
-to 29 (water logs, weight logs, their recovery states, and the Tracking charts)
-were added on the web first; the native suites pick up the same numbers when
-they gain the feature. That makes 27 numbered specs plus 20 role-based ones, 48
-in all.
+The numbered specs follow the React Native flow numbers. One has no web
+counterpart and is left out on purpose: 16 (food picker above the keyboard; no
+soft keyboard on the web). Menu-item detail, health conditions and the settings
+sheet do not exist on the web, so those steps are omitted from the flows that
+would otherwise include them. The older role-based specs (`authentication`,
+`foods`, `restaurants`, `scan`, `food-logs`, `glucose`) remain alongside for the
+relay and contract-shape checks they cover. Flows 26 to 39 were added on the web
+first; the native suites pick up the same numbers when they gain the flow:
+
+| Flow | Covers |
+| --- | --- |
+| 26–29 | Water logs, weight logs, their recovery states, and the Tracking charts |
+| 30 | Food search loading, category, scope, and barcode mode (an unknown UPC is no match) |
+| 31 | Restaurant search and menu loading, empty, failure, retry, and location |
+| 32 | Food detail loading, failure, retry, and serving quantity |
+| 33 | Photo scan from the library, camera, and sample; correction; meal glucose |
+| 34 | Description and UPC states, and the barcode camera |
+| 35 | Voice capture: transcript, cancel, nothing heard, blocked, unsupported |
+| 36 | Tracking without a user, meal states, and entries on an earlier day |
+| 37 | The meal editor: foods, serving, quantity, time, save states |
+| 38 | Glucose profile, food suggestions, and loading |
+| 39 | Token minting through the relay, and the active user |
+
+That makes 63 tests in 37 numbered specs plus 20 role-based ones, 83 in all.
+
+## Every test ID is exercised
+
+`npm run test:ui:ids` (`scripts/ui-coverage.mjs`) reads the demo source and the
+specs as text and fails unless every test ID the demo declares is clicked,
+filled, or asserted on by at least one spec in this folder. It prints
+`UI coverage: N/M (P%)` and lists any ID left out. CI runs it with the demo's
+static checks, and `npm run check` runs it before the suite.
+
+A declared ID is a string literal given to `data-testid`, to a `*TestId` prop
+the shared components forward (`testId`, `busyTestId`, `retryTestId`,
+`inputTestId`, `voiceTestId`), or to `testId:` in an option list. IDs built from
+a template (`food-result-${index}`) or a prefix prop (`testIdPrefix`,
+`itemTestIdPrefix`, `idPrefix`) have no literal, so the script lists each one
+with a pattern and a representative ID; a template or prefix it does not know
+fails the check until it is added there.
+
+Headless Chromium has no camera, microphone, speech recognition, or
+`BarcodeDetector`. `device-stubs.ts` installs stand-ins before the page loads,
+so the barcode camera and voice capture flows run end to end, including the
+blocked and unsupported cases.
 
 ## Tracking and Logs
 
@@ -75,6 +109,20 @@ Tracking test ids:
 For a range (start date before end date) the fixture answers the list routes
 with a generated year of history ending today, with gaps, and weights older
 than 45 days stored in kg; a single-day request keeps its fixed answer.
+
+Food detail: `food-alternatives` opens `alternatives-panel` with the chips
+`diet-restriction-<value>` and `diet-preference-<value>` (`aria-pressed`),
+`alternatives-refresh` (`alternatives-loading` while busy), and then
+`alternatives-results` with rows `alternative-N`, `alternatives-empty`, or
+`alternatives-error` with `alternatives-error-retry`.
+
+Scan results (photo and description): rows `scan-detection-N` or
+`scan-detections-empty`; `scan-correct` opens `scan-correction` with
+`scan-correction-input`, `scan-correction-submit` (`scan-correction-loading`),
+`scan-correction-cancel`, and `scan-correction-error` with
+`scan-correction-retry`; a corrected result shows `scan-corrected`. The meal
+prediction is `scan-glucose-predict` (`scan-glucose-loading`), then
+`scan-glucose-result` or `scan-glucose-error`.
 
 Logs keeps its original ids: `logs-range-today`, `logs-range-week`,
 `logs-range-month`, `food-logs-refresh`, `food-log-list`, `food-log-N`,

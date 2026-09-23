@@ -9,10 +9,11 @@
     "prebuild": "npm --prefix ../.. run build",
     "build": "vite build",
     "precheck": "npm --prefix ../.. run build",
-    "check": "npm run check:static && npm run test:ui",
+    "check": "npm run check:static && npm run test:ui:ids && npm run test:ui",
     "typecheck": "tsc --noEmit",
     "test": "node --experimental-strip-types --test src/lib/*.test.ts",
     "test:ui": "playwright test",
+    "test:ui:ids": "node scripts/ui-coverage.mjs",
     "check:static": "npm run typecheck && npm test && vite build"
   },
   "dependencies": {

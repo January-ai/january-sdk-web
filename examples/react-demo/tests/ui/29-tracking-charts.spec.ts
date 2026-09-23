@@ -109,3 +109,22 @@ test('Tracking charts empty failure and retry', async ({ page }) => {
   await expect(byId(page, 'weight-chart')).toHaveAttribute('data-range', 'month')
   await expect(byId(page, 'weight-chart-error')).toHaveCount(0)
 })
+
+test('Tracking charts loading, water total, and a water failure with retry', async ({ page }) => {
+  await control('/v1.2/water-logs', { delay: 2 })
+  await control('/v1.2/weight-logs', { delay: 2 })
+  await openDemo(page, '/tracking')
+  await expect(byId(page, 'water-chart-loading')).toBeVisible()
+  await expect(byId(page, 'weight-chart-loading')).toBeVisible()
+  // Week: 24 today, then 32, 48, 24, nothing, 16 and 32 fl oz on the six days before.
+  await expect(byId(page, 'water-chart-total')).toHaveText('176 fl oz', { timeout: 15_000 })
+  await expect(byId(page, 'weight-chart')).toBeVisible({ timeout: 15_000 })
+
+  await control('/v1.2/water-logs', { status: 500 })
+  await byId(page, 'water-chart-range-month').click()
+  await expect(byId(page, 'water-chart-error')).toBeVisible({ timeout: 15_000 })
+  await control('/v1.2/water-logs', { status: 200 })
+  await byId(page, 'water-chart-retry').click()
+  await expect(byId(page, 'water-chart')).toHaveAttribute('data-range', 'month')
+  await expect(byId(page, 'water-chart-error')).toHaveCount(0)
+})

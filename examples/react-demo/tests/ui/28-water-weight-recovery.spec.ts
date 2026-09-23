@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { byId, control, openDemo, resetFixture } from './flow'
+import { byId, control, localDay, openDemo, resetFixture } from './flow'
 
 test.beforeEach(async () => {
   await resetFixture()
@@ -29,9 +29,11 @@ test('Water and weight loading empty failure and retry', async ({ page }) => {
   await expect(byId(page, 'water-logs-error')).toHaveCount(0)
   await expect(byId(page, 'water-log-add-error')).toHaveCount(0)
 
-  // Yesterday's weight is already cached from above, so use a day not visited yet.
+  // Nothing is logged ahead of today, so the picker stops there.
+  await expect(byId(page, 'logs-day-next')).toBeDisabled()
+  // The last two days are already cached from above, so use a day not visited yet.
   await control('/v1.2/weight-logs', { empty: true })
-  await byId(page, 'logs-day-next').click()
+  await byId(page, 'logs-day-input').fill(localDay(-3))
   await expect(byId(page, 'weight-logs-empty')).toBeVisible()
   await control('/v1.2/weight-logs', { status: 500 })
   await byId(page, 'weight-log-add').click()

@@ -25,10 +25,19 @@ export async function resetFixture() {
   if (!response.ok) throw new Error(`Fixture reset failed: HTTP ${response.status}`)
 }
 
+/** One request the fixture server received; `body` is the JSON a POST or PATCH sent. */
+export interface FixtureRequest {
+  method: string
+  path: string
+  query: Record<string, string>
+  body?: any
+  authorization: string | null
+}
+
 /** The requests the fixture server has received since the last reset. */
-export async function fixtureRequests(): Promise<Array<{ method: string; path: string; query: Record<string, string> }>> {
+export async function fixtureRequests(): Promise<FixtureRequest[]> {
   const response = await fetch(`${fixtureApi}/__requests`)
-  return (await response.json()) as Array<{ method: string; path: string; query: Record<string, string> }>
+  return (await response.json()) as FixtureRequest[]
 }
 
 /** Opens a demo route and waits until the client has hydrated. */
@@ -40,4 +49,12 @@ export async function openDemo(page: Page, path: string) {
 /** Selects by the kebab-case test id shared with the React Native, iOS and Android demos. */
 export function byId(page: Page, id: string): Locator {
   return page.getByTestId(id)
+}
+
+/** A local calendar day as `YYYY-MM-DD`, `offsetDays` from today (negative is earlier). */
+export function localDay(offsetDays = 0): string {
+  const day = new Date()
+  day.setHours(12, 0, 0, 0)
+  day.setDate(day.getDate() + offsetDays)
+  return `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`
 }
