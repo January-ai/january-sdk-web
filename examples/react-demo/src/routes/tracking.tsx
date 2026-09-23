@@ -14,6 +14,7 @@ import { useUserScopeKey, useUserSession } from '~/components/user-session'
 import { Button, Card, EmptyState, ErrorMessage, Page, PageHeader, SecondaryButton, SectionLabel, SkeletonList, TextField } from '~/components/ui'
 import { formatDay, shiftDay, timestampForDay, todayLocalDate } from '~/lib/log-day'
 import { ChartRange, chunkDateRange, dailyBars, mergeDailyItems, monthlyBars, resolveChartRange, weightPoints } from '~/lib/tracking-charts'
+import { convertWaterDraft, convertWeightDraft } from '~/lib/unit-drafts'
 import { formatNumber, formatQuantity } from '~/lib/utils'
 
 export const Route = createFileRoute('/tracking')({ component: TrackingPage })
@@ -226,7 +227,7 @@ function TrackingScreen() {
                         : waterTotal ? <p className="data-number mt-1 text-2xl font-bold" data-testid="water-day-total">{formatNumber(waterTotal.total.value)} {unitLabel(waterTotal.total.unit)}</p>
                           : <p className="mt-1 text-sm font-semibold text-stone-500" data-testid="water-logs-empty">Nothing logged yet</p>}
                 </div>
-                <SegmentedControl<VolumeUnitValue> className="w-56" label="Water unit" name="water-unit" onChange={(unit) => { setWaterUnit(unit); if (logWater.isError) logWater.reset() }} options={volumeUnits} value={waterUnit} />
+                <SegmentedControl<VolumeUnitValue> className="w-56" label="Water unit" name="water-unit" onChange={(unit) => { setWaterValue((value) => convertWaterDraft(value, waterUnit, unit)); setWaterUnit(unit); if (logWater.isError) logWater.reset() }} options={volumeUnits} value={waterUnit} />
               </div>
               <div className="mt-5 grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
                 <TextField data-testid="water-amount" inputMode="decimal" label={`Amount (${unitLabel(waterUnit)})`} min={waterUnit === VolumeUnit.cups ? 0.125 : 1} onChange={(event) => { if (Number.isFinite(event.currentTarget.valueAsNumber)) setWaterValue(event.currentTarget.valueAsNumber) }} step={waterUnit === VolumeUnit.cups ? 0.125 : 0.5} type="number" value={waterValue} />
@@ -257,7 +258,7 @@ function TrackingScreen() {
                         : dayWeight ? <p className="data-number mt-1 text-2xl font-bold" data-testid="weight-day-value">{formatNumber(dayWeight.weight.value)} {dayWeight.weight.unit}</p>
                           : <p className="mt-1 text-sm font-semibold text-stone-500" data-testid="weight-logs-empty">Nothing logged yet</p>}
                 </div>
-                <SegmentedControl<WeightUnitValue> className="w-40" label="Weight unit" name="weight-unit" onChange={(unit) => { setWeightUnit(unit); if (logWeight.isError) logWeight.reset() }} options={weightUnits} value={weightUnit} />
+                <SegmentedControl<WeightUnitValue> className="w-40" label="Weight unit" name="weight-unit" onChange={(unit) => { setWeightValue((value) => convertWeightDraft(value, weightUnit, unit)); setWeightUnit(unit); if (logWeight.isError) logWeight.reset() }} options={weightUnits} value={weightUnit} />
               </div>
               <div className="mt-5 grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
                 <TextField data-testid="weight-value" inputMode="decimal" label={`Weight (${weightUnit})`} min={1} onChange={(event) => { if (Number.isFinite(event.currentTarget.valueAsNumber)) setWeightValue(event.currentTarget.valueAsNumber) }} step="0.1" type="number" value={weightValue} />
