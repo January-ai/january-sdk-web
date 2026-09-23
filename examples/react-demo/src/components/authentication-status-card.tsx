@@ -46,7 +46,7 @@ export function AuthenticationStatusCard() {
       </div>
 
       <div className="space-y-4 px-5 py-4">
-        {configuration.isPending && <StatusLine tone="neutral" label="Checking authentication…" />}
+        {configuration.isPending && <StatusLine label="Checking authentication…" testId="configuration-loading" tone="neutral" />}
 
         {data?.authMode === 'unconfigured' && (
           <>
@@ -138,9 +138,9 @@ export function AuthenticationStatusCard() {
   )
 }
 
-function StatusLine({ tone, label }: { tone: 'positive' | 'warning' | 'neutral'; label: string }) {
+function StatusLine({ tone, label, testId }: { tone: 'positive' | 'warning' | 'neutral'; label: string; testId?: string }) {
   return (
-    <div className="flex items-center gap-2 text-sm font-bold text-stone-900">
+    <div className="flex items-center gap-2 text-sm font-bold text-stone-900" data-testid={testId}>
       <span
         aria-hidden="true"
         className={cn(

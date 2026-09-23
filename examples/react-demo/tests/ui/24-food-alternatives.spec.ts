@@ -47,4 +47,9 @@ test('Food alternatives empty, failure, and retry', async ({ page }) => {
   await control('/v1.2/foods/food-1/alternatives', { status: 200 })
   await byId(page, 'alternatives-error-retry').click()
   await expect(byId(page, 'alternative-0')).toContainText('Fixture Salad')
+
+  // A food with no nutrition beyond the macros says so.
+  await byId(page, 'alternative-1').click()
+  await expect(page.getByRole('heading', { name: 'Fixture Soup' })).toBeVisible()
+  await expect(byId(page, 'food-nutrition-empty')).toHaveText('No additional nutrients were returned.')
 })

@@ -174,6 +174,11 @@ createServer(async (request, response) => {
   }, 404)
   if (url.pathname === '/v1.2/foods/food-1') return json(response, food)
   if (url.pathname === '/v1.2/foods/food-2') return json(response, alternativeFood)
+  // A food with calories and protein only, so its detail has no further nutrition facts.
+  if (url.pathname === '/v1.2/foods/food-3') return json(response, {
+    ...alternativeFood, id: 'food-3', name: 'Fixture Soup', brand_name: 'Fixture Kitchen', glycemic_index: null, glycemic_load: null,
+    servings: [{ id: '31', quantity: 1, unit: 'cup', scaling_factor: 1, weight_grams: null, is_primary: true }],
+  })
   if (url.pathname === '/v1.2/foods/food-1/alternatives' && request.method === 'POST') {
     return json(response, { alternatives: rule.empty ? [] : alternatives })
   }
