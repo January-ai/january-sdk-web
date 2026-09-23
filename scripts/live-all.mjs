@@ -161,7 +161,8 @@ if (!prediction.prediction.length) throw new Error('glucose.predict returned no 
 pass('glucose.predict', `${prediction.prediction.length} points`);
 
 const user = client.forUser({ endUserId, endUserTimezone: timezone });
-const logDay = new Date().toISOString().slice(0, 10);
+// The API files logs under the end user's local day, which differs from the UTC day around midnight.
+const logDay = new Intl.DateTimeFormat('en-CA', { timeZone: timezone }).format(new Date());
 let waterLogId;
 try {
   const water = await user.waterLogs.create({ amount: { value: 8, unit: VolumeUnit.fluidOunces } });

@@ -100,6 +100,8 @@ test('water and weight inputs are validated before any request is sent', async (
   await assert.rejects(client.weightLogs.create({ endUserId: 'u', weight: { value: 150, unit: 'stone' } }), /weight\.unit must be one of lb, kg/);
   await assert.rejects(client.weightLogs.create({ endUserId: 'u', weight: { value: Number.NaN, unit: 'kg' } }), /weight\.value must be a positive number/);
   await assert.rejects(client.weightLogs.list({ endUserId: 'u', start: '2026-09-01', end: 'today' }), /end must be an ISO-8601 date/);
+  await assert.rejects(client.waterLogs.list({ endUserId: 'u', start: '2026-02-31', end: '2026-03-10', unit: 'ml' }), /start must be an ISO-8601 date/);
+  await assert.rejects(client.weightLogs.list({ endUserId: 'u', start: '2026-09-01', end: '2026-09-31' }), /end must be an ISO-8601 date/);
   assert.equal(requests.length, 0);
 });
 

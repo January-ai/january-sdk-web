@@ -4,7 +4,8 @@ export function init(signal?: AbortSignal): RequestInit | undefined { return sig
 export function parseDate(value: string, name: string): Date {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) throw new TypeError(`${name} must be an ISO-8601 date.`);
   const result = new Date(`${value}T00:00:00.000Z`);
-  if (Number.isNaN(result.getTime())) throw new TypeError(`${name} must be an ISO-8601 date.`);
+  // Date rolls impossible days forward (2026-02-31 becomes March 3), so the parsed day must read back unchanged.
+  if (Number.isNaN(result.getTime()) || formatDate(result) !== value) throw new TypeError(`${name} must be an ISO-8601 date.`);
   return result;
 }
 
