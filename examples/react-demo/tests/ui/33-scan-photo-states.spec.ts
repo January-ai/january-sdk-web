@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from './fixtures'
 import { fileURLToPath } from 'node:url'
 import { byId, control, fixtureRequests, openDemo, resetFixture } from './flow'
 

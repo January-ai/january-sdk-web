@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from './fixtures'
 import { byId, control, fixtureRequests, openDemo, resetFixture } from './flow'
 
 test.beforeEach(async () => {

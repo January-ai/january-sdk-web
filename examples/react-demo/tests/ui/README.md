@@ -15,6 +15,7 @@ npx playwright test tests/ui/09-glucose.spec.ts      # one flow
 npx playwright test --shard=2/3                      # the slice CI runs as "2 of 3"
 npx playwright test --ui                             # step through interactively
 npm run test:ui:ids                                  # every test ID exercised?
+npm run test:ui:lines                                # the suite, then browser line coverage of src
 ```
 
 The dev server is started with `JANUARY_TEST_API_URL` pointing at the fixture
@@ -66,6 +67,13 @@ a template (`food-result-${index}`) or a prefix prop (`testIdPrefix`,
 `itemTestIdPrefix`, `idPrefix`) have no literal, so the script lists each one
 with a pattern and a representative ID; a template or prefix it does not know
 fails the check until it is added there.
+
+`npm run test:ui:lines` runs the suite with each test recording the browser's
+V8 coverage of the demo's modules, then maps it back to lines of `src` through
+the dev server's source maps and prints the coverage per file (also written to
+`test-results/ui-line-coverage.txt`). It is for information and not a gate;
+server-function handlers run in Node and are not counted. Specs import `test`
+and `expect` from `fixtures.ts`, which records the coverage only when asked.
 
 Headless Chromium has no camera, microphone, speech recognition, or
 `BarcodeDetector`. `device-stubs.ts` installs stand-ins before the page loads,

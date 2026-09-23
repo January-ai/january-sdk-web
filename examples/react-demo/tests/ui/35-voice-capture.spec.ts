@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from './fixtures'
 import { stubVoiceCapture } from './device-stubs'
 import { byId, openDemo, resetFixture } from './flow'
 

@@ -15,6 +15,7 @@
     "test:ui": "playwright test",
     "test:ui:ids": "node scripts/ui-coverage.mjs",
     "test:ui:live": "playwright test --config playwright.live.config.ts",
+    "test:ui:lines": "node -e \"require('node:fs').rmSync('test-results/v8-coverage',{recursive:true,force:true})\" && UI_LINE_COVERAGE=1 playwright test; node scripts/ui-line-coverage.mjs",
     "check:static": "npm run typecheck && npm test && vite build"
   },
   "dependencies": {
