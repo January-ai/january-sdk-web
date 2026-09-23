@@ -32,6 +32,7 @@ import {
   SkeletonList,
 } from '~/components/ui'
 import { formatNumber } from '~/lib/utils'
+import { formatDistance } from '~/lib/distance'
 import { primaryServingLabel } from '~/lib/food-display'
 
 type CatalogKind = 'foods' | 'restaurants'
@@ -293,7 +294,7 @@ function SearchPage() {
                   <ResultRow
                     key={restaurant.id}
                     media={<Building2 aria-hidden="true" className="size-6 text-stone-600" />}
-                    meta={[restaurant.city, restaurant.distance != null ? `${formatNumber(restaurant.distance)} mi` : null].filter(Boolean).join(' · ')}
+                    meta={[restaurant.city, restaurant.distance != null ? formatDistance(restaurant.distance) : null].filter(Boolean).join(' · ')}
                     onClick={() => setSelectedRestaurant(restaurant)}
                     testId={`restaurant-result-${index}`}
                     title={restaurant.name ?? 'Unnamed restaurant'}

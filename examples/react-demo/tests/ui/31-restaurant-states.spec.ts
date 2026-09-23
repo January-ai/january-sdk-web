@@ -19,6 +19,8 @@ test('Restaurant search loading, results, empty, and failure', async ({ page }) 
   await searchRestaurants(page, 'pizza')
   await expect(byId(page, 'restaurants-loading')).toBeVisible()
   await expect(byId(page, 'restaurant-results')).toBeVisible({ timeout: 15_000 })
+  // The API gives distance in meters (100 here); the demo shows miles.
+  await expect(byId(page, 'restaurant-result-0')).toContainText('San Francisco · 0.1 mi')
   const search = (await fixtureRequests()).find(({ path }) => path === '/v1.2/restaurants')
   expect(search?.query).toMatchObject({ query: 'pizza', latitude: '40.7128', longitude: '-74.006' })
 

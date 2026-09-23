@@ -219,6 +219,7 @@ export interface Restaurant {
   id: ContractRestaurant['id'];
   name: ContractRestaurant['name'];
   isChain?: ContractRestaurant['isChain'];
+  /** Distance from the searched point, in meters. */
   distance?: ContractRestaurant['distanceMeters'];
   city?: ContractRestaurant['city'];
   address1?: ContractRestaurant['address1'];
@@ -244,6 +245,7 @@ export interface RestaurantMenuItem {
   gi?: number | null;
   gl?: number | null;
   photoUrl?: string | null;
+  /** Distance from the searched point, in meters. */
   distance?: number | null;
   servings: ServingOption[];
 }
