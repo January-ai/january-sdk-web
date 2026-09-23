@@ -2,8 +2,11 @@
 
 ## Unreleased
 
+## 0.3.0 - 2026-09-23
+
 * Water logs with `waterLogs.create`, `list` (daily totals in a chosen unit), and `delete`, plus `VolumeUnit` (`fl_oz`, `ml`, and `cup`); the API accepts 0.1–101.4 cups
 * Food, water, and weight logs send and read the API's `created_at`, which replaces `eaten_at`, `consumed_at`, and `measured_at`; the SDK's `timestampUtc`, `consumedAt`, and `measuredAt` are unchanged
+* 0.2.0 and earlier can't read food logs from the current API, which now sends `created_at`; upgrade to 0.3.0
 * Weight logs with `weightLogs.create` and `list` (latest weight per day)
 * `ServingSummary` and `ServingDetails` carry `weightGrams` and non-null `id` and `quantity`; `DetectedFood.id` and `quantity` are non-null
 * Breaking: `AlternativeFood.id`, `RestaurantMenuEntry.id`, `LoggedFood.id`, and `ServingOption.id` are non-null strings, matching the current Partner API
@@ -13,10 +16,13 @@
 * The React demo's Tracking tab charts weight (line) and daily water (bars) over the last week, month, or year
 * The React demo suggests food alternatives from a food's detail, filtered by dietary restrictions and preferences, and corrects a photo or description scan from a short note
 * The React demo logs meals, water, and weight on the Tracking day being viewed, and shows an unknown UPC as no match rather than as an error
+* Photo analysis effort with `ScanFoodPhotoRequest.reasoningEffort`; the API uses the reasoning-based analyzer unless `none` asks for the standard one
+
+## 0.2.0 and earlier
+
 * Breaking: `DetectedFood` exposes `serving` and `quantity` instead of `servings`, matching the current Partner API; `0.1.x` fails to decode photo scans and description analyses
 * Food alternatives are `AlternativeFood` values with `servings: ServingSummary[]`
 * Food-log summaries per day or week with `foodLogs.getSummary`
-* Photo analysis effort with `ScanFoodPhotoRequest.reasoningEffort`; the API uses the reasoning-based analyzer unless `none` asks for the standard one
 * Removed the unused `NaturalLanguageFood`, `NaturalLanguageServing`, and `NaturalLanguageFoodDetection` types
 * Restaurant and menu-item searches accept the v1.2 radius range through 50,000 meters
 * Typed Promise-based Web SDK for browser applications
@@ -30,5 +36,4 @@
 * Typed imperial and metric glucose-profile measurements
 * Shared, white-label-ready React demo components
 * Paginated restaurant-menu lookup by restaurant ID, ready after backend deployment
-
 Pin pre-release integrations to the version supplied by January.
