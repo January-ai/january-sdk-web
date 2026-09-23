@@ -5,7 +5,7 @@
 // (method, path, status, body) with tokens redacted.
 //
 // As a script, for the same end user and the local calendar day:
-//   node tests/live/live-api.mjs state [YYYY-MM-DD]   # water, weight, meals, and totals
+//   node tests/live/live-api.mjs state [YYYY-MM-DD]   # water, weight, meals with their created_at, and totals
 //   node tests/live/live-api.mjs cleanup             # delete the logs a live run created
 //
 // Environment: PARTNER_TOKEN_URL (the token relay; default the local relay),
@@ -121,7 +121,7 @@ async function ok(method, path, requestBody) {
   return result.body
 }
 
-/** Daily water totals from `start` through `end` in `unit` (`fl_oz` or `ml`). */
+/** Daily water totals from `start` through `end` in `unit` (`fl_oz`, `ml`, or `cup`). */
 export async function waterTotals(start, end, unit) {
   return (await ok('GET', `/v1.2/water-logs?${query({ start_date: start, end_date: end, timezone, unit })}`)).items
 }
@@ -185,16 +185,16 @@ export async function cleanup() {
 
 /** The end user's logs for one day, as the demo's Tracking screen would show them. */
 export async function state(day = localDay()) {
-  const [flOz, ml, weight, meals, summary] = [
-    await waterTotal(day, 'fl_oz'), await waterTotal(day, 'ml'), await weightOn(day), await foodLogs(day), await foodLogSummary(day),
+  const [flOz, ml, cup, weight, meals, summary] = [
+    await waterTotal(day, 'fl_oz'), await waterTotal(day, 'ml'), await waterTotal(day, 'cup'), await weightOn(day), await foodLogs(day), await foodLogSummary(day),
   ]
   return {
     endUserId,
     timezone,
     day,
-    water: { fl_oz: flOz, ml },
+    water: { fl_oz: flOz, ml, cup },
     weight,
-    meals: meals.map((log) => ({ id: log.id, name: log.name, foods: log.foods.map((food) => `${food.quantity} × ${food.name}`) })),
+    meals: meals.map((log) => ({ id: log.id, name: log.name, createdAt: log.created_at, foods: log.foods.map((food) => `${food.quantity} × ${food.name}`) })),
     totals: summary.totals,
   }
 }

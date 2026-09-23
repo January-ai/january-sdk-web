@@ -33,7 +33,7 @@ test('Tracking and Logs use the user’s timezone for today, not the browser’s
   await byId(page, 'water-log-add').click()
   await expect(byId(page, 'water-log-last')).toBeVisible()
   const water = (await fixtureRequests()).find(({ method, path }) => method === 'POST' && path === '/v1.2/water-logs')
-  const consumedAt = new Date(water?.body?.consumed_at)
+  const consumedAt = new Date(water?.body?.created_at)
   expect(new Intl.DateTimeFormat('en-CA', { timeZone: userZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(consumedAt)).toBe(dayIn(userZone, -1))
   expect(new Intl.DateTimeFormat('en-US', { timeZone: userZone, hour: 'numeric', hourCycle: 'h23' }).format(consumedAt)).toBe('12')
 

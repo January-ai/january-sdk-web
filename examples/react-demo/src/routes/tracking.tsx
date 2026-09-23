@@ -237,7 +237,7 @@ function TrackingScreen() {
                 <SegmentedControl<VolumeUnitValue> className="w-56" label="Water unit" name="water-unit" onChange={(unit) => { setWaterValue((value) => convertWaterDraft(value, waterUnit, unit)); setWaterUnit(unit); if (logWater.isError) logWater.reset() }} options={volumeUnits} value={waterUnit} />
               </div>
               <div className="mt-5 grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
-                <TextField data-testid="water-amount" inputMode="decimal" label={`Amount (${unitLabel(waterUnit)})`} min={waterUnit === VolumeUnit.cups ? 0.125 : 1} onChange={(event) => { if (Number.isFinite(event.currentTarget.valueAsNumber)) setWaterValue(event.currentTarget.valueAsNumber) }} step={waterUnit === VolumeUnit.cups ? 0.125 : 0.5} type="number" value={waterValue} />
+                <TextField data-testid="water-amount" inputMode="decimal" label={`Amount (${unitLabel(waterUnit)})`} min={waterUnit === VolumeUnit.cups ? 0.1 : 1} onChange={(event) => { if (Number.isFinite(event.currentTarget.valueAsNumber)) setWaterValue(event.currentTarget.valueAsNumber) }} step={waterUnit === VolumeUnit.cups ? 0.1 : 0.5} type="number" value={waterValue} />
                 <Button busy={logWater.isPending} data-testid="water-log-add" disabled={!ready || logWater.isPending || waterValue <= 0} onClick={() => logWater.mutate()} type="button">Log water</Button>
               </div>
               {logWater.isError ? <div className="mt-4"><ErrorMessage error={logWater.error} testId="water-log-add-error" /></div> : null}

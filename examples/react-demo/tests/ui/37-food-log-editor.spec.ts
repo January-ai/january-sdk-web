@@ -24,7 +24,7 @@ test('Logs prompt, meal list, and editing the foods of a meal', async ({ page })
   const update = (await fixtureRequests()).find(({ method, path }) => method === 'PATCH' && path === '/v1.2/food-logs/log-1')
   expect(update?.body.foods).toEqual([{ food_id: 'food-1', serving_id: '11', quantity: 2 }])
   const [year, month, date] = localDay().split('-').map(Number)
-  expect(new Date(update?.body.eaten_at).getTime()).toBe(new Date(year!, month! - 1, date!, 8, 30).getTime())
+  expect(new Date(update?.body.created_at).getTime()).toBe(new Date(year!, month! - 1, date!, 8, 30).getTime())
 })
 
 test('Saving a meal: suggestions, loading, failure, and a fresh editor for the next meal', async ({ page }) => {

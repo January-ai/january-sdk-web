@@ -3,7 +3,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { byId, freshRateWindow, observed, openDemo, shown, step, verified } from './evidence'
 import {
-  allowanceUsedUp, api, cleanup, deleteWaterLog, endUserId, evidenceDir, foodLog, foodLogs, foodLogSummary, localDay,
+  allowanceUsedUp, api, cleanup, endUserId, evidenceDir, foodLog, foodLogs, foodLogSummary, localDay,
   rememberCreated, setLogContext, state, timezone, waterTotal, waterTotals, weightOn, weights,
 } from './live-api.mjs'
 
@@ -422,7 +422,7 @@ test.describe('Live demo @live', () => {
       expect(created).toBeTruthy()
       snackId = created.id
       rememberCreated('food', snackId, snack)
-      verified('Meal created from Tracking', snack, { id: created.id, eatenAt: created.eaten_at })
+      verified('Meal created from Tracking', snack, { id: created.id, createdAt: created.created_at })
     }, () => page.getByTestId(/^tracking-meal-\d+$/).filter({ hasText: snack }))
     await step(page, 'Food logs', 'Delete the snack on Tracking', async () => {
       await page.getByTestId(/^tracking-meal-\d+$/).filter({ hasText: snack }).getByTestId('tracking-meal-delete').click()
@@ -552,42 +552,41 @@ test.describe('Live demo @live', () => {
     }, () => byId(page, 'water-section'))
   })
 
-  test('Water in cups is rejected by the API and shown as an error @logs', async ({ page }) => {
+  test('Water in cups: the day total, log 1 cup, and delete it @logs', async ({ page }) => {
     const flOz = await waterTotal(today, 'fl_oz')
-    await step(page, 'Water (cup)', 'The day total in cups shows the API\'s rejection', async () => {
+    let cups = 0
+    await step(page, 'Water (cup)', 'The day total in cups matches the API', async () => {
       await openDemo(page, '/tracking')
       await byId(page, 'water-unit-cup').click()
-      await expect(byId(page, 'water-logs-error')).toBeVisible()
-      await expect(byId(page, 'water-chart-error')).toBeVisible()
-      const server = await api('GET', `/v1.2/water-logs?${query({ start_date: today, end_date: today, timezone, unit: 'cup' })}`)
-      await expect(byId(page, 'water-logs-error-details-body')).toHaveText(server.body.message)
-      verified('Cup day total (pending backend support)', await text(page, 'water-logs-error-details-body'), { status: server.status, body: server.body })
-      expect(server.status).toBe(400)
+      cups = await waterTotal(today, 'cup')
+      if (cups) await expect(byId(page, 'water-day-total')).toHaveText(`${shown(cups)} cup`)
+      else await expect(byId(page, 'water-logs-empty')).toBeVisible()
+      await expect(byId(page, 'water-logs-error')).toHaveCount(0)
+      verified('Water today in cups', cups ? await text(page, 'water-day-total') : await text(page, 'water-logs-empty'), { cup: cups })
     }, () => byId(page, 'water-section'))
-    await step(page, 'Water (cup)', 'Logging 1 cup shows the API\'s rejection and creates nothing', async () => {
+    await step(page, 'Water (cup)', 'Log 1 cup: 8 fl oz more', async () => {
       await byId(page, 'water-amount').fill('1')
       await byId(page, 'water-log-add').click()
-      await expect(byId(page, 'water-log-add-error')).toBeVisible()
-      await expect(byId(page, 'water-log-last')).toHaveCount(0)
-      const shownMessage = await text(page, 'water-log-add-error-details-body')
-      const server = await api('POST', '/v1.2/water-logs', { amount: { value: 1, unit: 'cup' } })
-      if (server.status < 300 && server.body?.id) {
-        rememberCreated('water', server.body.id, '1 cup (direct check)')
-        await deleteWaterLog(server.body.id)
-      }
-      verified('Cup create (pending backend support)', shownMessage, { status: server.status, body: server.body })
-      expect(server.status).toBe(400)
-      expect(shownMessage).toBe(server.body.message)
-      expect(await waterTotal(today, 'fl_oz')).toBeCloseTo(flOz, 1)
+      await expect(byId(page, 'water-log-last')).toContainText('Logged 1 cup at')
+      rememberCreated('water', (await byId(page, 'water-log-last').getAttribute('data-log-id'))!, '1 cup today')
+      const server = { cup: await waterTotal(today, 'cup'), fl_oz: await waterTotal(today, 'fl_oz') }
+      expect(server.cup).toBeCloseTo(cups + 1, 1)
+      expect(server.fl_oz).toBeCloseTo(flOz + 8, 1)
+      await expect(byId(page, 'water-day-total')).toHaveText(`${shown(server.cup)} cup`)
+      verified('Water today after 1 cup', await text(page, 'water-day-total'), server)
     }, () => byId(page, 'water-section'))
-    await step(page, 'Water (cup)', 'Back in fl oz everything works', async () => {
+    await step(page, 'Water (cup)', 'Delete the cup, and fl oz is back where it was', async () => {
+      await byId(page, 'water-log-delete').click()
+      await expect(byId(page, 'water-log-last')).toHaveCount(0)
       await byId(page, 'water-unit-fl-oz').click()
-      await expect(byId(page, 'water-log-add-error')).toHaveCount(0)
       if (flOz) await expect(byId(page, 'water-day-total')).toHaveText(`${shown(flOz)} fl oz`)
       else await expect(byId(page, 'water-logs-empty')).toBeVisible()
+      const server = await waterTotal(today, 'fl_oz')
+      expect(server).toBeCloseTo(flOz, 1)
       await expect(byId(page, 'water-chart').or(byId(page, 'water-chart-empty'))).toBeVisible()
       await expect(byId(page, 'water-chart-error')).toHaveCount(0)
       if (await byId(page, 'water-chart').count()) await expect(byId(page, 'water-chart')).toHaveAttribute('data-unit', 'fl oz')
+      verified('Water today after deleting the cup', flOz ? await text(page, 'water-day-total') : await text(page, 'water-logs-empty'), { fl_oz: server })
     }, () => byId(page, 'water-section'))
   })
 

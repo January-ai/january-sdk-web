@@ -5,9 +5,10 @@ test.beforeEach(async () => {
   await resetFixture()
 })
 
-// The live API does not accept the US cup yet: listing or logging water in `cup` answers
-// 400 invalid_request. The demo keeps the unit and shows the API's message on the day
-// total, the chart, and the log action, and fl oz and ml keep working.
+// An API that does not accept the US cup (as the live API did not before it listed `cup`)
+// answers 400 invalid_request to listing or logging water in `cup`. The demo keeps the unit
+// and shows the API's message on the day total, the chart, and the log action, and fl oz
+// and ml keep working.
 const rejection = 'unit is required: fl_oz or ml — the unit every daily total is returned in.'
 
 test('Water in cups rejected by the API is shown clearly and nothing breaks', async ({ page }) => {

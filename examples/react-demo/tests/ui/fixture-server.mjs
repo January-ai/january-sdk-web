@@ -11,13 +11,13 @@ const food = {
 }
 // An hour ago, but never before today's local midnight, so the seeded log
 // always falls in the demo's default "today" range.
-const seededEatenAt = () => {
+const seededCreatedAt = () => {
   const startOfToday = new Date(); startOfToday.setHours(0, 0, 0, 0)
   const anHourAgo = Date.now() - 60 * 60 * 1000
   return new Date(Math.max(anHourAgo, startOfToday.getTime() + 60 * 1000)).toISOString().replace(/\.\d{3}Z$/, 'Z')
 }
 const foodLog = {
-  id: 'log-1', name: 'Fixture lunch', get eaten_at() { return seededEatenAt() },
+  id: 'log-1', name: 'Fixture lunch', get created_at() { return seededCreatedAt() },
   foods: [{
     food_id: food.id, name: food.name, brand_name: null, image_url: null,
     glycemic_index: 52, glycemic_load: 12, nutrients,
@@ -86,8 +86,8 @@ const alternatives = [
     servings: [{ id: '31', quantity: 1, unit: 'cup', weight_grams: null }] },
 ]
 
-const waterLog = { id: 'water-1', amount: { value: 8, unit: 'fl_oz' }, get consumed_at() { return seededEatenAt() } }
-const weightLog = { weight: { value: 150, unit: 'lb' }, get measured_at() { return seededEatenAt() } }
+const waterLog = { id: 'water-1', amount: { value: 8, unit: 'fl_oz' }, get created_at() { return seededCreatedAt() } }
+const weightLog = { weight: { value: 150, unit: 'lb' }, get created_at() { return seededCreatedAt() } }
 const directItems = [
   { id: '101', name: 'Fixture bowl', nutrients, glycemic_index: null, glycemic_load: null, servings },
   { id: '102', name: 'Fixture soup', nutrients, glycemic_index: null, glycemic_load: null, servings },
@@ -230,7 +230,7 @@ createServer(async (request, response) => {
     response.writeHead(204); return response.end()
   }
   if (url.pathname === '/v1.2/water-logs' && request.method === 'POST') {
-    return json(response, { ...waterLog, amount: body?.amount ?? waterLog.amount, consumed_at: body?.consumed_at ?? waterLog.consumed_at }, 201)
+    return json(response, { ...waterLog, amount: body?.amount ?? waterLog.amount, created_at: body?.created_at ?? waterLog.created_at }, 201)
   }
   if (url.pathname === '/v1.2/water-logs' && request.method === 'GET') {
     const requested = url.searchParams.get('unit')
@@ -244,7 +244,7 @@ createServer(async (request, response) => {
     response.writeHead(204); return response.end()
   }
   if (url.pathname === '/v1.2/weight-logs' && request.method === 'POST') {
-    return json(response, { weight: body?.weight ?? weightLog.weight, measured_at: body?.measured_at ?? weightLog.measured_at }, 201)
+    return json(response, { weight: body?.weight ?? weightLog.weight, created_at: body?.created_at ?? weightLog.created_at }, 201)
   }
   if (url.pathname === '/v1.2/weight-logs' && request.method === 'GET' && isRange(url)) return json(response, {
     items: rule.empty ? [] : weightHistory(url.searchParams.get('start_date'), url.searchParams.get('end_date')),

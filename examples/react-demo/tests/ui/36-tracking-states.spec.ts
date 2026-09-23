@@ -90,10 +90,10 @@ test('An entry logged while viewing an earlier day lands on that day', async ({ 
   const meal = requests.find(({ method, path }) => method === 'POST' && path === '/v1.2/food-logs')
   const water = requests.find(({ method, path }) => method === 'POST' && path === '/v1.2/water-logs')
   const weight = requests.find(({ method, path }) => method === 'POST' && path === '/v1.2/weight-logs')
-  expect(new Date(meal?.body.eaten_at).getTime()).toBe(noonOf(yesterday))
-  expect(new Date(water?.body.consumed_at).getTime()).toBe(noonOf(yesterday))
+  expect(new Date(meal?.body.created_at).getTime()).toBe(noonOf(yesterday))
+  expect(new Date(water?.body.created_at).getTime()).toBe(noonOf(yesterday))
   expect(water?.body.amount).toEqual({ value: 12, unit: 'fl_oz' })
-  expect(new Date(weight?.body.measured_at).getTime()).toBe(noonOf(yesterday))
+  expect(new Date(weight?.body.created_at).getTime()).toBe(noonOf(yesterday))
   expect(weight?.body.weight).toEqual({ value: 151.5, unit: 'lb' })
 
   // Today is stamped now.
@@ -102,7 +102,7 @@ test('An entry logged while viewing an earlier day lands on that day', async ({ 
   await byId(page, 'water-log-add').click()
   await expect(byId(page, 'water-log-last')).toContainText('Logged 12 fl oz at')
   const today = (await fixtureRequests()).filter(({ method, path }) => method === 'POST' && path === '/v1.2/water-logs').at(-1)
-  expect(Math.abs(new Date(today?.body.consumed_at).getTime() - Date.now())).toBeLessThan(60_000)
+  expect(Math.abs(new Date(today?.body.created_at).getTime() - Date.now())).toBeLessThan(60_000)
 })
 
 test('Water delete failure, weight loading, and a failed weight day', async ({ page }) => {
