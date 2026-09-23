@@ -2,7 +2,8 @@
 
 ## Unreleased
 
-* Water logs with `waterLogs.create`, `list` (daily totals in a chosen unit), and `delete`, plus `VolumeUnit` (`fl_oz`, `ml`, and `cup`)
+* Water logs with `waterLogs.create`, `list` (daily totals in a chosen unit), and `delete`, plus `VolumeUnit` (`fl_oz`, `ml`, and `cup`); the API accepts 0.1–101.4 cups
+* Food, water, and weight logs send and read the API's `created_at`, which replaces `eaten_at`, `consumed_at`, and `measured_at`; the SDK's `timestampUtc`, `consumedAt`, and `measuredAt` are unchanged
 * Weight logs with `weightLogs.create` and `list` (latest weight per day)
 * `ServingSummary` and `ServingDetails` carry `weightGrams` and non-null `id` and `quantity`; `DetectedFood.id` and `quantity` are non-null
 * Breaking: `AlternativeFood.id`, `RestaurantMenuEntry.id`, `LoggedFood.id`, and `ServingOption.id` are non-null strings, matching the current Partner API

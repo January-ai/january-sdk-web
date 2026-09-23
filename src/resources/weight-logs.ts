@@ -28,12 +28,12 @@ export class WeightLogsResource {
           value: requireFiniteNumber(request.weight.value, 'weight.value'),
           unit: requireUnit(request.weight.unit, weightUnits, 'weight.unit'),
         },
-        ...(request.measuredAt !== undefined ? { measuredAt: parseDateTime(request.measuredAt, 'measuredAt') } : {}),
+        ...(request.measuredAt !== undefined ? { createdAt: parseDateTime(request.measuredAt, 'measuredAt') } : {}),
       },
     }, init(request.signal)));
     return {
       weight: { value: response.weight.value, unit: response.weight.unit },
-      measuredAt: response.measuredAt.toISOString(),
+      measuredAt: response.createdAt.toISOString(),
     };
   }
 

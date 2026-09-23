@@ -22,7 +22,7 @@ export class FoodLogsResource {
       januaryEndUserID: request.endUserId,
       createFoodLogBody: {
         foods: request.foods.map(mapSelection),
-        ...(request.timestampUtc !== undefined ? { eatenAt: parseDateTime(request.timestampUtc, 'timestampUtc') } : {}),
+        ...(request.timestampUtc !== undefined ? { createdAt: parseDateTime(request.timestampUtc, 'timestampUtc') } : {}),
         ...(request.name !== undefined ? { name: request.name } : {}),
       },
     }, init(request.signal)));
@@ -83,7 +83,7 @@ export class FoodLogsResource {
     // caller set are serialized.
     const updateFoodLogBody = {
       ...(request.foods !== undefined ? { foods: request.foods.map(mapSelection) } : {}),
-      ...(request.timestampUtc !== undefined ? { eatenAt: parseDateTime(request.timestampUtc, 'timestampUtc') } : {}),
+      ...(request.timestampUtc !== undefined ? { createdAt: parseDateTime(request.timestampUtc, 'timestampUtc') } : {}),
       ...(request.name !== undefined ? { name: request.name } : {}),
     };
     if (Object.keys(updateFoodLogBody).length === 0) {
@@ -110,7 +110,7 @@ function mapSelection(selection: import('../models.js').FoodSelection) {
 function mapFoodLog(value: import('../internal/transport/models/FoodLog.js').FoodLog): FoodLog {
   return {
     id: value.id,
-    timestampUtc: value.eatenAt.toISOString(),
+    timestampUtc: value.createdAt.toISOString(),
     name: value.name,
     foods: value.foods.map((food) => ({
       id: food.foodId,

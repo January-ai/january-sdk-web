@@ -85,14 +85,14 @@ function responseFor(path, method) {
   if (path.includes('/food-analysis/')) return { meal_name: 'Fixture meal', total_nutrients: {}, detections: [] };
   if (path === '/v1.2/food-logs' && method === 'GET') return { items: [] };
   if (path === '/v1.2/food-logs/summary') return { group_by: 'day', week_start: null, timezone: 'UTC', start_date: '2026-08-21', end_date: '2026-08-23', buckets: [], totals: { logs_count: 0, days_with_logs: 0, nutrients: {} }, average_per_logged_day: { nutrients: {} } };
-  if (path === '/v1.2/water-logs' && method === 'POST') return { id: '00000000-0000-0000-0000-000000000002', amount: { value: 8, unit: 'fl_oz' }, consumed_at: '2026-08-22T12:00:00.000Z' };
+  if (path === '/v1.2/water-logs' && method === 'POST') return { id: '00000000-0000-0000-0000-000000000002', amount: { value: 8, unit: 'fl_oz' }, created_at: '2026-08-22T12:00:00.000Z' };
   if (path === '/v1.2/water-logs' && method === 'GET') return { items: [] };
   if (path.startsWith('/v1.2/water-logs/') && method === 'DELETE') return undefined;
-  if (path === '/v1.2/weight-logs' && method === 'POST') return { weight: { value: 175, unit: 'lb' }, measured_at: '2026-08-22T12:00:00.000Z' };
+  if (path === '/v1.2/weight-logs' && method === 'POST') return { weight: { value: 175, unit: 'lb' }, created_at: '2026-08-22T12:00:00.000Z' };
   if (path === '/v1.2/weight-logs' && method === 'GET') return { items: [] };
   if (path.includes('/food-logs/') && method === 'DELETE') return { status: 'deleted' };
   if (path.includes('/food-logs')) {
-    return { id: '00000000-0000-0000-0000-000000000001', foods: [], eaten_at: '2026-08-22T12:00:00Z', name: 'Fixture' };
+    return { id: '00000000-0000-0000-0000-000000000001', foods: [], created_at: '2026-08-22T12:00:00Z', name: 'Fixture' };
   }
   if (path.includes('/glucose/predictions')) {
     return { points: [{ minutes: 0, value: 100 }], impact_score: 'low', chart: { min: 70, max: 140 } };

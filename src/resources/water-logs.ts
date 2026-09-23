@@ -27,13 +27,13 @@ export class WaterLogsResource {
           value: requireFiniteNumber(request.amount.value, 'amount.value'),
           unit: requireUnit(request.amount.unit, volumeUnits, 'amount.unit'),
         },
-        ...(request.consumedAt !== undefined ? { consumedAt: parseDateTime(request.consumedAt, 'consumedAt') } : {}),
+        ...(request.consumedAt !== undefined ? { createdAt: parseDateTime(request.consumedAt, 'consumedAt') } : {}),
       },
     }, init(request.signal)));
     return {
       id: response.id,
       amount: { value: response.amount.value, unit: response.amount.unit },
-      consumedAt: response.consumedAt.toISOString(),
+      consumedAt: response.createdAt.toISOString(),
     };
   }
 

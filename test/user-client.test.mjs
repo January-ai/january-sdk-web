@@ -14,10 +14,10 @@ test('scoped client applies immutable identity and preserves multi-food and date
       : isGlucose
         ? { points: [], impact_score: 'low', chart: { min: 70, max: 140 } }
         : url.pathname === '/v1.2/water-logs'
-          ? { id: '00000000-0000-0000-0000-000000000002', amount: { value: 8, unit: 'fl_oz' }, consumed_at: '2026-08-25T16:30:00.000Z' }
+          ? { id: '00000000-0000-0000-0000-000000000002', amount: { value: 8, unit: 'fl_oz' }, created_at: '2026-08-25T16:30:00.000Z' }
           : url.pathname === '/v1.2/weight-logs'
-            ? { weight: { value: 145, unit: 'lb' }, measured_at: '2026-08-25T16:30:00.000Z' }
-            : { id: '00000000-0000-0000-0000-000000000001', foods: [], eaten_at: '2026-08-25T16:30:00Z' };
+            ? { weight: { value: 145, unit: 'lb' }, created_at: '2026-08-25T16:30:00.000Z' }
+            : { id: '00000000-0000-0000-0000-000000000001', foods: [], created_at: '2026-08-25T16:30:00Z' };
     return new Response(JSON.stringify(response), { status: 200, headers: { 'content-type': 'application/json' } });
   };
   const client = new JanuaryPartnerClient({ apiKey: 'fixture', fetch });
@@ -50,11 +50,11 @@ test('scoped client applies immutable identity and preserves multi-food and date
   assert.ok(requests.slice(0, 3).every(({ init }) => new Headers(init.headers).get('january-end-user-id') === 'user-42'));
   assert.equal(new Headers(requests[3].init.headers).get('january-end-user-id'), null);
   assert.deepEqual(requests[0].body.foods, [{ food_id: '1', serving_id: '11', quantity: 1 }, { food_id: '2', serving_id: '22', quantity: 1.5 }]);
-  assert.equal(requests[0].body.eaten_at, '2026-08-25T16:30:00.000Z');
+  assert.equal(requests[0].body.created_at, '2026-08-25T16:30:00.000Z');
   assert.equal(requests[1].url.searchParams.get('start_date'), '2026-08-23');
   assert.equal(requests[1].url.searchParams.get('end_date'), '2026-08-29');
   assert.equal(requests[1].url.searchParams.get('timezone'), 'America/New_York');
-  assert.equal(requests[2].body.eaten_at, '2026-08-25T17:00:00.000Z');
+  assert.equal(requests[2].body.created_at, '2026-08-25T17:00:00.000Z');
   assert.equal(requests[3].body.timezone, 'America/New_York');
   assert.ok(requests.slice(4).every(({ init }) => new Headers(init.headers).get('january-end-user-id') === 'user-42'));
   assert.equal(requests[5].url.searchParams.get('timezone'), 'America/New_York');
