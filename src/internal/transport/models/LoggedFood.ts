@@ -35,11 +35,11 @@ import {
  */
 export interface LoggedFood {
     /**
-     * Food id from a search or food-analysis result. Null only when the upstream sent a food with no id.
+     * Food id from a search or food-analysis result.
      * @type {string}
      * @memberof LoggedFood
      */
-    foodId: string | null;
+    foodId: string;
     /**
      * Null only when the upstream sent none.
      * @type {string}

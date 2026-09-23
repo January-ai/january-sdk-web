@@ -35,11 +35,11 @@ import {
  */
 export interface RestaurantMenuItem {
     /**
-     * Food id of the dish — the same id `GET /v1.2/foods/{food_id}` and `POST /v1.2/food-logs` take. Null only when the menu source carries no id for the row.
+     * Food id of the dish — the same id `GET /v1.2/foods/{food_id}` and `POST /v1.2/food-logs` take.
      * @type {string}
      * @memberof RestaurantMenuItem
      */
-    id: string | null;
+    id: string;
     /**
      * Null only when the menu source has no name for the dish.
      * @type {string}

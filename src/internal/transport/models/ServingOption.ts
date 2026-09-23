@@ -24,7 +24,7 @@ export interface ServingOption {
      * @type {string}
      * @memberof ServingOption
      */
-    id: string | null;
+    id: string;
     /**
      *
      * @type {number}

@@ -14,7 +14,7 @@
 * Breaking: `DetectedFood` exposes `serving` and `quantity` instead of `servings`, matching the current Partner API; `0.1.x` fails to decode photo scans and description analyses
 * Food alternatives are `AlternativeFood` values with `servings: ServingSummary[]`
 * Food-log summaries per day or week with `foodLogs.getSummary`
-* Optional reasoning-based photo analysis with `ScanFoodPhotoRequest.reasoningEffort`
+* Photo analysis effort with `ScanFoodPhotoRequest.reasoningEffort`; the API uses the reasoning-based analyzer unless `none` asks for the standard one
 * Removed the unused `NaturalLanguageFood`, `NaturalLanguageServing`, and `NaturalLanguageFoodDetection` types
 * Restaurant and menu-item searches accept the v1.2 radius range through 50,000 meters
 * Typed Promise-based Web SDK for browser applications

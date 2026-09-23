@@ -35,11 +35,11 @@ import {
  */
 export interface AlternativeFood {
     /**
-     * Catalog food id, or null when the producer matched none.
+     * Catalog food id.
      * @type {string}
      * @memberof AlternativeFood
      */
-    id: string | null;
+    id: string;
     /**
      * Null only when the producer sent a food with no name.
      * @type {string}

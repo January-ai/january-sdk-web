@@ -276,7 +276,7 @@ export type AnalysisEffort = typeof AnalysisEffort[keyof typeof AnalysisEffort];
 export interface ScanFoodPhotoRequest {
   image: string;
   endUserId?: string;
-  /** Omit or `none` for the standard analyzer; `xhigh` for the reasoning-based one. */
+  /** Omit or `xhigh` for the reasoning-based analyzer (the API default); `none` for the standard one. */
   reasoningEffort?: AnalysisEffort;
   signal?: AbortSignal;
 }
