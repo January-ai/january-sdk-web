@@ -2,8 +2,9 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { JanuaryPartnerClient } from '../dist/index.js';
 
-// Responses captured from the live Partner API on 2026-09-15, after the detected-food shape changed.
-const textAnalysis = { meal_name: null, total_nutrients: { calories: { value: 206.8, unit: 'kcal' }, protein: { value: 14.58, unit: 'g' } }, detections: [{ confidence: null, food: { id: '70382174', name: 'eggs', brand_name: null, nutrients: { calories: { value: 143, unit: 'kcal' }, protein: { value: 12.6, unit: 'g' } }, quantity: 2, serving: { id: '34073350', quantity: 1, unit: 'large' } } }] };
+// Responses captured from the live Partner API on 2026-09-15, after the detected-food shape changed,
+// with the serving weight the API added on 2026-09-22.
+const textAnalysis = { meal_name: null, total_nutrients: { calories: { value: 206.8, unit: 'kcal' }, protein: { value: 14.58, unit: 'g' } }, detections: [{ confidence: null, food: { id: '70382174', name: 'eggs', brand_name: null, nutrients: { calories: { value: 143, unit: 'kcal' }, protein: { value: 12.6, unit: 'g' } }, quantity: 2, serving: { id: '34073350', quantity: 1, unit: 'large', weight_grams: 50 } } }] };
 const summary = { group_by: 'day', week_start: null, timezone: 'America/Chicago', start_date: '2026-09-14', end_date: '2026-09-14', buckets: [{ start_date: '2026-09-14', end_date: '2026-09-14', logs_count: 1, days_with_logs: 1, nutrients: { calories: { value: 1853.06, unit: 'kcal' }, protein: { value: 79.8822, unit: 'g' } } }], totals: { logs_count: 3, days_with_logs: 2, nutrients: { calories: { value: 3656.4883824999997, unit: 'kcal' } } }, average_per_logged_day: { nutrients: { calories: { value: 1828.2441912499999, unit: 'kcal' } } } };
 
 function makeClient(bodyFor) {
@@ -22,20 +23,26 @@ test('a detection carries the selected serving and the quantity eaten', async ()
   const food = scan.detections[0].food;
   assert.equal(food.name, 'eggs');
   assert.equal(food.quantity, 2);
-  assert.deepEqual(food.serving, { id: '34073350', quantity: 1, unit: 'large' });
+  assert.deepEqual(food.serving, { id: '34073350', quantity: 1, unit: 'large', weightGrams: 50 });
   assert.equal(food.nutrients.calories.value, 143);
   assert.equal(scan.totalNutrients.calories.value, 206.8);
   assert.equal('servings' in food, false);
 });
 
-test('a correction round-trips serving and quantity in the new shape', async () => {
+test('a correction sends the scan back field for field', async () => {
   const { client, requests } = makeClient(() => textAnalysis);
   const scan = await client.foodAnalysis.analyzeDescription({ query: 'three eggs' });
   await client.foodAnalysis.correct({ analysis: scan, instruction: 'make it two eggs' });
-  const sent = requests[1].body.analysis.detections[0].food;
-  assert.equal(sent.quantity, 2);
-  assert.deepEqual(sent.serving, { id: '34073350', quantity: 1, unit: 'large' });
-  assert.equal('servings' in sent, false);
+  assert.deepEqual(requests[1].body, { analysis: textAnalysis, instruction: 'make it two eggs' });
+});
+
+test('a scan that predates serving weights is corrected with an unknown weight', async () => {
+  const { client, requests } = makeClient(() => textAnalysis);
+  await client.foodAnalysis.correct({
+    analysis: { mealName: null, totalNutrients: {}, detections: [{ food: { id: '70382174', name: 'eggs', nutrients: {}, quantity: 2, serving: { id: '34073350', quantity: 1, unit: 'large' } } }] },
+    instruction: 'make it two eggs',
+  });
+  assert.deepEqual(requests[0].body.analysis.detections[0], { confidence: null, food: { id: '70382174', name: 'eggs', brand_name: null, nutrients: {}, quantity: 2, serving: { id: '34073350', quantity: 1, unit: 'large', weight_grams: null } } });
 });
 
 test('photo scan sends reasoning effort only when asked', async () => {
@@ -47,10 +54,10 @@ test('photo scan sends reasoning effort only when asked', async () => {
 });
 
 test('alternatives keep their serving list', async () => {
-  const { client } = makeClient(() => ({ alternatives: [{ id: '70372230', name: 'brown rice', brand_name: null, nutrients: { calories: { value: 108, unit: 'kcal' } }, servings: [{ id: '34113801', quantity: 0.5, unit: 'cup' }] }] }));
+  const { client } = makeClient(() => ({ alternatives: [{ id: '70372230', name: 'brown rice', brand_name: null, nutrients: { calories: { value: 108, unit: 'kcal' } }, servings: [{ id: '34113801', quantity: 0.5, unit: 'cup', weight_grams: 81 }] }] }));
   const { alternatives } = await client.foods.suggestAlternatives({ foodId: '1', dietRestrictions: [], dietPreferences: [] });
   assert.equal(alternatives[0].name, 'brown rice');
-  assert.deepEqual(alternatives[0].servings, [{ id: '34113801', quantity: 0.5, unit: 'cup' }]);
+  assert.deepEqual(alternatives[0].servings, [{ id: '34113801', quantity: 0.5, unit: 'cup', weightGrams: 81 }]);
 });
 
 test('food-log summary decodes and sends the range parameters', async () => {

@@ -153,11 +153,15 @@ export interface SuggestFoodAlternativesRequest {
   signal?: AbortSignal;
 }
 
-/** The catalog serving a detected or alternative food is expressed in. `quantity` is the size of one serving, not the amount eaten. */
+/**
+ * The catalog serving a detected or alternative food is expressed in. `quantity` is the size of
+ * one serving, not the amount eaten; `weightGrams` is that serving's weight, or null when unknown.
+ */
 export interface ServingSummary {
-  id: string | null;
-  quantity?: number | null;
+  id: string;
+  quantity: number;
   unit: string | null;
+  weightGrams: number | null;
 }
 
 /** @deprecated Use ServingSummary. The amount eaten is now DetectedFood.quantity. */
@@ -167,20 +171,19 @@ export type DetectedServing = ServingSummary;
  * A food recognized from a photo or a description. `serving` is the selected catalog serving and
  * `quantity` is how many of that serving were eaten (0.4 for 40 g of a 100 g serving), so together
  * they are ready to use as a food-log entry. `nutrients` are already scaled to `quantity`.
- * `quantity` is null when no usable portion was found.
  */
 export interface DetectedFood {
-  id?: string | null;
+  id: string;
   name: string | null;
   brandName?: string | null;
   nutrients: CompleteScanNutritionFacts;
   serving: ServingSummary;
-  quantity?: number | null;
+  quantity: number;
 }
 
 /** A healthier alternative to a food, with the servings its nutrition can be read against. */
 export interface AlternativeFood {
-  id?: string | null;
+  id: string;
   name: string | null;
   brandName?: string | null;
   nutrients: CompleteScanNutritionFacts;
@@ -216,6 +219,7 @@ export interface Restaurant {
   id: ContractRestaurant['id'];
   name: ContractRestaurant['name'];
   isChain?: ContractRestaurant['isChain'];
+  /** Distance from the searched point, in meters. */
   distance?: ContractRestaurant['distanceMeters'];
   city?: ContractRestaurant['city'];
   address1?: ContractRestaurant['address1'];
@@ -241,6 +245,7 @@ export interface RestaurantMenuItem {
   gi?: number | null;
   gl?: number | null;
   photoUrl?: string | null;
+  /** Distance from the searched point, in meters. */
   distance?: number | null;
   servings: ServingOption[];
 }
@@ -248,7 +253,7 @@ export interface RestaurantMenuItem {
 export interface SearchRestaurantMenuItemsResponse { totalCount: number; items: RestaurantMenuItem[] }
 
 export interface RestaurantMenuEntry {
-  id: string | null;
+  id: string;
   name: string | null;
   energy?: number | null;
   protein?: number | null;
@@ -271,7 +276,7 @@ export type AnalysisEffort = typeof AnalysisEffort[keyof typeof AnalysisEffort];
 export interface ScanFoodPhotoRequest {
   image: string;
   endUserId?: string;
-  /** Omit or `none` for the standard analyzer; `xhigh` for the reasoning-based one. */
+  /** Omit or `xhigh` for the reasoning-based analyzer (the API default); `none` for the standard one. */
   reasoningEffort?: AnalysisEffort;
   signal?: AbortSignal;
 }
@@ -290,6 +295,10 @@ export type PhotoScan = FoodScan;
 /** @deprecated Use FoodScanGlucoseImpact. */
 export type PhotoScanGlucoseImpact = FoodScanGlucoseImpact;
 
+/**
+ * Sends a scan back for correction. Pass the `FoodScan` exactly as it was returned: every
+ * detection, its serving, quantity, and nutrients are forwarded unchanged.
+ */
 export interface CorrectPhotoScanRequest {
   analysis: FoodScan;
   instruction: string;
@@ -324,6 +333,7 @@ export interface ListFoodLogsRequest extends PartnerUserContext {
   signal?: AbortSignal;
 }
 
+/** At least one of `foods`, `timestampUtc`, or `name` is required; omitted fields are left unchanged. */
 export interface UpdateFoodLogRequest extends PartnerUserContext {
   logId: string;
   foods?: FoodSelection[];
@@ -378,10 +388,11 @@ export interface FoodLogSummary {
   averagePerLoggedDay: FoodLogSummaryAverage;
 }
 export interface DeleteFoodLogRequest extends PartnerUserContext { logId: string; signal?: AbortSignal }
-export interface ConsumedServing { id: string | null; quantity: number | null }
-export interface ServingDetails { id: string | null; quantity: number | null; unit: string | null; weightGrams?: number | null }
+export interface ConsumedServing { id: string; quantity: number | null }
+/** The catalog serving a logged food refers to; `weightGrams` is null when unknown. */
+export interface ServingDetails { id: string; quantity: number; unit: string | null; weightGrams: number | null }
 export interface LoggedFood {
-  id: string | null;
+  id: string;
   name: string | null;
   brandName?: string | null;
   imageUrl?: string | null;
@@ -404,7 +415,10 @@ export type HeightUnit = typeof HeightUnit[keyof typeof HeightUnit];
 export interface Height { value: number; unit: HeightUnit }
 export const WeightUnit = { pounds: 'lb', kilograms: 'kg' } as const;
 export type WeightUnit = typeof WeightUnit[keyof typeof WeightUnit];
+/** A weight to send: the unit must be one of `WeightUnit`. */
 export interface Weight { value: number; unit: WeightUnit }
+/** A weight as January stored it. `unit` is a `WeightUnit` today; a value added later is passed through as a string. */
+export interface WeightMeasurement { value: number; unit: WeightUnit | (string & {}) }
 export const ActivityLevel = {
   sedentary: 'sedentary', lightlyActive: 'lightly_active', moderatelyActive: 'moderately_active', veryActive: 'very_active',
 } as const;
@@ -441,6 +455,63 @@ export interface GlucosePrediction {
   impact: string | null;
   chart: GlucoseChart;
 }
+
+export const VolumeUnit = { fluidOunces: 'fl_oz', milliliters: 'ml', cups: 'cup' } as const;
+export type VolumeUnit = typeof VolumeUnit[keyof typeof VolumeUnit];
+/** An amount of water to log: 1–811.5 fl oz, 30–24,000 ml, or 0.1–101.4 US cups (8 fl oz each). */
+export interface WaterAmount { value: number; unit: VolumeUnit }
+/** A volume as January reports it. `unit` is a `VolumeUnit` today; a value added later is passed through as a string. */
+export interface Volume { value: number; unit: VolumeUnit | (string & {}) }
+
+/** Logs one amount of water. `consumedAt` defaults to now; its local day is the one the 24 L daily cap counts it against. */
+export interface CreateWaterLogRequest extends PartnerUserContext {
+  amount: WaterAmount;
+  consumedAt?: string;
+  signal?: AbortSignal;
+}
+/** One water intake as stored. Keep `id` to delete it. */
+export interface WaterLog {
+  id: string;
+  amount: Volume;
+  consumedAt: string;
+}
+/**
+ * Daily water totals between `start` and `end` (inclusive calendar dates in the user's
+ * timezone, at most 100 days with water logged are returned), in `unit`.
+ */
+export interface ListWaterLogsRequest extends PartnerUserContext {
+  start: string;
+  end: string;
+  unit: VolumeUnit;
+  signal?: AbortSignal;
+}
+/** Everything logged on one local calendar day. Days with nothing logged are absent. */
+export interface DailyWaterTotal { date: string; total: Volume }
+export interface ListWaterLogsResponse { items: DailyWaterTotal[] }
+/** Deleting an unknown or already-deleted log succeeds too, so a retry is safe. */
+export interface DeleteWaterLogRequest extends PartnerUserContext { logId: string; signal?: AbortSignal }
+export type DeleteWaterLogResponse = void;
+
+/** Logs one weight measurement: 10–1,000 lb or 4.5–453.6 kg. `measuredAt` defaults to now. */
+export interface CreateWeightLogRequest extends PartnerUserContext {
+  weight: Weight;
+  measuredAt?: string;
+  signal?: AbortSignal;
+}
+/** One weight measurement as stored. */
+export interface WeightLog {
+  weight: WeightMeasurement;
+  measuredAt: string;
+}
+/** Daily weights between `start` and `end` (inclusive calendar dates in the user's timezone). */
+export interface ListWeightLogsRequest extends PartnerUserContext {
+  start: string;
+  end: string;
+  signal?: AbortSignal;
+}
+/** The latest weight measured on one local calendar day. Days without a weight are absent. */
+export interface DailyWeight { date: string; weight: WeightMeasurement }
+export interface ListWeightLogsResponse { items: DailyWeight[] }
 import type { FoodLogInputFood as ContractFoodLogInputFood } from './internal/transport/models/FoodLogInputFood.js';
 import type { FoodSearchItem as ContractFoodSearchItem } from './internal/transport/models/FoodSearchItem.js';
 import type { FoodSuggestion as ContractFoodSuggestion } from './internal/transport/models/FoodSuggestion.js';

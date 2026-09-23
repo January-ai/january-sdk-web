@@ -2,7 +2,7 @@
 /* eslint-disable */
 /**
  * January AI - Nutrition Intelligence APIs
- * Build food and metabolic intelligence into your product — one API for understanding what people eat and how food may affect them.  **Clinical-grade precision, consumer-grade experiences.** January builds the infrastructure underneath the product: turning messy health and nutrition data into reliable intelligence, so your team spends its time on the experience instead of the foundation.  **Security & compliance** — **SOC 2 Type II** · **HIPAA-aligned practices** · **BAA** and **Zero Data Retention (ZDR)** available  **What you can build** - **Scan food** — photo and text food recognition: detect foods and nutrition, then correct results conversationally - **Search the food database** — by name or barcode — and get healthier alternatives for any food - **Log food** — a per-user diary with day-range queries - **Predict glucose response** to any meal — no sensor required  **Getting started** 1. Create an API key in the [Developer Dashboard](https://dashboard.january.ai) — the full key is shown once, at creation. 2. Send it as `Authorization: Bearer sk-…` — click **Authorize** here to make every example below a live request. 3. On the **food-logs** endpoints, say whose diary you are reading or writing with the `January-End-User-ID` header. No other endpoint takes it: everything else either asks the shared food database a question or works on the body you send, and neither depends on who the food is for.  **Calling from a mobile app** — your `sk-` key must never ship inside an app. Instead, exchange it on your backend for a *client token*: a credential that lasts up to two hours, acts as exactly one of your end users, and carries only the scopes you grant it (see the **authentication** section). Your app then calls these endpoints directly, with no proxy of your own in the request path. Both credentials travel in the same `Authorization: Bearer` header, and every endpoint below opens by saying which it accepts — **API key or client token**, or **API key only**.  **Support** — [support@january.ai](mailto:support@january.ai) · [Discord community](https://discord.gg/cYQeh3UnC) · [docs.january.ai](https://docs.january.ai)
+ * Build food and metabolic intelligence into your product — one API for understanding what people eat and how food may affect them.  **Clinical-grade precision, consumer-grade experiences.** January builds the infrastructure underneath the product: turning messy health and nutrition data into reliable intelligence, so your team spends its time on the experience instead of the foundation.  **Security & compliance** — **SOC 2 Type II** · **HIPAA-aligned practices** · **BAA** and **Zero Data Retention (ZDR)** available  **What you can build** - **Scan food** — photo and text food recognition: detect foods and nutrition, then correct results conversationally - **Search the food database** — by name or barcode — and get healthier alternatives for any food - **Log food, water and weight** — per-user diaries with day-range queries - **Predict glucose response** to any meal — no sensor required  **Getting started** 1. Create an API key in the [Developer Dashboard](https://dashboard.january.ai) — the full key is shown once, at creation. 2. Send it as `Authorization: Bearer sk-…` — click **Authorize** here to make every example below a live request. 3. On the endpoints that read or write an end user\'s logs, say whose with the `January-End-User-ID` header — each one documents it. No other endpoint takes it: everything else either asks the shared food database a question or works on the body you send, and neither depends on who the food is for.  **Calling from a mobile app** — your `sk-` key must never ship inside an app. Instead, exchange it on your backend for a *client token*: a credential that lasts up to two hours, acts as exactly one of your end users, and carries only the scopes you grant it (see the **authentication** section). Your app then calls these endpoints directly, with no proxy of your own in the request path. Both credentials travel in the same `Authorization: Bearer` header, and every endpoint below opens by saying which it accepts — **API key or client token**, or **API key only**.  **Support** — [support@january.ai](mailto:support@january.ai) · [Discord community](https://discord.gg/cYQeh3UnC) · [docs.january.ai](https://docs.january.ai)
  *
  * The version of the OpenAPI document: 1.2
  * Contact: support@january.ai
@@ -35,12 +35,6 @@ import {
  */
 export interface DetectedFood {
     /**
-     * Catalog food id, or null when the producer matched none.
-     * @type {string}
-     * @memberof DetectedFood
-     */
-    id: string | null;
-    /**
      * Null only when the producer sent a food with no name.
      * @type {string}
      * @memberof DetectedFood
@@ -53,11 +47,17 @@ export interface DetectedFood {
      */
     brandName: string | null;
     /**
-     * Number of catalog servings consumed, ready to use as food-log quantity. For 40 g from a 100 g serving this is 0.4. Null when the producer supplied no usable portion.
+     * Matched catalog food id. Pass it back as food_id when logging this food.
+     * @type {string}
+     * @memberof DetectedFood
+     */
+    id: string;
+    /**
+     * Positive number of selected catalog servings consumed. Use it unchanged as food-log quantity. Display the consumed amount as food.quantity × food.serving.quantity, followed by food.serving.unit: 4 × 0.5 cup = 2 cups; 0.4 × 100 g = 40 g. Nutrients already describe this consumed portion; do not multiply them again.
      * @type {number}
      * @memberof DetectedFood
      */
-    quantity: number | null;
+    quantity: number;
     /**
      *
      * @type {ServingSummary}
@@ -76,9 +76,9 @@ export interface DetectedFood {
  * Check if a given object implements the DetectedFood interface.
  */
 export function instanceOfDetectedFood(value: object): value is DetectedFood {
-    if (!('id' in value) || value['id'] === undefined) return false;
     if (!('name' in value) || value['name'] === undefined) return false;
     if ((!('brandName' in (value as Record<string, any>)) && !('brand_name' in (value as Record<string, any>))) || ((value as Record<string, any>)['brandName'] === undefined && (value as Record<string, any>)['brand_name'] === undefined)) return false;
+    if (!('id' in value) || value['id'] === undefined) return false;
     if (!('quantity' in value) || value['quantity'] === undefined) return false;
     if (!('serving' in value) || value['serving'] === undefined) return false;
     if (!('nutrients' in value) || value['nutrients'] === undefined) return false;
@@ -95,9 +95,9 @@ export function DetectedFoodFromJSONTyped(json: any, ignoreDiscriminator: boolea
     }
     return {
 
-        'id': json['id'],
         'name': json['name'],
         'brandName': json['brand_name'],
+        'id': json['id'],
         'quantity': json['quantity'],
         'serving': ServingSummaryFromJSON(json['serving']),
         'nutrients': NutritionFactsFromJSON(json['nutrients']),
@@ -115,9 +115,9 @@ export function DetectedFoodToJSONTyped(value?: DetectedFood | null, ignoreDiscr
 
     return {
 
-        'id': value['id'],
         'name': value['name'],
         'brand_name': value['brandName'],
+        'id': value['id'],
         'quantity': value['quantity'],
         'serving': ServingSummaryToJSON(value['serving']),
         'nutrients': NutritionFactsToJSON(value['nutrients']),

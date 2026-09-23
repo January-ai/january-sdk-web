@@ -27,5 +27,5 @@ export function FoodNutritionFacts({ portion }: { portion: FoodPortion | null })
     ['Glycemic load', portion?.glycemicLoad, ''],
   ] as const
   const available = values.filter(([, value]) => value != null).map(([label, value, unit]) => ({ label, value: `${formatNumber(value ?? 0)}${unit ? ` ${unit}` : ''}` }))
-  return <Card className="p-5 sm:p-6" data-testid="food-nutrition"><h2 className="font-serif text-3xl">Nutrition facts</h2>{available.length ? <div className="mt-4"><NutritionList values={available} /></div> : <p className="mt-4 text-stone-500">No additional nutrients were returned.</p>}</Card>
+  return <Card className="p-5 sm:p-6" data-testid="food-nutrition"><h2 className="font-serif text-3xl">Nutrition facts</h2>{available.length ? <div className="mt-4"><NutritionList values={available} /></div> : <p className="mt-4 text-stone-500" data-testid="food-nutrition-empty">No additional nutrients were returned.</p>}</Card>
 }

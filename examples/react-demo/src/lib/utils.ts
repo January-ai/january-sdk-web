@@ -10,8 +10,7 @@ export function formatNumber(value: number | null | undefined, maximumFractionDi
   return new Intl.NumberFormat('en-US', { maximumFractionDigits }).format(value)
 }
 
-export function todayInputValue(offsetDays = 0) {
-  const date = new Date()
-  date.setDate(date.getDate() + offsetDays)
-  return date.toISOString().slice(0, 10)
+/** A serving quantity, which moves in quarters: 1.25 stays 1.25 rather than rounding to 1.3. */
+export function formatQuantity(value: number | null | undefined) {
+  return formatNumber(value, 2)
 }

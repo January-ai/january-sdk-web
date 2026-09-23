@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from './fixtures'
 import { byId, control, openDemo, resetFixture } from './flow'
 
 test.beforeEach(async () => {
@@ -9,8 +9,12 @@ test('Every primary destination is reachable', async ({ page }) => {
   await openDemo(page, '/search')
   await byId(page, 'tab-scan').filter({ visible: true }).first().click()
   await expect(byId(page, 'scan-screen')).toBeVisible()
+  await byId(page, 'tab-tracking').filter({ visible: true }).first().click()
+  await expect(byId(page, 'tracking-screen')).toBeVisible()
+  await expect(byId(page, 'logs-day-label')).toHaveText('Today')
   await byId(page, 'tab-food-logs').filter({ visible: true }).first().click()
   await expect(byId(page, 'food-logs-screen')).toBeVisible()
+  await expect(byId(page, 'food-logs-refresh')).toBeVisible()
   await byId(page, 'tab-glucose').filter({ visible: true }).first().click()
   await expect(byId(page, 'glucose-screen')).toBeVisible()
   await byId(page, 'tab-search').filter({ visible: true }).first().click()

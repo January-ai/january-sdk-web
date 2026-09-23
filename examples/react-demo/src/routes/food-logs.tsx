@@ -1,7 +1,7 @@
 import type { FoodLog } from '@januaryai/web-sdk'
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
-import { CalendarDays, ClipboardList, Pencil, Plus, Trash2, Utensils } from 'lucide-react'
+import { CalendarDays, NotebookPen, Pencil, Plus, Trash2, Utensils } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { deleteFoodLog, listFoodLogs } from '~/api/january.functions'
 import { Dialog } from '~/components/dialog'
@@ -9,10 +9,10 @@ import { FoodLogEditor } from '~/components/food-log-editor'
 import { NetworkImage } from '~/components/network-image'
 import { SegmentedControl } from '~/components/segmented-control'
 import { UserContextCard } from '~/components/user-context-card'
-import { useUserSession } from '~/components/user-session'
+import { useUserScopeKey, useUserSession } from '~/components/user-session'
 import { Button, Card, EmptyState, ErrorMessage, Page, PageHeader, SectionLabel, SkeletonList } from '~/components/ui'
 import { FoodLogTimeSpan, resolveFoodLogTimeSpan, type FoodLogTimeSpan as FoodLogTimeSpanValue } from '~/lib/food-log-time-span'
-import { formatNumber } from '~/lib/utils'
+import { formatNumber, formatQuantity } from '~/lib/utils'
 
 export const Route = createFileRoute('/food-logs')({ component: FoodLogsPage })
 
@@ -23,13 +23,22 @@ const spans = [
 ] as const
 
 function FoodLogsPage() {
+  // Everything on this screen belongs to one end user. Remounting on a user change drops the
+  // previous user's results, pending actions, and the data shown while the next user's loads.
+  const session = useUserSession()
+  const scope = useUserScopeKey(session.endUserId)
+  return <FoodLogsScreen key={scope} />
+}
+
+function FoodLogsScreen() {
   const queryClient = useQueryClient()
   const session = useUserSession()
   const [span, setSpan] = useState<FoodLogTimeSpanValue>(FoodLogTimeSpan.today)
-  const range = useMemo(() => resolveFoodLogTimeSpan(span), [span])
+  const range = useMemo(() => resolveFoodLogTimeSpan(span, session.endUserTimezone), [span, session.endUserTimezone])
   const [request, setRequest] = useState<{ endUserId: string; endUserTimezone: string; start: string; end: string } | null>(null)
   const [editorOpen, setEditorOpen] = useState(false)
   const [editingLog, setEditingLog] = useState<FoodLog | undefined>()
+  const [editorSession, setEditorSession] = useState(0)
   const logs = useQuery({
     queryKey: ['food-logs', request],
     queryFn: () => listFoodLogs({ data: request! }),
@@ -42,6 +51,8 @@ function FoodLogsPage() {
   })
 
   function openEditor(log?: FoodLog) {
+    // A fresh editor each time, so a new meal never starts from the last one's foods.
+    setEditorSession((session) => session + 1)
     setEditingLog(log)
     setEditorOpen(true)
   }
@@ -77,18 +88,18 @@ function FoodLogsPage() {
             <CalendarDays aria-hidden="true" className="size-7 text-stone-400" />
           </div>
           {remove.isError ? <div className="mb-4"><ErrorMessage error={remove.error} testId="food-log-delete-error" /></div> : null}
-          {!request ? <EmptyState description="Save an active user and load a calendar range to see meal history." icon={<ClipboardList aria-hidden="true" className="size-6" />} testId="food-logs-prompt" title="No request yet" />
+          {!request ? <EmptyState description="Save an active user and load a calendar range to see meal history." icon={<NotebookPen aria-hidden="true" className="size-6" />} testId="food-logs-prompt" title="No request yet" />
             : logs.isPending && !logs.data ? <SkeletonList testId="food-logs-loading" />
               : logs.isError ? <ErrorMessage error={logs.error} testId="food-logs-error" />
                 : logs.data?.items.length ? <div className="space-y-4" data-testid="food-log-list">{logs.data.items.map((log, index) => <Card className="overflow-hidden" data-testid={`food-log-${index}`} key={log.id ?? `log-${index}`}>
                   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-200 px-5 py-4 sm:px-6"><div><h3 className="text-lg font-bold">{log.name || 'Logged meal'}</h3><p className="data-number mt-1 text-sm text-stone-500">{new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(log.timestampUtc))}</p></div><div className="flex items-center gap-2"><span className="rounded-full bg-[#eee8dc] px-3 py-1.5 text-xs font-bold text-stone-600">{log.foods.length} food{log.foods.length === 1 ? '' : 's'}</span><button aria-label={`Edit ${log.name || 'meal'}`} className="grid size-10 place-items-center rounded-full hover:bg-stone-100" data-testid="food-log-edit" disabled={!log.id} onClick={() => openEditor(log)} type="button"><Pencil aria-hidden="true" className="size-4" /></button><button aria-label={`Delete ${log.name || 'meal'}`} className="grid size-10 place-items-center rounded-full text-red-800 hover:bg-red-50" data-testid="food-log-delete" disabled={remove.isPending || !log.id} onClick={() => log.id && remove.mutate(log.id)} type="button"><Trash2 aria-hidden="true" className="size-4" /></button></div></div>
-                  {log.foods.map((food, foodIndex) => <div className="flex items-center gap-4 border-b border-stone-200 px-5 py-4 last:border-0 sm:px-6" key={`${log.id ?? index}-${food.id ?? foodIndex}`}><NetworkImage alt="" className="size-12 shrink-0 rounded-xl" fallback={<Utensils aria-hidden="true" className="size-5 text-stone-600" />} src={food.imageUrl} /><div className="min-w-0 flex-1"><div className="truncate font-bold">{food.name ?? 'Unnamed food'}</div><div className="data-number mt-1 text-sm text-stone-500">{formatNumber(food.nutrients.calories?.value, 0)} cal · {formatNumber(food.consumedServing.quantity)} {food.servingDetails.unit ?? 'serving'}</div></div></div>)}
+                  {log.foods.map((food, foodIndex) => <div className="flex items-center gap-4 border-b border-stone-200 px-5 py-4 last:border-0 sm:px-6" key={`${log.id ?? index}-${food.id ?? foodIndex}`}><NetworkImage alt="" className="size-12 shrink-0 rounded-xl" fallback={<Utensils aria-hidden="true" className="size-5 text-stone-600" />} src={food.imageUrl} /><div className="min-w-0 flex-1"><div className="truncate font-bold">{food.name ?? 'Unnamed food'}</div><div className="data-number mt-1 text-sm text-stone-500">{formatNumber(food.nutrients.calories?.value, 0)} cal · {formatQuantity(food.consumedServing.quantity)} {food.servingDetails.unit ?? 'serving'}</div></div></div>)}
                 </Card>)}</div>
-                  : <EmptyState description="No meals were returned for this person and date range." icon={<ClipboardList aria-hidden="true" className="size-6" />} testId="food-logs-empty" title="No food logs found" />}
+                  : <EmptyState description="No meals were returned for this person and date range." icon={<NotebookPen aria-hidden="true" className="size-6" />} testId="food-logs-empty" title="No food logs found" />}
         </section>
       </div>
       <Dialog onClose={() => setEditorOpen(false)} open={editorOpen} title={editingLog ? 'Edit meal' : 'Add a meal'}>
-        <FoodLogEditor key={editingLog?.id ?? 'new'} log={editingLog} onSaved={editorSaved} />
+        <FoodLogEditor key={editorSession} log={editingLog} onSaved={editorSaved} />
       </Dialog>
     </Page>
   )

@@ -40,7 +40,17 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000). The authentication card
 shows the local relay status and lets you mint a fresh client token. Search for
-`banana` to make the first SDK request.
+`banana` to make the first SDK request, open it, and choose **Find food
+alternatives** for suggestions shaped by dietary restrictions and preferences.
+A photo or description scan can be corrected with a short note, such as "it was
+two eggs, not three". The Tracking screen shows one day at
+a time: the day's meals with their totals, water with the day's total, and the
+day's weight, each with a log action. Below the water and weight cards, charts
+show the last week, month, or year ending today: daily water totals as bars
+(monthly totals for a year) and weight as a line in the card's unit. The Year
+view asks `waterLogs.list` / `weightLogs.list` in consecutive ranges of up to 90
+days, because each call returns at most 100 days. The Logs screen lists meal history over
+a date range.
 
 To use a hosted development relay instead, follow its
 [Vercel guide](https://github.com/January-ai/january-token-relay#deploy)
@@ -69,3 +79,41 @@ commit the key.
 The Playwright flows under `tests/ui` and how to run them locally are described
 in [tests/ui/README.md](tests/ui/README.md). They run on every pull request as
 the `ui-tests` check.
+
+### Against the live API through a local relay
+
+`tests/live` drives every screen against the real January API, with client
+tokens from the token relay, and after each change made in the demo reads the
+same data back from the API to confirm it. With the relay running (`./start.sh`
+in `january-token-relay`), from `examples/react-demo`:
+
+```sh
+LIVE_END_USER_ID=your-test-user npm run test:ui:live
+```
+
+Use a dedicated test user: the run creates meals and water logs for it and
+deletes them at the end, and it logs two weights for today, which the API does
+not delete. It uses the relay at `http://127.0.0.1:8787` unless
+`PARTNER_TOKEN_URL` says otherwise (with `PARTNER_APP_SESSION_TOKEN` for a hosted
+relay). The API allows 60 requests a minute per end user, so each flow starts
+in a fresh minute and the run takes about 20 minutes.
+
+A complete run makes about 220 API requests between the demo and the checks.
+Your account's allowance also caps requests in any rolling 24 hours; if that cap
+is smaller, run the two halves on different days:
+
+```sh
+LIVE_END_USER_ID=your-test-user npm run test:ui:live -- --grep @catalog   # search, scans, restaurants, glucose
+LIVE_END_USER_ID=your-test-user npm run test:ui:live -- --grep @logs      # meals, water, weight, charts
+```
+
+When the allowance runs out mid-run, the remaining flows are skipped with the
+API's message rather than retried.
+
+Everything lands in `LIVE_EVIDENCE_DIR` (default `test-results/live`): a
+screenshot per step, a Playwright trace per flow, `api-verification.log` with
+every direct API call (method, path, status, and body, with tokens redacted),
+and `steps.jsonl` with what each step compared. If a run stops early, delete
+what it created with `node tests/live/live-api.mjs cleanup`; `node
+tests/live/live-api.mjs state` prints the test user's logs for today. The live
+suite is not part of `npm run test:ui` or CI.

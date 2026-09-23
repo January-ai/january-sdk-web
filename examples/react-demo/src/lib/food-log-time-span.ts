@@ -1,3 +1,5 @@
+import { firstOfMonth, formatShortDay, shiftDay, todayIn, weekday } from './log-day.ts'
+
 export const FoodLogTimeSpan = {
   today: 'today',
   thisWeek: 'this-week',
@@ -12,41 +14,24 @@ export interface FoodLogDateRange {
   display: string
 }
 
-export function resolveFoodLogTimeSpan(span: FoodLogTimeSpan, now = new Date()): FoodLogDateRange {
-  const anchor = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12)
-  let start: Date
-  let end: Date
+/** The inclusive dates a span covers, in the end user's timezone. */
+export function resolveFoodLogTimeSpan(span: FoodLogTimeSpan, timeZone: string, now = new Date()): FoodLogDateRange {
+  const today = todayIn(timeZone, now)
+  let start: string
+  let end: string
   if (span === FoodLogTimeSpan.today) {
-    start = anchor
-    end = anchor
+    start = today
+    end = today
   } else if (span === FoodLogTimeSpan.thisWeek) {
-    start = addDays(anchor, -anchor.getDay())
-    end = addDays(start, 6)
+    start = shiftDay(today, -weekday(today))
+    end = shiftDay(start, 6)
   } else {
-    start = new Date(anchor.getFullYear(), anchor.getMonth() - 1, 1, 12)
-    end = new Date(anchor.getFullYear(), anchor.getMonth(), 0, 12)
+    start = firstOfMonth(today, -1)
+    end = shiftDay(firstOfMonth(today), -1)
   }
   return {
-    start: localDate(start),
-    end: localDate(end),
-    display: start.getTime() === end.getTime()
-      ? formatDisplay(start)
-      : `${formatDisplay(start)} – ${formatDisplay(end)}`,
+    start,
+    end,
+    display: start === end ? formatShortDay(start) : `${formatShortDay(start)} – ${formatShortDay(end)}`,
   }
-}
-
-function addDays(date: Date, days: number) {
-  const result = new Date(date)
-  result.setDate(result.getDate() + days)
-  return result
-}
-
-function localDate(date: Date) {
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${date.getFullYear()}-${month}-${day}`
-}
-
-function formatDisplay(date: Date) {
-  return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(date)
 }

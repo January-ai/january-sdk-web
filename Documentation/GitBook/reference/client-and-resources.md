@@ -40,12 +40,14 @@ always targets January production; no public base URL or token endpoint exists.
 | `foods` | `autocomplete`, `search`, `get`, `lookupBarcode`, `suggestAlternatives` |
 | `restaurants` | `search`, `searchMenuItems`, `getMenuItems` |
 | `foodAnalysis` | `analyzePhoto`, `analyzeDescription`, `correct` |
-| `foodLogs` | `create`, `list`, `update`, `delete` |
+| `foodLogs` | `create`, `list`, `getSummary`, `get`, `update`, `delete` |
 | `glucose` | `predict` |
+| `waterLogs` | `create`, `list`, `delete` |
+| `weightLogs` | `create`, `list` |
 
 `forUser(context)` and `forUser(endUserId, timezone?)` return a lightweight
 `JanuaryPartnerUserClient` whose `foods`, `restaurants`, `foodAnalysis`,
-`foodLogs`, and `glucose` resources reuse one context. Set the user once, then
+`foodLogs`, `glucose`, `waterLogs`, and `weightLogs` resources reuse one context. Set the user once, then
 use the scoped client for every operation. Every public request type accepts an
 optional `AbortSignal`.
 

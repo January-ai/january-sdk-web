@@ -25,7 +25,7 @@ import {
   SkeletonList,
   TextField,
 } from '~/components/ui'
-import { cn, formatNumber } from '~/lib/utils'
+import { cn, formatNumber, formatQuantity } from '~/lib/utils'
 import { GlucoseChart, friendlyImpact, impactClass } from '~/components/glucose-prediction'
 import { HeightInput } from '~/components/height-input'
 import { WeightInput } from '~/components/weight-input'
@@ -127,7 +127,7 @@ function GlucosePage() {
             </div>
             <label className="mt-4 block">
               <span className="mb-2 block text-sm font-semibold text-stone-700">Activity level</span>
-              <select className="min-h-12 w-full rounded-2xl border border-stone-300 bg-white px-4 outline-none transition-colors focus:bg-stone-50" onChange={(event) => setActivityLevel(event.target.value as typeof activityLevel)} value={activityLevel}>
+              <select className="min-h-12 w-full rounded-2xl border border-stone-300 bg-white px-4 outline-none transition-colors focus:bg-stone-50" data-testid="glucose-activity" onChange={(event) => setActivityLevel(event.target.value as typeof activityLevel)} value={activityLevel}>
                 <option value={ActivityLevel.sedentary}>Sedentary</option>
                 <option value={ActivityLevel.lightlyActive}>Lightly active</option>
                 <option value={ActivityLevel.moderatelyActive}>Moderately active</option>
@@ -146,7 +146,7 @@ function GlucosePage() {
                     <div className="truncate font-bold">{food.name}</div>
                     <div className="mt-1 text-sm text-stone-500">{formatNumber(food.calories, 0)} calories</div>
                   </div>
-                  <QuantityControl decreaseDisabled={quantity <= 0.25} onDecrease={() => setQuantity((value) => Math.max(0.25, value - 0.25))} onIncrease={() => setQuantity((value) => value + 0.25)} testId="food-serving-controls" value={formatNumber(quantity)} />
+                  <QuantityControl decreaseDisabled={quantity <= 0.25} onDecrease={() => setQuantity((value) => Math.max(0.25, value - 0.25))} onIncrease={() => setQuantity((value) => value + 0.25)} testId="food-serving-controls" value={formatQuantity(quantity)} />
                 </div>
                 {servingId != null && <div className="mt-4"><ServingSelector onChange={(value) => { setServingId(value); prediction.reset() }} servings={food.servings} testId="food-serving-unit" value={servingId} /></div>}
                 <button className="mt-4 min-h-11 text-sm font-bold text-amber-800" data-testid="glucose-start-over" onClick={() => { setFood(null); setServingId(null); prediction.reset() }} type="button">Choose a different food</button>
@@ -238,7 +238,7 @@ function PredictionResult({ food, servingId, quantity, result }: { food: FoodSea
           <SectionLabel>Meal</SectionLabel>
           <div className="mt-1 truncate text-lg font-bold">{food.name}</div>
         </div>
-        <div className="data-number text-right text-sm font-bold text-stone-600">{formatNumber(quantity)} × {food.servings.find((item) => item.id === servingId)?.unit ?? 'serving'}</div>
+        <div className="data-number text-right text-sm font-bold text-stone-600">{formatQuantity(quantity)} × {food.servings.find((item) => item.id === servingId)?.unit ?? 'serving'}</div>
       </Card>
       <p className="text-pretty text-sm leading-6 text-stone-500">This is an estimate for demonstration purposes, not medical advice.</p>
     </div>

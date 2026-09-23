@@ -14,13 +14,13 @@ const prepared = await preparePhotoScanImage(file);
 const scan = await january.foodAnalysis.analyzePhoto({ image: prepared.dataUri });
 ```
 
-Correct a result using its current name and detections:
+Correct a result by sending it back exactly as it was returned, with a
+plain-language instruction:
 
 ```ts
 const corrected = await january.foodAnalysis.correct({
-  mealName: scan.mealName ?? 'Meal',
-  detections: scan.detections ?? [],
-  userInput: 'Remove the fries',
+  analysis: scan,
+  instruction: 'Remove the fries',
 });
 ```
 

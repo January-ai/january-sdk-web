@@ -4,11 +4,15 @@ import { FoodLogsApi } from './internal/transport/apis/FoodLogsApi.js';
 import { GlucoseApi } from './internal/transport/apis/GlucoseApi.js';
 import { PhotoScanningApi } from './internal/transport/apis/PhotoScanningApi.js';
 import { RestaurantsApi } from './internal/transport/apis/RestaurantsApi.js';
+import { WaterLogsApi } from './internal/transport/apis/WaterLogsApi.js';
+import { WeightLogsApi } from './internal/transport/apis/WeightLogsApi.js';
 import { FoodsResource } from './resources/foods.js';
 import { FoodLogsResource } from './resources/food-logs.js';
 import { GlucoseResource } from './resources/glucose.js';
 import { FoodAnalysisResource } from './resources/photo-scanning.js';
 import { RestaurantsResource } from './resources/restaurants.js';
+import { WaterLogsResource } from './resources/water-logs.js';
+import { WeightLogsResource } from './resources/weight-logs.js';
 import type { PartnerUserContext } from './models.js';
 import {
   createJanuaryPartnerUserClient,
@@ -194,6 +198,8 @@ export class JanuaryPartnerClient {
   readonly foodAnalysis: FoodAnalysisResource;
   readonly foodLogs: FoodLogsResource;
   readonly glucose: GlucoseResource;
+  readonly waterLogs: WaterLogsResource;
+  readonly weightLogs: WeightLogsResource;
 
   constructor(options: JanuaryPartnerClientOptions) {
     const credentials = ['apiKey', 'developmentApiKey', 'accessToken', 'clientTokenProvider']
@@ -254,6 +260,8 @@ export class JanuaryPartnerClient {
     this.foodAnalysis = new FoodAnalysisResource(foodAnalysisApi);
     this.foodLogs = new FoodLogsResource(new FoodLogsApi(configuration));
     this.glucose = new GlucoseResource(new GlucoseApi(configuration));
+    this.waterLogs = new WaterLogsResource(new WaterLogsApi(configuration));
+    this.weightLogs = new WeightLogsResource(new WeightLogsApi(configuration));
   }
 
   forUser(context: PartnerUserContext): JanuaryPartnerUserClient;

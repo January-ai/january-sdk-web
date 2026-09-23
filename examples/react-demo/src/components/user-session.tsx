@@ -49,6 +49,21 @@ export function UserSessionProvider({ defaultEndUserId = '', children }: { defau
   return <UserSessionContext.Provider value={value}>{children}</UserSessionContext.Provider>
 }
 
+/**
+ * A key that changes when one end user replaces another (or the user is cleared), for remounting a
+ * screen whose state belongs to that user. The first user arriving is not a change: nothing was
+ * loaded for "no user", and anything already typed on the screen is kept.
+ */
+export function useUserScopeKey(endUserId: string): number {
+  const [scope, setScope] = useState({ user: endUserId, key: 0 })
+  if (endUserId !== scope.user) {
+    const next = { user: endUserId, key: scope.user ? scope.key + 1 : scope.key }
+    setScope(next)
+    return next.key
+  }
+  return scope.key
+}
+
 export function useUserSession() {
   const value = useContext(UserSessionContext)
   if (!value) throw new Error('useUserSession must be used inside UserSessionProvider')

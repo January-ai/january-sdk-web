@@ -12,6 +12,7 @@ import type {
 } from '../models.js';
 import { executeRequest } from '../errors.js';
 import { FoodLogsApi } from '../internal/transport/apis/FoodLogsApi.js';
+import { formatDate, init, parseDate, parseDateTime } from './shared.js';
 
 export class FoodLogsResource {
   constructor(private readonly api: FoodLogsApi) {}
@@ -21,7 +22,7 @@ export class FoodLogsResource {
       januaryEndUserID: request.endUserId,
       createFoodLogBody: {
         foods: request.foods.map(mapSelection),
-        ...(request.timestampUtc !== undefined ? { eatenAt: parseDateTime(request.timestampUtc, 'timestampUtc') } : {}),
+        ...(request.timestampUtc !== undefined ? { createdAt: parseDateTime(request.timestampUtc, 'timestampUtc') } : {}),
         ...(request.name !== undefined ? { name: request.name } : {}),
       },
     }, init(request.signal)));
@@ -78,13 +79,19 @@ export class FoodLogsResource {
   }
 
   async update(request: UpdateFoodLogRequest): Promise<FoodLog> {
+    // The API rejects an empty patch and any key it does not know, so only the fields the
+    // caller set are serialized.
+    const updateFoodLogBody = {
+      ...(request.foods !== undefined ? { foods: request.foods.map(mapSelection) } : {}),
+      ...(request.timestampUtc !== undefined ? { createdAt: parseDateTime(request.timestampUtc, 'timestampUtc') } : {}),
+      ...(request.name !== undefined ? { name: request.name } : {}),
+    };
+    if (Object.keys(updateFoodLogBody).length === 0) {
+      throw new TypeError('Provide at least one of foods, timestampUtc, or name to update.');
+    }
     const response = await executeRequest(() => this.api.updateFoodLog({
       januaryEndUserID: request.endUserId, logId: request.logId,
-      updateFoodLogBody: {
-        ...(request.foods !== undefined ? { foods: request.foods.map(mapSelection) } : {}),
-        ...(request.timestampUtc !== undefined ? { eatenAt: parseDateTime(request.timestampUtc, 'timestampUtc') } : {}),
-        ...(request.name !== undefined ? { name: request.name } : {}),
-      },
+      updateFoodLogBody,
     }, init(request.signal)));
     return mapFoodLog(response);
   }
@@ -103,7 +110,7 @@ function mapSelection(selection: import('../models.js').FoodSelection) {
 function mapFoodLog(value: import('../internal/transport/models/FoodLog.js').FoodLog): FoodLog {
   return {
     id: value.id,
-    timestampUtc: value.eatenAt.toISOString(),
+    timestampUtc: value.createdAt.toISOString(),
     name: value.name,
     foods: value.foods.map((food) => ({
       id: food.foodId,
@@ -124,19 +131,4 @@ function mapFoodLog(value: import('../internal/transport/models/FoodLog.js').Foo
   };
 }
 
-function init(signal?: AbortSignal): RequestInit | undefined { return signal ? { signal } : undefined }
 
-function parseDate(value: string, name: string): Date {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) throw new TypeError(`${name} must be an ISO-8601 date.`);
-  const result = new Date(`${value}T00:00:00.000Z`);
-  if (Number.isNaN(result.getTime())) throw new TypeError(`${name} must be an ISO-8601 date.`);
-  return result;
-}
-
-function formatDate(value: Date): string { return value.toISOString().slice(0, 10) }
-
-function parseDateTime(value: string, name: string): Date {
-  const result = new Date(value);
-  if (Number.isNaN(result.getTime())) throw new TypeError(`${name} must be an ISO-8601 date-time.`);
-  return result;
-}

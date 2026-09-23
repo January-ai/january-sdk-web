@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from './fixtures'
 import { byId, control, openDemo, resetFixture } from './flow'
 
 test.beforeEach(async () => {
@@ -13,7 +13,7 @@ test('Launch and primary navigation', async ({ page }) => {
   for (const id of ['category-all', 'category-general', 'category-branded', 'category-recipe']) {
     await expect(byId(page, id)).toBeVisible()
   }
-  for (const id of ['tab-search', 'tab-scan', 'tab-food-logs', 'tab-glucose']) {
+  for (const id of ['tab-search', 'tab-scan', 'tab-tracking', 'tab-food-logs', 'tab-glucose']) {
     await expect(byId(page, id).filter({ visible: true }).first()).toBeVisible()
   }
   await expect(byId(page, 'search-results')).toHaveCount(0)

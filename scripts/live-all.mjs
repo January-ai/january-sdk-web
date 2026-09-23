@@ -3,6 +3,7 @@ import {
   HeightUnit,
   JanuaryPartnerClient,
   Sex,
+  VolumeUnit,
   WeightUnit,
 } from '../dist/index.js';
 import { readFile } from 'node:fs/promises';
@@ -119,6 +120,10 @@ try {
   if (fetched.id !== created.id) throw new Error('foodLogs.get returned the wrong log.');
   pass('foodLogs.get');
 
+  const summary = await client.foodLogs.getSummary({ endUserId, endUserTimezone: timezone, start, end });
+  if (summary.totals.logsCount < 1) throw new Error('foodLogs.getSummary did not count the created log.');
+  pass('foodLogs.getSummary', `${summary.buckets.length} buckets`);
+
   const updated = await client.foodLogs.update({
     endUserId, endUserTimezone: timezone, logId: created.id, name: 'January Web SDK smoke updated',
   });
@@ -155,7 +160,37 @@ const prediction = await client.glucose.predict({
 if (!prediction.prediction.length) throw new Error('glucose.predict returned no points.');
 pass('glucose.predict', `${prediction.prediction.length} points`);
 
-console.log('PASS all 17 client Partner API v1.2 operations through the public Web SDK');
+const user = client.forUser({ endUserId, endUserTimezone: timezone });
+// The API files logs under the end user's local day, which differs from the UTC day around midnight.
+const logDay = new Intl.DateTimeFormat('en-CA', { timeZone: timezone }).format(new Date());
+let waterLogId;
+try {
+  const water = await user.waterLogs.create({ amount: { value: 8, unit: VolumeUnit.fluidOunces } });
+  waterLogId = water.id;
+  pass('waterLogs.create', `${water.amount.value} ${water.amount.unit}`);
+
+  const totals = await user.waterLogs.list({ start: logDay, end: logDay, unit: VolumeUnit.milliliters });
+  if (!totals.items.some((day) => day.total.value >= 236)) {
+    throw new Error('waterLogs.list did not include the logged amount.');
+  }
+  pass('waterLogs.list', `${totals.items.length} days`);
+
+  await user.waterLogs.delete({ logId: water.id });
+  waterLogId = undefined;
+  pass('waterLogs.delete');
+} finally {
+  if (waterLogId) await user.waterLogs.delete({ logId: waterLogId }).catch(() => {});
+}
+
+const weight = await user.weightLogs.create({ weight: { value: 175, unit: WeightUnit.pounds } });
+pass('weightLogs.create', `${weight.weight.value} ${weight.weight.unit}`);
+const weights = await user.weightLogs.list({ start: logDay, end: logDay });
+if (!weights.items.some((day) => day.weight.value === 175)) {
+  throw new Error('weightLogs.list did not return the logged weight.');
+}
+pass('weightLogs.list', `${weights.items.length} days`);
+
+console.log('PASS all 23 client Partner API v1.2 operations through the public Web SDK');
 
 function pass(operation, detail) {
   console.log(`PASS ${operation}${detail ? ` (${detail})` : ''}`);
