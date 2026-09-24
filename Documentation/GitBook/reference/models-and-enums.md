@@ -15,12 +15,13 @@
   sulfites, soy, wheat, shellfish, fish, mushrooms, sesame, MSG, caffeine, and
   FODMAP constants.
 
-`NutritionFacts` uses optional `{ value: number; unit: string }` amounts for
-calories, protein, carbohydrates, net carbohydrates, fats, fiber, sugars,
-cholesterol, calcium, iron, potassium, sodium, and vitamin D.
+`NutritionFacts` has 16 optional `NutrientAmount` (`{ value: number; unit: string }`)
+properties: `calories`, `protein`, `carbohydrates`, `netCarbohydrates`,
+`totalFat`, `saturatedFat`, `transFat`, `fiber`, `totalSugars`, `addedSugars`,
+`cholesterol`, `calcium`, `iron`, `potassium`, `sodium`, and `vitaminD`.
 
 `FoodSelection` is `{ id: string; serving: { id: string; quantity: number } }`
-and is accepted by Food Logs and Glucose.
+and is what `foodLogs.create`, `foodLogs.update`, and `glucose.predict` accept.
 
 * `FoodLogSummaryGrouping`: `day`, `week`
 * `WeekStart`: `monday`, `sunday`
@@ -63,10 +64,9 @@ interface GlucosePredictionProfile {
 
 ## Errors
 
-HTTP/transport operations throw `JanuaryError` with `category`, optional
-`status`, optional `code`, optional `requestId`, and a cause. Categories are
-`authentication`, `authorization`, `validation`, `notFound`, `rateLimit`,
-`server`, `transport`, and `unknown`.
-
-Local request validation throws `TypeError` or `RangeError`. Portion failures
-throw `FoodPortionError`. Cancellation propagates as `AbortError`.
+API and network failures reject with `JanuaryError`, which has `category`,
+optional `status`, optional `code`, optional `requestId`, and `cause`.
+`category` is one of `authentication`, `authorization`, `validation`,
+`notFound`, `rateLimit`, `server`, `transport`, or `unknown`. Invalid input,
+`FoodPortionError`, and cancellation are covered in
+[Error handling](error-handling.md).

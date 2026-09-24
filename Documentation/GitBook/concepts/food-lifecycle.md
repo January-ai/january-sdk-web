@@ -10,29 +10,25 @@ autocomplete ── selection ──▶ search ── selected result ──▶ 
                                                       FoodPortion
 ```
 
-Autocomplete is a text-suggestion step. Selecting a suggestion should populate
-the search field and run `search`; it should not open a serving picker. After a
-search result is selected, call `get` before showing servings.
+Autocomplete suggests text. Selecting a suggestion should fill the search field and run `search`, not open a serving picker. Search results are summaries: when the user picks one, fetch the full food with `foods.get` before showing servings.
 
 ```ts
 import { FoodPortion } from '@januaryai/web-sdk';
 
-const results = await january.foods.search({ query: 'banana' });
-const selected = results.items[0];
+const { items } = await user.foods.search({ query: 'banana' });
+const selected = items[0];
 if (!selected) throw new Error('No matching food');
 
-const food = await january.foods.get({ foodId: selected.id });
-const serving = food.servings.find((item) => item.isPrimary) ?? food.servings[0];
-if (!serving) throw new Error('Food has no serving options');
+// Search results are summaries: load the full food before showing servings.
+const food = await user.foods.get({ foodId: selected.id });
 
-const portion = FoodPortion.from(food, {
-  servingId: serving.id,
-  quantity: 1.5,
-});
+// The primary serving at its listed quantity.
+const portion = FoodPortion.from(food);
+console.log(portion.serving.unit, portion.quantity, portion.nutrition.calories?.value);
 
-console.log(portion.nutrition.calories?.value);
-const apiSelection = portion.selection;
+await user.foodLogs.create({ foods: [portion.selection] });
 ```
 
-`portion.selection` is accepted by Food Logs and Glucose. Catch
-`FoodPortionError` when serving or quantity data is invalid.
+`FoodPortion.from` calculates nutrition locally. Pass `servingId` to pick another serving and `quantity` to change the amount; `quantity` is in the serving's unit and defaults to the serving's listed quantity. Invalid serving data, or a quantity that isn't positive or is over 10,000, throws `FoodPortionError`.
+
+`portion.selection` is what `foodLogs.create` and `glucose.predict` accept.

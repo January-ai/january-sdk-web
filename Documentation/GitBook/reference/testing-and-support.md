@@ -1,37 +1,20 @@
 # Testing and support
 
-## Verify the SDK checkout and package
+## Test your integration
 
-```bash
-npm ci
-npm test
-npm run build
-npm pack --dry-run
-npm run demo:web:build
-```
+Before launch, check that:
 
-For a release candidate, inspect `npm pack --dry-run`, install the resulting
-tarball into a clean temporary ESM project, and import `JanuaryClient`.
+* Your provider handles a token response with `expires_in` and one with `expiresIn`.
+* A failing token endpoint surfaces the right error, and retries stop in a time your UI can live with ([retry policy](retries-and-lifecycle.md#provider-retry-policy)).
+* Concurrent requests share one token fetch, and a `401 token_expired` is replayed once.
+* A canceled request is treated as cancellation, not as a failure.
+* Autocomplete leads to search, and a picked result loads the full food with `foods.get` before servings show.
+* Photo preparation works in each browser you support.
+* Signing out, switching accounts, and changing the timezone each give the right user's data ([Client lifecycle](../concepts/client-lifecycle.md)).
+* Your production bundle and network panel contain no API key.
 
-The example app also has an end-to-end suite of Playwright specs that exercise
-every screen against a local fixture server; see
-`examples/react-demo/tests/ui/README.md` in the repository for how to run it.
+Before upgrading, read the [changelog](changelog.md).
 
-## Verify an integration
+## Contact support
 
-Test token success, both expiry spellings, exhausted provider retries,
-single-flight concurrent refresh, one-time `token_expired` replay, cancellation,
-autocomplete → search → hydration, photo preparation, and user/timezone changes.
-Inspect the production browser bundle and network panel to prove that no partner
-key is present.
-
-## Versioning and updates
-
-Use your package-manager lockfile, review the changelog and exported declaration
-diff, rerun the checks above, and upgrade deliberately.
-
-## Support report
-
-Include the SDK version, Node/browser/framework versions, operation,
-`JanuaryError` category/status/code/request ID, and reproduction. Exclude keys,
-tokens, images, nutrition records, and health profiles.
+Include the SDK version, browser and framework versions, the operation, the `JanuaryError` category, status, code, and request ID, and a minimal reproduction. Leave out API keys, tokens, images, nutrition records, and health profiles.

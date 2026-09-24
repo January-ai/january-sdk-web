@@ -1,6 +1,6 @@
 # Installation
 
-Install the public package from npm:
+Install [`@januaryai/web-sdk`](https://www.npmjs.com/package/@januaryai/web-sdk) from npm:
 
 ```bash
 npm install @januaryai/web-sdk
@@ -10,11 +10,6 @@ npm install @januaryai/web-sdk
 import { JanuaryClient } from '@januaryai/web-sdk';
 ```
 
-The package is ESM-first and includes its TypeScript declarations. Commit your
-application lockfile to make installs reproducible.
+The package is ESM-only and includes its TypeScript declarations. The source is on [GitHub](https://github.com/January-ai/january-sdk-web). Supported Node.js versions and browsers are in [Compatibility](../reference/compatibility.md).
 
-## Requirements
-
-* Node.js 22 or newer for package installation and builds
-* A modern browser with Fetch when calling January directly from an approved origin
-* An authenticated partner backend that returns short-lived January client tokens
+**Next:** [Backend token endpoint](backend-token-endpoint.md)
