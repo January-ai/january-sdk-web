@@ -32,5 +32,5 @@
 * Browser voice transcription with live levels and duration, without retaining recorded audio
 * Typed imperial and metric glucose-profile measurements
 * Shared, white-label-ready React demo components
-* Production restaurant-menu search and paginated lookup by restaurant ID
+* Restaurant menu-item search, and paginated restaurant-menu lookup by restaurant ID (`getMenuItems`)
 * Single food-log retrieval and no-content deletion aligned with API `v1.2`
