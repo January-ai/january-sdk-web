@@ -57,8 +57,10 @@ FoodPortion.from(
 ): FoodPortion
 ```
 
-It selects the primary or first serving by default, and `quantity` (in the
-serving's unit) defaults to the serving's listed quantity. Quantity must be
-finite, positive, and at most 10,000. Failures throw
+It selects the primary or first serving by default. `quantity` is an amount in
+the serving's unit, and without one the portion is one serving; `selection`
+sends the number of servings
+([Quantity and servings](../concepts/food-lifecycle.md#quantity-and-servings)).
+Quantity must be finite, positive, and at most 10,000. Failures throw
 `FoodPortionError` with code `no_servings`, `serving_not_found`,
 `invalid_serving`, or `invalid_quantity`.

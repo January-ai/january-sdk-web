@@ -30,7 +30,7 @@ It needs browser image and canvas APIs, so call it only in the browser. On a ser
 
 ## Canceled requests look like errors
 
-A canceled request rejects with category `transport`. Check your signal's `aborted` flag before treating it as a failure ([Error handling](error-handling.md#cancellation)).
+A canceled request rejects with an `AbortError`, not a `JanuaryError`. Check the error's `name` or your signal's `aborted` flag before treating it as a failure ([Error handling](error-handling.md#cancellation)).
 
 ## Contacting support
 
