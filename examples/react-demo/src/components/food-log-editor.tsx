@@ -37,8 +37,9 @@ export function FoodLogEditor({ log, defaultTimestamp, onSaved }: { log?: FoodLo
       name: food.name ?? 'Unnamed food',
       servingId,
       servingUnit: food.servingDetails.unit ?? 'serving',
+      // A number of servings; the serving option keeps its own size ("6 oz", not "1 oz").
       quantity: food.consumedServing.quantity ?? 1,
-      servings: [{ id: servingId, quantity: 1, unit: food.servingDetails.unit ?? 'serving' }],
+      servings: [{ id: servingId, quantity: food.servingDetails.quantity, unit: food.servingDetails.unit ?? 'serving' }],
     }]
   }) ?? [])
   const hydratedFood = useHydratedFood()

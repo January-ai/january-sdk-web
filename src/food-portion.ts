@@ -13,19 +13,34 @@ export type FoodPortionErrorCode =
   | 'invalid_quantity';
 
 export interface FoodPortionOptions {
+  /** The serving to use. Defaults to the food's primary serving, or its first. */
   servingId?: string;
+  /**
+   * The amount eaten in the serving's unit, not a number of servings: 12 for 12 oz of a
+   * "6 oz" serving. Defaults to the serving's own quantity, which is one serving.
+   */
   quantity?: number;
 }
 
-/** A validated serving and quantity with locally calculated nutrition. */
+/**
+ * A validated serving and amount, with nutrition calculated locally and the selection to send
+ * to Food Logs and Glucose.
+ */
 export class FoodPortion {
   readonly foodId: string;
   readonly serving: ServingOption;
+  /** The amount eaten in the serving's unit: 6 for one "6 oz" serving, 12 for two. */
   readonly quantity: number;
+  /** Nutrition for `quantity`, scaled from the food's nutrients by the serving's scaling factor. */
   readonly nutrition: NutritionFacts;
   readonly totalWeightGrams: number | null;
   readonly glycemicIndex: number | null;
   readonly glycemicLoad: number | null;
+  /**
+   * The food, serving, and number of servings for `foodLogs.create`, `foodLogs.update`, and
+   * `glucose.predict`. `serving.quantity` counts servings: `quantity` divided by the serving's
+   * own quantity, so 12 oz of a "6 oz" serving is 2.
+   */
   readonly selection: FoodSelection;
 
   private constructor(food: FoodSearchItem, serving: ServingOption, quantity: number) {
@@ -43,7 +58,9 @@ export class FoodPortion {
       : serving.weightGrams * quantity / servingQuantity;
     this.glycemicIndex = food.glycemicIndex;
     this.glycemicLoad = food.glycemicLoad == null ? null : food.glycemicLoad * scale;
-    this.selection = { id: food.id, serving: { id: servingId, quantity } };
+    // The API reads a selection's quantity as a number of servings, not an amount in the
+    // serving's unit.
+    this.selection = { id: food.id, serving: { id: servingId, quantity: quantity / servingQuantity } };
   }
 
   static from(food: FoodSearchItem, options: FoodPortionOptions = {}): FoodPortion {

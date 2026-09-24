@@ -99,14 +99,23 @@ relay). The API allows 60 requests a minute per end user, so each flow waits
 until a minute after the previous flow's last request, and the run takes about
 20 minutes.
 
-A complete run makes about 215 API requests between the demo and the checks,
-about 155 of them in the `@logs` half. Your account's allowance also caps
+A complete run makes about 225 API requests between the demo and the checks,
+about 165 of them in the `@logs` half. Your account's allowance also caps
 requests in any rolling 24 hours; if that cap is smaller, run the two halves on
 different days:
 
 ```sh
 LIVE_END_USER_ID=your-test-user npm run test:ui:live -- --grep @catalog   # search, scans, restaurants, glucose
 LIVE_END_USER_ID=your-test-user npm run test:ui:live -- --grep @logs      # meals, water, weight, charts
+```
+
+The `@portion` flow, part of `@logs`, also runs on its own in about 8 requests. It
+logs greek yogurt's default 6 oz portion from the food's detail and checks that
+Logs and the API both record one serving (about 100 kcal, not 600), then deletes
+the log. Give it its own test user and evidence folder:
+
+```sh
+LIVE_END_USER_ID=e2e-qa-portion-web LIVE_EVIDENCE_DIR=test-results/live-portion npm run test:ui:live -- --grep @portion
 ```
 
 When the allowance runs out mid-run, the remaining flows are skipped with the
