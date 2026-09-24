@@ -1,55 +1,40 @@
 # React example app
 
-`examples/react-demo` is a full-stack TanStack Start application demonstrating
-shared UI, autocomplete, hydrated servings, food alternatives, browser photo
-preparation, scan correction, barcode lookup, a per-day Tracking view for meals, water, and weight with week, month, and year
-charts, a Logs meal history, glucose prediction, user
-context, imperial/metric controls, and local voice capture for food and
-restaurant search.
+The [Web SDK repository](https://github.com/January-ai/january-sdk-web) includes `examples/react-demo`, a TanStack Start app that uses every part of the SDK. It calls January from server functions (`src/api/january.functions.ts`), so it runs without origin enablement.
 
-## Install and configure
+## Run it
 
-From the repository root:
+1. In the [Developer Dashboard](https://dashboard.january.ai), create an API key under **API keys → Create key**, then switch on **Enable client tokens** under [Client tokens](https://dashboard.january.ai/dashboard/client-tokens). Without the switch, minting fails with `403`.
+2. Start the [token relay](https://docs.january.ai/docs/authentication#develop-with-the-token-relay) and paste the key when it asks. Leave it running.
 
-```bash
-npm ci
-cp .env.example .env.local
-cd examples/react-demo
-npm ci
-```
+   ```bash
+   git clone https://github.com/January-ai/january-token-relay.git
+   cd january-token-relay
+   ./start.sh
+   ```
 
-For the standalone local token relay, put these server-side values in the
-root `.env.local` (the copied template already has them):
+3. In a second terminal, clone the SDK and start the demo. The copied `.env.local` already points at the relay.
 
-```text
-PARTNER_TOKEN_URL=http://127.0.0.1:8787/api/january/client-token
-JANUARY_END_USER_ID=january-sdk-demo-user
-```
+   ```bash
+   git clone https://github.com/January-ai/january-sdk-web.git
+   cd january-sdk-web
+   npm ci
+   cp .env.example .env.local
+   cd examples/react-demo
+   npm ci
+   npm run dev
+   ```
 
-`PARTNER_TOKEN_URL` has no default. The demo sends a server-side `POST` with the
-selected stable user ID in `January-End-User-ID`. A production provider instead
-sends the app's normal session to its authenticated backend, which derives the
-user ID server-side. The public SDK exposes no January base-URL override. Never
-use a browser-exposed variable for server credentials.
+4. Open [http://localhost:3000](http://localhost:3000) and search for `banana`.
 
-For a hosted development relay, set `PARTNER_TOKEN_URL` to the relay's Vercel
-HTTPS token URL and `PARTNER_APP_SESSION_TOKEN` to its `RELAY_TOKEN`. Follow the
-[relay deployment guide](https://github.com/January-ai/january-token-relay#deploy).
-This is for development and testing only; production must use your authenticated
-backend.
+## How it gets tokens
 
-## Run and verify
+The demo's server code posts to `PARTNER_TOKEN_URL` (the relay) with the demo user's ID in the `January-End-User-ID` header; `JANUARY_END_USER_ID` sets the default user. That header goes only to the relay, and the SDK strips it from calls to January. Your production endpoint takes the user from the app session instead ([Backend token endpoint](backend-token-endpoint.md)). The API key stays in the relay and never reaches the browser.
 
-```bash
-npm test
-npm run build
-npm run dev
-```
+To use a relay deployed to Vercel, set `PARTNER_TOKEN_URL` to its HTTPS token URL and `PARTNER_APP_SESSION_TOKEN` to its `RELAY_TOKEN` in `.env.local`. See the [relay deployment guide](https://github.com/January-ai/january-token-relay#optional-deploy-to-vercel).
 
-Open the printed local URL. Verify connection, autocomplete → search, complete
-servings, food alternatives, voice capture → transcript, photo scan and
-correction, the Tracking day view (meals, water, weight) and its Week / Month /
-Year charts, the Logs meal history,
-Glucose, and account/timezone changes. Browser
-developer tools must not show server-side token-issuance credentials in source, network requests, or
-storage.
+## What it shows
+
+Search for foods, barcodes, restaurants, and menu items (with voice input); food details, portions, and alternatives; photo and description scans with corrections; a daily view of meals, water, and weight with charts; meal history; and glucose prediction.
+
+**Next:** [Core concepts](https://docs.january.ai/web-sdk/concepts)

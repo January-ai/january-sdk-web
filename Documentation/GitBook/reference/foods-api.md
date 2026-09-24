@@ -1,11 +1,6 @@
 # Foods API
 
-Every request accepts optional `endUserId?: string` and `signal?: AbortSignal`.
-Food requests never send `January-End-User-ID`: the foods endpoints don't depend
-on who is asking, so `endUserId` remains only for source compatibility.
-
-Prefer `january.forUser(...).foods`; it exposes the same operations without an
-`endUserId` field in each request.
+Use these through a scoped client, `user.foods` ([Client and authentication API](client-and-resources.md#scoped-clients)). Every request accepts an optional `signal: AbortSignal`.
 
 ## Operations
 
@@ -39,12 +34,16 @@ Autocomplete trims the query and permits an empty prefix, but rejects more than
 `NutritionFacts`.
 
 `FoodSearchResults` contains `totalCount` and `items: FoodSearchItem[]`.
-`FoodSearchItem` includes ID/name/brand, flattened nullable nutrition values,
-nullable glycemic values/photo/UPC, complete nullable `nutrients`, and
-`servings: ServingOption[]`.
+`totalCount` is the number of items in this response, not the total number of
+matches; keep paging with `offset` while a full page comes back. `lookupBarcode`
+returns one item.
 
-`ServingOption` fields are `id`, `quantity`, `unit`, `scalingFactor`, nullable
-`weightGrams`, and `isPrimary`.
+`FoodSearchItem` includes `id`, `name`, `brandName`, flattened nullable nutrition
+values, nullable glycemic values, `photoUrl`, and `barcode`, the complete nullable
+`nutrients`, and `servings: ServingOption[]`.
+
+`ServingOption` fields are `id`, `quantity`, `unit`, `scalingFactor`, `weightGrams`,
+and `isPrimary`; every field except `id` can be `null`.
 
 Alternatives returns `{ alternatives: AlternativeFood[] }`. Natural-language
 meal descriptions are handled by `foodAnalysis.analyzeDescription`.
@@ -58,7 +57,8 @@ FoodPortion.from(
 ): FoodPortion
 ```
 
-It selects the primary or first serving by default and uses the serving quantity
-by default. Quantity must be finite, positive, and at most 10,000. Failures throw
+It selects the primary or first serving by default, and `quantity` (in the
+serving's unit) defaults to the serving's listed quantity. Quantity must be
+finite, positive, and at most 10,000. Failures throw
 `FoodPortionError` with code `no_servings`, `serving_not_found`,
 `invalid_serving`, or `invalid_quantity`.

@@ -1,49 +1,43 @@
 # Restaurants
 
-```ts
-const request = {
-  query: 'mediterranean',
-  latitude: 37.7749,
-  longitude: -122.4194,
-  radius: 8_000,
-  limit: 10,
-};
+Scope: `restaurants:read`. `user` is the [scoped client](../concepts/client-lifecycle.md).
 
-const restaurants = await january.restaurants.search(request);
-const menuItems = await january.restaurants.searchMenuItems({
-  ...request,
-  query: 'grilled chicken',
-});
+## Search near a location
+
+```ts
+const location = { latitude: 37.7749, longitude: -122.4194, radius: 8_000 };
+
+const restaurants = await user.restaurants.search({ ...location, query: 'mediterranean', limit: 10 });
+const dishes = await user.restaurants.searchMenuItems({ ...location, query: 'grilled chicken' });
+dishes.items.forEach((dish) => console.log(dish.restaurantName, dish.name, dish.energy));
 ```
+
+`radius` is in meters. Field limits are in the [reference](../reference/discovery-and-scanning-api.md#restaurants).
 
 ## Load one restaurant's menu
 
-Use an ID returned by restaurant search to load that restaurant's menu without
-repeating the query or location:
+`getMenuItems` loads a restaurant's menu by the ID from `search`, without repeating the query or location. It returns pages of up to 100 items with no total count, so keep paging while a full page comes back:
 
 ```ts
-let offset = 0;
-const limit = 100;
+import type { RestaurantMenuEntry } from '@januaryai/web-sdk';
 
-while (true) {
-  const page = await january.restaurants.getMenuItems({
-    restaurantId: restaurant.id,
-    limit,
-    offset,
-  });
+async function loadMenu(restaurantId: string): Promise<RestaurantMenuEntry[]> {
+  const menu: RestaurantMenuEntry[] = [];
+  const limit = 100;
+  while (true) {
+    const page = await user.restaurants.getMenuItems({ restaurantId, limit, offset: menu.length });
+    menu.push(...page.items);
+    if (page.items.length < limit) return menu;
+  }
+}
 
-  consume(page.items);
-  offset += page.items.length;
-
-  if (page.items.length < limit) break;
+const [restaurant] = restaurants.items;
+if (restaurant) {
+  const menu = await loadMenu(restaurant.id);
+  menu.forEach((item) => console.log(item.name, item.energy, item.carbs, item.fat));
 }
 ```
 
-The response contains only `items`, with no `totalCount`; keep paging while a
-full page comes back. An empty page ends the menu, including for a restaurant
-with no menu on record. An unknown restaurant returns `404`.
+A restaurant with no menu on record returns an empty first page. An unknown restaurant fails with category `notFound`; in a discovery UI, fall back to `searchMenuItems` with the user's query and location.
 
-Queries contain 1–256 characters, radius is 1–50,000 meters (8,000 when
-omitted), limit is 1–100, and coordinates must be valid latitude and longitude
-values. Menu items can include nutrition, serving choices, photos, restaurant
-name, and distance.
+Menu items use short nutrition names: `energy`, `protein`, `carbs`, `netCarbs`, `fat`, `fiber`, `sugars`, `addedSugars`, `gi`, and `gl`, not the `calories`, `carbohydrates`, and `totalFat` of foods.

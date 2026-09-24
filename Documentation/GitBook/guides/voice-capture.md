@@ -1,76 +1,49 @@
 # Voice capture
 
-`VoiceCaptureSession` adds browser microphone transcription without coupling the
-SDK to React or another UI framework. It is intended for explicit user-driven
-flows such as speaking a food, meal description, or restaurant search.
+`VoiceCaptureSession` records from the microphone and transcribes speech in the browser, for spoken food, meal, or restaurant searches. It runs entirely in the browser: no token, scope, or origin enablement needed. It doesn't depend on React or any other UI framework.
 
 ## Capture and transcribe
 
-Create one session for the lifetime of the owning component. Subscribe before
-starting so the UI can render permission, recording, and processing states.
+Create one session for the lifetime of the component that owns it, and subscribe before starting so the UI can show permission, recording, and processing states. Call `start()` from a user gesture, such as a microphone button, and `stop()` when the user presses stop.
 
 ```ts
-import {
-  VoiceCaptureError,
-  VoiceCaptureSession,
-  type VoiceCaptureSnapshot,
-} from '@januaryai/web-sdk';
+import { VoiceCaptureError, VoiceCaptureSession } from '@januaryai/web-sdk';
 
 const voice = new VoiceCaptureSession();
+const unsubscribe = voice.subscribe((snapshot) => render(snapshot)); // state, audioLevel, durationMs, partialTranscript
 
-const unsubscribe = voice.subscribe((snapshot: VoiceCaptureSnapshot) => {
-  updateWaveform(snapshot.audioLevel);
-  updateTimer(snapshot.durationMs);
-  updatePartialTranscript(snapshot.partialTranscript);
-});
-
-try {
-  await voice.start({ language: 'en-US' });
-  const result = await voice.stop();
-
-  const query = result.transcript;
-} catch (error) {
-  if (error instanceof VoiceCaptureError) {
-    showVoiceError(error.code);
+// First gesture: the microphone button.
+export async function onMicPressed() {
+  try {
+    await voice.start({ language: 'en-US' });
+  } catch (error) {
+    if (error instanceof VoiceCaptureError) showVoiceError(error.code);
   }
 }
 
-unsubscribe();
-voice.dispose();
+// Second gesture: the stop button.
+export async function onStopPressed() {
+  const { transcript } = await voice.stop();
+  if (transcript) setQuery(transcript);
+}
+
+// When the component or page goes away.
+export function onUnmount() {
+  unsubscribe();
+  voice.dispose();
+}
 ```
 
-`start()` must be called from a user gesture. Call `stop()` only while the
-session state is `recording`. `cancel()` immediately releases the active capture;
-`dispose()` also removes all subscribers.
+Call `stop()` only while `voice.snapshot.state` is `recording`. `cancel()` discards the capture at once; `dispose()` also removes every subscriber. `VoiceCaptureError.code` is one of `unsupported`, `permissionDenied`, `microphoneUnavailable`, `recordingFailed`, `invalidState`, or `cancelled`.
 
-## Result and browser capabilities
+## Browser support
 
-Every successful result contains:
-
-| Field | Meaning |
-| --- | --- |
-| `durationMs` | Capture duration in milliseconds |
-| `transcript` | Recognized speech when browser speech recognition is available |
-
-Check `session.isSupported` before offering the microphone action and
-`session.isTranscriptionSupported` when the flow requires text. Keep text input
-available because speech recognition is not universal and may depend on browser
-or operating-system services.
+A result has `durationMs` and, when the browser recognized speech, `transcript`. Check `voice.isSupported` before showing the microphone, and `voice.isTranscriptionSupported` when you need text. Speech recognition isn't available in every browser and can depend on operating-system services, so keep a text field too.
 
 ## Permissions and privacy
 
-Microphone access requires a secure context such as HTTPS; localhost is suitable
-for local development. Ask only after the user presses the microphone control,
-show a persistent recording indicator, provide visible stop and cancel actions,
-and explain how to re-enable site microphone access after a denial.
+Microphone access needs a secure context such as HTTPS; `localhost` works for development. Ask only after the user presses the microphone button, show a recording indicator with stop and cancel buttons, and explain how to allow the microphone again after a denial.
 
-The SDK does not retain, return, or upload a recording. It releases the microphone
-stream when capture stops or is cancelled. The browser's speech-recognition
-service controls how voice input is processed for transcription.
+The SDK doesn't keep, return, or upload the recording. It discards audio chunks during capture and releases the microphone when capture stops or is canceled. The browser's speech-recognition service controls how speech is processed.
 
-## React demo
-
-The Search screen in `examples/react-demo` places a microphone beside the food
-or restaurant query. While recording it shows a live audio meter, duration,
-stop, and cancel controls. Stopping appends recognized text
-to the query. Barcode mode disables voice input.
+The Search screen of the [React example app](../getting-started/example-app.md) shows this flow.

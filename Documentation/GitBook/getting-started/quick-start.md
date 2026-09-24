@@ -1,69 +1,37 @@
 # First request
 
-This browser example constructs the provider and client, fetches a short-lived
-token from your authenticated backend, calls January, and renders food names. It
-uses the package installed in the [installation guide](installation.md).
+This page searches foods from the browser and renders the names.
 
-## 1. Add the request to your web application
+{% hint style="warning" %}
+**Before you begin:**
 
-Create `src/january-quickstart.ts` in the consuming web project. Replace the
-example user ID with the stable ID from your authenticated application session.
+* January has enabled every origin this page runs on, including `http://localhost:<port>`. Send your January contact the exact scheme, host, and port of each.
+* Your token endpoint, or the token relay, returns a token with the `foods:read` scope.
+
+Until your origin is enabled, this request fails with category `transport` and a CORS error in the browser console. Make January calls from your server instead: see [Runtime and security boundaries](../concepts/runtime-boundaries.md).
+{% endhint %}
+
+## 1. Add the request
+
+Create `src/january-quickstart.ts` next to the `src/january.ts` from [Authentication](authentication.md):
 
 ```ts
-import {
-  JanuaryError,
-  JanuaryClient,
-  JanuaryTokenProviderError,
-  type JanuaryClientTokenResponse,
-} from '@januaryai/web-sdk';
+import { JanuaryError } from '@januaryai/web-sdk';
+import { createJanuaryClient } from './january';
+import { getAppSession } from './session';
 
-const endUserId = 'replace-with-your-stable-user-id';
+const january = createJanuaryClient();
 
-async function fetchJanuaryToken(): Promise<JanuaryClientTokenResponse> {
-  let response: Response;
+export async function renderJanuaryQuickStart(output: HTMLElement): Promise<void> {
+  const session = await getAppSession();
+  const user = january.forUser({
+    endUserId: session.endUserId,
+    endUserTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  });
+
   try {
-    response = await fetch('/api/january/client-token', {
-      method: 'POST',
-      // The server must also return Cache-Control: no-store.
-      cache: 'no-store',
-      credentials: 'include',
-      headers: {
-        Accept: 'application/json',
-      },
-    });
-  } catch (error) {
-    throw new JanuaryTokenProviderError(
-      'Token endpoint is unavailable',
-      { retryable: true, cause: error },
-    );
-  }
-
-  if (!response.ok) {
-    throw new JanuaryTokenProviderError(
-      `Token endpoint returned HTTP ${response.status}`,
-      { retryable: response.status === 408 || response.status === 429 || response.status >= 500 },
-    );
-  }
-  return (await response.json()) as JanuaryClientTokenResponse;
-}
-
-const january = new JanuaryClient({
-  clientTokenProvider: fetchJanuaryToken,
-});
-const user = january.forUser(
-  endUserId,
-  Intl.DateTimeFormat().resolvedOptions().timeZone,
-);
-
-export async function renderJanuaryQuickStart(output: HTMLElement) {
-  try {
-    const response = await user.foods.search({
-      query: 'greek yogurt',
-      limit: 5,
-    });
-
-    output.style.whiteSpace = 'pre-line';
-    output.textContent = response.items.map((food) => food.name).join('\n');
+    const { items } = await user.foods.search({ query: 'greek yogurt', limit: 5 });
+    output.textContent = items.map((food) => food.name).join(', ');
   } catch (error) {
     if (error instanceof JanuaryError) {
       console.error('January request failed', {
@@ -71,35 +39,31 @@ export async function renderJanuaryQuickStart(output: HTMLElement) {
         status: error.status,
         code: error.code,
         requestId: error.requestId,
-        message: error.message,
+        cause: error.cause,
       });
-    } else {
-      console.error('Integration failed:', error);
     }
     throw error;
   }
 }
 ```
 
+The token decides which user January acts for; the SDK doesn't send `endUserId` to January. Still set it to your opaque user ID, never an email address or name ([User identity and timezone](../concepts/user-context.md)).
+
 ## 2. Run it
 
-Call the exported function from a page after the user session is available, then
-start the application's normal development server:
+Call the function once the user is signed in, then start your development server:
 
 ```ts
 import { renderJanuaryQuickStart } from './january-quickstart';
 
 const output = document.querySelector<HTMLElement>('#january-results');
 if (output) {
-  void renderJanuaryQuickStart(output).catch(() => {
-    // renderJanuaryQuickStart already logs the typed January error details.
+  renderJanuaryQuickStart(output).catch(() => {
+    // renderJanuaryQuickStart already logged the error.
   });
 }
 ```
 
-The page renders the returned food names inside `#january-results`. The exact
-count and foods vary. Failures throw after logging the typed January error fields
-or the token-endpoint error.
+`#january-results` shows up to five food names. If the request fails, the console shows the error's category, status, code, request ID, and cause; [Error handling](../reference/error-handling.md) says what each category means.
 
-Use an authenticated same-origin token endpoint; see
-[Authentication](authentication.md) for cookie and CORS guidance.
+**Next:** [React example app](example-app.md)

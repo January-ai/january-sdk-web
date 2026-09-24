@@ -1,6 +1,6 @@
 # Table of contents
 
-* [Web SDK](README.md)
+* [Overview](README.md)
 
 ## Getting started
 
@@ -13,6 +13,7 @@
 ## Core concepts
 
 * [Runtime and security boundaries](concepts/runtime-boundaries.md)
+* [Client lifecycle](concepts/client-lifecycle.md)
 * [User identity and timezone](concepts/user-context.md)
 * [Food discovery and servings](concepts/food-lifecycle.md)
 
@@ -28,10 +29,10 @@
 
 ## Reference
 
-* [Client and authentication API](reference/client-and-resources.md)
+* [Client and resources](reference/client-and-resources.md)
 * [Foods API](reference/foods-api.md)
 * [Restaurants and food analysis API](reference/discovery-and-scanning-api.md)
-* [Food, Water, and Weight Logs and Glucose API](reference/user-resources-api.md)
+* [Logs and glucose API](reference/user-resources-api.md)
 * [Models and enums](reference/models-and-enums.md)
 * [Retries, refresh, and cancellation](reference/retries-and-lifecycle.md)
 * [Error handling](reference/error-handling.md)
