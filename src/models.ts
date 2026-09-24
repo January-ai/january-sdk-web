@@ -308,6 +308,7 @@ export interface CorrectPhotoScanRequest {
 
 export interface ServingSelection {
   id: ContractFoodLogInputFood['servingId'];
+  /** How many of the serving were eaten: 2 for 12 oz of a "6 oz" serving, not 12. */
   quantity: ContractFoodLogInputFood['quantity'];
 }
 export interface FoodSelection { id: ContractFoodLogInputFood['foodId']; serving: ServingSelection }

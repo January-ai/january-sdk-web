@@ -173,9 +173,10 @@ export const listFoodLogs = createServerFn({ method: 'GET' })
     return getJanuaryClient(data.endUserId).forUser({ endUserId, endUserTimezone }).foodLogs.list(request)
   })
 
+// `serving.quantity` is a number of servings; the API accepts up to 10,000.
 const foodSelectionSchema = z.object({
   id: foodIdSchema,
-  serving: z.object({ id: servingIdSchema, quantity: z.number().positive().max(100) }),
+  serving: z.object({ id: servingIdSchema, quantity: z.number().positive().max(10_000) }),
 })
 
 export const saveFoodLog = createServerFn({ method: 'POST' })
@@ -278,7 +279,8 @@ export const predictGlucose = createServerFn({ method: 'POST' })
     healthConditions: z.array(z.enum([MedicalCondition.type2Diabetes, MedicalCondition.prediabetes])),
     foodId: foodIdSchema,
     servingId: servingIdSchema,
-    quantity: z.number().positive().max(100),
+    // A number of servings, which can pass 100 when a serving is under one unit ("0.5 cup").
+    quantity: z.number().positive().max(10_000),
     startTime: z.iso.datetime(),
     endUserId: optionalUserId,
     endUserTimezone: z.string().trim().min(1).max(100),

@@ -43,6 +43,74 @@ test('scales nutrients, weight, and glycemic load for an alternate serving', () 
   assert.equal(portion.totalWeightGrams, 240);
   assert.equal(portion.glycemicIndex, 50);
   assert.equal(portion.glycemicLoad, 48);
+  // The API reads a selection's quantity as a count of servings: 4 pieces of a "2 pieces"
+  // serving is 2.
+  assert.deepEqual(portion.selection, { id: 42, serving: { id: 2, quantity: 2 } });
+});
+
+// Greek yogurt as the catalog returns it: nutrients are for the primary "6 oz" serving. The API
+// reads a selection's quantity as a number of servings, so sending 6 for this serving logs six
+// servings (about 600 kcal) instead of one (100 kcal).
+const yogurt = {
+  ...food,
+  id: '70376084',
+  name: 'Greek yogurt',
+  glycemicIndex: 11,
+  glycemicLoad: 1,
+  nutrients: { calories: { value: 100, unit: 'kcal' }, protein: { value: 17, unit: 'g' } },
+  servings: [
+    { id: '34157706', quantity: 6, unit: 'oz', scalingFactor: 1, weightGrams: 170, isPrimary: true },
+    { id: '34157707', quantity: 1, unit: 'cup', scalingFactor: 1.5, weightGrams: 255, isPrimary: false },
+  ],
+};
+
+test('a 6 oz serving by default is one serving', () => {
+  const portion = FoodPortion.from(yogurt);
+  assert.equal(portion.quantity, 6);
+  assert.deepEqual(portion.selection, { id: '70376084', serving: { id: '34157706', quantity: 1 } });
+});
+
+test('12 oz of a 6 oz serving is two servings', () => {
+  const portion = FoodPortion.from(yogurt, { quantity: 12 });
+  assert.equal(portion.quantity, 12);
+  assert.deepEqual(portion.selection, { id: '70376084', serving: { id: '34157706', quantity: 2 } });
+});
+
+test('a 1-cup serving sends the amount unchanged', () => {
+  assert.equal(FoodPortion.from(yogurt, { servingId: '34157707' }).selection.serving.quantity, 1);
+  assert.equal(FoodPortion.from(yogurt, { servingId: '34157707', quantity: 1.5 }).selection.serving.quantity, 1.5);
+});
+
+test('150 g of a 100 g serving is 1.5 servings', () => {
+  const rice = {
+    ...food,
+    id: '5001',
+    name: 'White rice',
+    nutrients: { calories: { value: 130, unit: 'kcal' } },
+    servings: [{ id: '9', quantity: 100, unit: 'g', scalingFactor: 1, weightGrams: 100, isPrimary: true }],
+  };
+  const portion = FoodPortion.from(rice, { quantity: 150 });
+  assert.deepEqual(portion.selection, { id: '5001', serving: { id: '9', quantity: 1.5 } });
+  assert.equal(portion.nutrition.calories.value, 195);
+  assert.equal(portion.totalWeightGrams, 150);
+});
+
+test('nutrition still follows the amount in the serving unit', () => {
+  const single = FoodPortion.from(yogurt);
+  assert.equal(single.nutrition.calories.value, 100);
+  assert.equal(single.nutrition.protein.value, 17);
+  assert.equal(single.totalWeightGrams, 170);
+  assert.equal(single.glycemicLoad, 1);
+
+  const double = FoodPortion.from(yogurt, { quantity: 12 });
+  assert.equal(double.nutrition.calories.value, 200);
+  assert.equal(double.nutrition.protein.value, 34);
+  assert.equal(double.totalWeightGrams, 340);
+  assert.equal(double.glycemicLoad, 2);
+
+  const cups = FoodPortion.from(yogurt, { servingId: '34157707', quantity: 2 });
+  assert.equal(cups.nutrition.calories.value, 300);
+  assert.equal(cups.totalWeightGrams, 510);
 });
 
 test('rejects unavailable servings and unsafe quantities', () => {

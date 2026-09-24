@@ -1,15 +1,16 @@
 import { ActivityLevel, FoodPortion, Sex, type FoodSearchItem, type ServingOption } from '@januaryai/web-sdk'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { Activity, ArrowLeft, Utensils } from 'lucide-react'
+import { Activity, ArrowLeft, Check, Plus, Utensils } from 'lucide-react'
 import { useState } from 'react'
-import { getDemoConfiguration, getFoodDetails, predictGlucose } from '~/api/january.functions'
+import { getDemoConfiguration, getFoodDetails, predictGlucose, saveFoodLog } from '~/api/january.functions'
 import { FoodAlternatives } from '~/components/food-alternatives'
 import { FoodMacroGrid, FoodNutritionFacts } from '~/components/food-detail-nutrition'
 import { FoodPredictionPanel } from '~/components/food-prediction-panel'
 import { NetworkImage } from '~/components/network-image'
 import { QuantityControl } from '~/components/quantity-control'
 import { Button, Card, ErrorMessage, Page, SectionLabel, SkeletonList } from '~/components/ui'
+import { useUserSession } from '~/components/user-session'
 import { formatNumber, formatQuantity } from '~/lib/utils'
 
 interface FoodDetailSearch {
@@ -61,7 +62,9 @@ function FoodDetailContent({ food, configuration }: { food: FoodSearchItem; conf
   const portion = serving?.id ? FoodPortion.from(food, { servingId: serving.id, quantity }) : null
   const prediction = useMutation({
     mutationFn: () => {
-      if (!serving?.id) throw new Error('Choose a serving before predicting glucose.')
+      if (!portion) throw new Error('Choose a serving before predicting glucose.')
+      // `quantity` is the amount in the serving's unit (6 for "6 oz"); the selection counts servings.
+      const { selection } = portion
       return predictGlucose({ data: {
         age: 42,
         sex: Sex.female,
@@ -69,13 +72,33 @@ function FoodDetailContent({ food, configuration }: { food: FoodSearchItem; conf
         weight: 150,
         activityLevel: ActivityLevel.moderatelyActive,
         healthConditions: [],
-        foodId: food.id,
-        servingId: serving.id,
-        quantity,
+        foodId: selection.id,
+        servingId: selection.serving.id,
+        quantity: selection.serving.quantity,
         startTime: new Date().toISOString(),
         endUserTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         ...(configuration.defaultEndUserId ? { endUserId: configuration.defaultEndUserId } : {}),
       } })
+    },
+  })
+
+  const session = useUserSession()
+  const queryClient = useQueryClient()
+  // Logs the portion shown, now, for the demo's user: `portion.selection` is ready for foodLogs.create.
+  const logPortion = useMutation({
+    mutationFn: () => {
+      if (!portion) throw new Error('Choose a serving before logging this food.')
+      return saveFoodLog({ data: {
+        foods: [portion.selection],
+        timestampUtc: new Date().toISOString(),
+        ...(food.name?.trim() ? { name: food.name.trim().slice(0, 120) } : {}),
+        endUserId: session.endUserId,
+        endUserTimezone: session.endUserTimezone,
+      } })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['food-logs'] })
+      queryClient.invalidateQueries({ queryKey: ['food-log-summary'] })
     },
   })
 
@@ -85,11 +108,13 @@ function FoodDetailContent({ food, configuration }: { food: FoodSearchItem; conf
     setServingId(next.id)
     setQuantity(next.quantity || 1)
     prediction.reset()
+    logPortion.reset()
   }
 
   function changeQuantity(next: number) {
     setQuantity(Math.min(100, Math.max(0.25, next)))
     prediction.reset()
+    logPortion.reset()
   }
 
   return (
@@ -122,9 +147,22 @@ function FoodDetailContent({ food, configuration }: { food: FoodSearchItem; conf
       <div className="space-y-6">
         <FoodMacroGrid portion={portion} />
         <FoodNutritionFacts portion={portion} />
-        <Button busy={prediction.isPending} busyTestId="food-glucose-loading" className="w-full" data-testid="food-check-glucose" disabled={!serving || prediction.isPending} onClick={() => prediction.mutate()}>
-          <Activity aria-hidden="true" className="size-5" /> {prediction.isPending ? 'Predicting response…' : 'Check glucose'}
-        </Button>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Button busy={logPortion.isPending} busyTestId="food-log-portion-loading" className="w-full border border-stone-300 bg-white text-stone-800 hover:bg-stone-50" data-testid="food-log-portion" disabled={!portion || !session.endUserId || logPortion.isPending} onClick={() => logPortion.mutate()} title={session.endUserId ? undefined : 'Set a user in Settings to log food.'} type="button">
+            <Plus aria-hidden="true" className="size-5" /> {logPortion.isPending ? 'Logging…' : 'Log this portion'}
+          </Button>
+          <Button busy={prediction.isPending} busyTestId="food-glucose-loading" className="w-full" data-testid="food-check-glucose" disabled={!serving || prediction.isPending} onClick={() => prediction.mutate()}>
+            <Activity aria-hidden="true" className="size-5" /> {prediction.isPending ? 'Predicting response…' : 'Check glucose'}
+          </Button>
+        </div>
+        {logPortion.isError && <ErrorMessage error={logPortion.error} testId="food-log-portion-error" />}
+        {logPortion.isSuccess && (
+          <p className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-950" data-testid="food-log-portion-saved">
+            <Check aria-hidden="true" className="size-4" />
+            <span>Logged {formatQuantity(quantity)} {serving?.unit ?? 'serving'}.</span>
+            <Link className="underline underline-offset-2" data-testid="food-log-portion-view" to="/tracking">See it in Tracking</Link>
+          </p>
+        )}
         {prediction.isError && <ErrorMessage error={prediction.error} testId="food-glucose-error" />}
         {prediction.data && <FoodPredictionPanel food={food} quantity={quantity} serving={serving!} result={prediction.data} />}
         <FoodAlternatives food={food} {...(configuration.defaultEndUserId ? { endUserId: configuration.defaultEndUserId } : {})} />
