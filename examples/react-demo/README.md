@@ -77,8 +77,8 @@ commit the key.
 ## End-to-end suite
 
 The Playwright flows under `tests/ui` and how to run them locally are described
-in [tests/ui/README.md](tests/ui/README.md). They run on every pull request as
-the `ui-tests` check.
+in [tests/ui/README.md](tests/ui/README.md). They run as the `ui-tests` check
+on every pull request that changes more than documentation.
 
 ### Against the live API through a local relay
 
@@ -127,4 +127,4 @@ every direct API call (method, path, status, and body, with tokens redacted),
 and `steps.jsonl` with what each step compared. If a run stops early, delete
 what it created with `node tests/live/live-api.mjs cleanup`; `node
 tests/live/live-api.mjs state` prints the test user's logs for today. The live
-suite is not part of `npm run test:ui` or CI.
+suite is not part of `npm run test:ui` or the pull-request checks.

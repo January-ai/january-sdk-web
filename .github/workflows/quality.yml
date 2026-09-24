@@ -5,20 +5,109 @@ on:
   push:
     branches:
       - main
+  # Nightly on main: the whole suite, plus the live suite when the repository has a
+  # JANUARY_API_KEY secret.
+  schedule:
+    - cron: "17 7 * * *"
   workflow_dispatch:
+    inputs:
+      live:
+        description: Also run the live suite against the January API (needs the JANUARY_API_KEY secret)
+        type: boolean
+        default: false
 
 permissions:
   contents: read
 
+# Pull requests and pushes cancel their own superseded runs. Nightly and manual runs
+# queue instead, so a push to main never stops a live run halfway through its cleanup.
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  group: ci-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
 
+# Timeouts are the slowest successful run of each job in the last ten CI runs plus
+# about 30%, rounded up to the minute: package 20s, example 29s, UI shard 152s,
+# ui-tests 4s. The changes job is new and does only a shallow checkout. Raise them
+# with the data if the suite grows.
 jobs:
+  # Decides whether a pull request changes only documentation. Every other event,
+  # and any change outside the documentation paths, runs everything.
+  changes:
+    name: Detect documentation-only changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      code: ${{ steps.classify.outputs.code }}
+      live: ${{ steps.live.outputs.live }}
+
+    steps:
+      # The merge commit's first parent is the base branch, so HEAD^1..HEAD is
+      # exactly what the pull request changes.
+      - name: Check out the pull request's merge commit
+        if: github.event_name == 'pull_request'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+
+      - name: Classify the changed files
+        id: classify
+        env:
+          EVENT: ${{ github.event_name }}
+        run: |
+          if [ "$EVENT" != "pull_request" ]; then
+            echo "code=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Documentation paths: any Markdown file, Documentation/, docs/, LICENSE,
+          # and the issue templates. The docs check still runs for these.
+          is_docs() {
+            case "$1" in
+              *.md | Documentation/* | docs/* | LICENSE | .github/ISSUE_TEMPLATE/*) return 0 ;;
+              *) return 1 ;;
+            esac
+          }
+
+          changed="$(git -c core.quotePath=false diff --name-only HEAD^1 HEAD)"
+          code=false
+          if [ -z "$changed" ]; then
+            code=true
+          fi
+          while IFS= read -r file; do
+            [ -n "$file" ] || continue
+            if ! is_docs "$file"; then
+              echo "Outside the documentation paths: $file"
+              code=true
+            fi
+          done <<< "$changed"
+
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          if [ "$code" = "false" ]; then
+            echo "Only documentation changed: the SDK build, the example build, and the UI shards are skipped."
+          fi
+
+      - name: Decide whether to run the live suite
+        id: live
+        env:
+          LIVE_REQUESTED: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.live) }}
+          HAS_API_KEY: ${{ secrets.JANUARY_API_KEY != '' }}
+        run: |
+          live=false
+          if [ "$LIVE_REQUESTED" = "true" ]; then
+            if [ "$HAS_API_KEY" = "true" ]; then
+              live=true
+            else
+              echo "::notice::The repository has no JANUARY_API_KEY secret, so the live suite is skipped."
+            fi
+          fi
+          echo "live=$live" >> "$GITHUB_OUTPUT"
+
   package:
     name: Test package on Node ${{ matrix.node }}
+    needs: changes
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 1
     strategy:
       fail-fast: false
       matrix:
@@ -32,24 +121,30 @@ jobs:
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: ${{ matrix.node }}
-          cache: npm
+          cache: ${{ needs.changes.outputs.code == 'true' && 'npm' || '' }}
 
       - name: Install pinned dependencies
+        if: needs.changes.outputs.code == 'true'
         run: npm ci
 
+      # Needs only Node, so it also runs when only documentation changed.
       - name: Validate README and GitBook
         run: node scripts/check-documentation.mjs
 
       - name: Build and test
+        if: needs.changes.outputs.code == 'true'
         run: npm test
 
       - name: Verify package contents
+        if: needs.changes.outputs.code == 'true'
         run: npm pack --dry-run
 
   example:
     name: Build React example and install packed SDK
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 1
 
     steps:
       - name: Check out repository
@@ -96,8 +191,10 @@ jobs:
   # are uploaded with it.
   ui-test-web:
     name: ui-test-web (shard ${{ matrix.shard }} of 3)
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 4
 
     strategy:
       fail-fast: false
@@ -142,15 +239,137 @@ jobs:
           if-no-files-found: ignore
 
   # One check that summarizes every shard, so branch protection can require a
-  # single stable name.
+  # single stable name. It passes without the shards only when the pull request
+  # changed nothing but documentation.
   ui-tests:
-    needs: ui-test-web
+    needs: [changes, ui-test-web]
     if: always()
     runs-on: ubuntu-latest
+    timeout-minutes: 1
     steps:
       - name: Every UI shard passed
         env:
+          CHANGES: ${{ needs.changes.result }}
+          CODE: ${{ needs.changes.outputs.code }}
           RESULT: ${{ needs.ui-test-web.result }}
         run: |
-          echo "web=$RESULT"
+          echo "changes=$CHANGES code=$CODE web=$RESULT"
+          if [ "$CHANGES" = "success" ] && [ "$CODE" = "false" ] && [ "$RESULT" = "skipped" ]; then
+            echo "Only documentation changed, so the UI shards did not need to run."
+            exit 0
+          fi
           test "$RESULT" = "success"
+
+  # The live suite (examples/react-demo/tests/live) against the real January API, with
+  # client tokens from the January Token Relay running inside this job. Nightly, and on
+  # a manual run that asks for it, when the repository has a JANUARY_API_KEY secret.
+  # The key reaches only the relay; the demo and the suite see client tokens.
+  live:
+    name: Live suite against the January API
+    needs: changes
+    if: needs.changes.outputs.live == 'true'
+    runs-on: ubuntu-latest
+    # No CI history yet: a full run takes about 20 minutes (one flow per rate-limit
+    # minute), plus 30% and the install.
+    timeout-minutes: 30
+    env:
+      LIVE_END_USER_ID: e2e-qa-web-nightly
+      LIVE_EVIDENCE_DIR: ${{ github.workspace }}/examples/react-demo/test-results/live
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check out the January Token Relay
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: January-ai/january-token-relay
+          ref: 65aa6dfc96e4ad0092e48130bba6fc5c3acea648
+          path: token-relay
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            examples/react-demo/package-lock.json
+
+      - name: Install pinned dependencies
+        run: |
+          npm ci
+          npm run build
+          npm --prefix examples/react-demo ci
+
+      - name: Install Playwright browser
+        run: npm --prefix examples/react-demo exec playwright install --with-deps chromium
+
+      # The relay's output names part of the key, so it goes to a file that is never
+      # uploaded, and is shown only redacted if the relay fails to start.
+      - name: Start the token relay
+        id: relay
+        working-directory: token-relay
+        env:
+          JANUARY_API_KEY: ${{ secrets.JANUARY_API_KEY }}
+        run: |
+          log="$RUNNER_TEMP/token-relay.log"
+          nohup node server.js > "$log" 2>&1 &
+          relay=$!
+          for _ in $(seq 1 30); do
+            if (exec 3<> /dev/tcp/127.0.0.1/8787) 2> /dev/null; then
+              echo "The token relay is listening on 127.0.0.1:8787."
+              exit 0
+            fi
+            kill -0 "$relay" 2> /dev/null || break
+            sleep 1
+          done
+          echo "::error::The token relay did not start."
+          sed -E 's/sk-[^[:space:]]*/sk-<redacted>/g' "$log"
+          exit 1
+
+      - name: Run the live suite
+        working-directory: examples/react-demo
+        run: npm run test:ui:live
+        env:
+          npm_config_ignore_scripts: "true"
+
+      # The suite deletes what it created at the end; after a failure, this deletes what
+      # the run's ledger still lists.
+      - name: Delete what an interrupted run left behind
+        if: always() && steps.relay.outcome == 'success'
+        working-directory: examples/react-demo
+        run: node tests/live/live-api.mjs cleanup
+
+      - name: Summarize the live run
+        if: always() && steps.relay.outcome == 'success'
+        working-directory: examples/react-demo
+        run: |
+          node --input-type=module <<'EOF' | tee -a "$GITHUB_STEP_SUMMARY"
+          import { existsSync, readFileSync } from 'node:fs'
+          const file = `${process.env.LIVE_EVIDENCE_DIR}/playwright-report.json`
+          if (!existsSync(file)) {
+            console.log('No live report was written.')
+          } else {
+            const { stats } = JSON.parse(readFileSync(file, 'utf8'))
+            console.log(`Live suite as ${process.env.LIVE_END_USER_ID}: ${stats.expected} passed, ${stats.unexpected} failed, ${stats.flaky} flaky, ${stats.skipped} skipped, in ${Math.round(stats.duration / 60_000)} min.`)
+            if (stats.skipped > 0) console.log("Flows are skipped when the account's daily API allowance runs out; the log above has the API's message.")
+          }
+          EOF
+
+      # Screenshots, steps, and the redacted API log. Traces and the HTML report hold the
+      # run's client tokens, so they stay on the runner.
+      - name: Upload live evidence
+        if: always() && steps.relay.outcome == 'success'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: live-evidence
+          path: |
+            examples/react-demo/test-results/live
+            !examples/react-demo/test-results/live/playwright
+            !examples/react-demo/test-results/live/playwright-html
+          retention-days: 14
+          if-no-files-found: ignore

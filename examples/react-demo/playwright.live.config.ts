@@ -3,7 +3,8 @@ import { resolve } from 'node:path'
 
 // The live suite: the demo against the real January API, with client tokens from a
 // running token relay. It creates and deletes logs for LIVE_END_USER_ID, so use a
-// dedicated test user. Not part of `npm run test:ui` or CI; run `npm run test:ui:live`.
+// dedicated test user. Not part of `npm run test:ui` or the pull-request checks (CI runs
+// it nightly); run `npm run test:ui:live`.
 const relayUrl = process.env.PARTNER_TOKEN_URL ?? 'http://127.0.0.1:8787/api/january/client-token'
 const endUserId = process.env.LIVE_END_USER_ID ?? 'e2e-qa-web'
 const evidenceDir = resolve(process.env.LIVE_EVIDENCE_DIR ?? 'test-results/live')
