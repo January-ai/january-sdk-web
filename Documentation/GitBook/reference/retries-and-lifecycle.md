@@ -33,7 +33,7 @@ Every request accepts `signal`:
 const controller = new AbortController();
 const request = user.foods.search({ query: 'banana', signal: controller.signal });
 controller.abort();
-await request; // rejects
+await request; // rejects with an AbortError
 ```
 
-In 0.3.0 a canceled request rejects with a `JanuaryError` whose category is `transport`, not with an `AbortError`. Check your signal's `aborted` flag to tell cancellation from a failure ([Error handling](error-handling.md)).
+A canceled request rejects with an `AbortError`, not with a `JanuaryError`. Check the error's `name` or your signal's `aborted` flag to tell cancellation from a failure ([Error handling](error-handling.md#cancellation)).

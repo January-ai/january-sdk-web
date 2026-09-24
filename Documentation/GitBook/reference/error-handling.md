@@ -36,7 +36,7 @@ try {
 | `notFound` | 404 | `not_found` | Fall back, for example to text search after a barcode miss. |
 | `rateLimit` | 429 | `rate_limited`, `request_limit_exceeded`, `credit_limit_exceeded` | Back off on `rate_limited`. The other two last until your monthly allowance resets ([Credits](https://docs.january.ai/rest-api/credits)). |
 | `server` | 500–599 | `internal_error`, `upstream_error`, `service_unavailable`, `upstream_timeout` | Retry reads with backoff. Before retrying a create, list the day to check it didn't go through. |
-| `transport` | none | none | The request didn't complete or never started: a network failure, an origin January hasn't enabled, a canceled request, a failing token provider, or invalid log input. Check `cause`. |
+| `transport` | none | none | The request didn't complete or never started: a network failure, an origin January hasn't enabled, a failing token provider, or invalid log input. Check `cause`. |
 | `unknown` | Any other, including 409 and 413 | `conflict`, `payload_too_large` | Show a generic error and log `requestId`. |
 
 `status`, `code`, and `requestId` are set when January answered. All codes are listed in [REST errors](https://docs.january.ai/rest-api/api-overview#errors). Log `category`, `status`, `code`, and `requestId`; never log tokens, meal images, nutrition data, or health profiles.
@@ -45,8 +45,8 @@ try {
 
 Most invalid requests throw a `TypeError` before anything is sent: food, restaurant, and food-analysis requests, `foodLogs.update` with no fields or a bad `timestampUtc`, and `forUser` with a blank end-user ID. `FoodPortion.from` throws `FoodPortionError`, and `preparePhotoScanImage` throws `TypeError` or `RangeError`.
 
-In 0.3.0, invalid input to the other food-, water-, and weight-log calls and to glucose timestamps is also caught before anything is sent, but it rejects as a `JanuaryError` with category `transport` whose `cause` is the `TypeError`. Examples are an impossible date such as `2026-02-31`, an unknown unit, and a timestamp that isn't a date.
+In 0.3.1, invalid input to the other food-, water-, and weight-log calls and to glucose timestamps is also caught before anything is sent, but it rejects as a `JanuaryError` with category `transport` whose `cause` is the `TypeError`. Examples are an impossible date such as `2026-02-31`, an unknown unit, and a timestamp that isn't a date.
 
 ## Cancellation
 
-In 0.3.0 an aborted request rejects with category `transport` and the message "The request failed and the interceptors did not return an alternative response", not with an `AbortError`. Check your signal's `aborted` flag first, as the sample does. An `AbortError` thrown by your token provider reaches the caller unchanged.
+A request canceled through its `signal` rejects with an `AbortError` (`error.name === 'AbortError'`), not with a `JanuaryError`. Check your signal's `aborted` flag first, as the sample does, so cancellation isn't handled as a failure. An `AbortError` thrown by your token provider also reaches the caller unchanged.

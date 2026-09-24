@@ -22,6 +22,9 @@ properties: `calories`, `protein`, `carbohydrates`, `netCarbohydrates`,
 
 `FoodSelection` is `{ id: string; serving: { id: string; quantity: number } }`
 and is what `foodLogs.create`, `foodLogs.update`, and `glucose.predict` accept.
+Its `serving.quantity` is the number of servings eaten; `FoodPortion.selection`
+converts a portion's amount to it
+([Quantity and servings](../concepts/food-lifecycle.md#quantity-and-servings)).
 
 * `FoodLogSummaryGrouping`: `day`, `week`
 * `WeekStart`: `monday`, `sunday`
