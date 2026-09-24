@@ -9,12 +9,17 @@ restaurant search.
 
 ## Install and configure
 
+From the repository root:
+
 ```bash
+npm ci
+cp .env.example .env.local
 cd examples/react-demo
 npm ci
 ```
 
-For the standalone local token relay, use these server-side defaults:
+For the standalone local token relay, put these server-side values in the
+root `.env.local` (the copied template already has them):
 
 ```text
 PARTNER_TOKEN_URL=http://127.0.0.1:8787/api/january/client-token

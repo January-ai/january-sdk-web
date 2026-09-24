@@ -27,7 +27,8 @@ and is accepted by Food Logs and Glucose.
 * `AnalysisEffort`: `none`, `xhigh`
 
 `ServingSummary` (`{ id: string; quantity: number; unit: string | null; weightGrams: number | null }`)
-is the catalog serving a detected, alternative, or logged food refers to;
+is the catalog serving a detected or alternative food refers to
+(`LoggedFood.servingDetails` is a `ServingDetails` with the same shape);
 `quantity` is the size of one serving and `weightGrams` is null when unknown.
 
 ## Water and weight logs

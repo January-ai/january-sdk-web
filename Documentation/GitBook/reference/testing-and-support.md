@@ -32,6 +32,6 @@ diff, rerun the checks above, and upgrade deliberately.
 
 ## Support report
 
-Include the pinned commit, Node/browser/framework versions, operation,
+Include the SDK version, Node/browser/framework versions, operation,
 `JanuaryError` category/status/code/request ID, and reproduction. Exclude keys,
 tokens, images, nutrition records, and health profiles.

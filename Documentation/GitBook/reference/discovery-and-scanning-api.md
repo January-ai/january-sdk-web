@@ -1,10 +1,11 @@
 # Restaurants and food analysis API
 
-All request types accept optional `endUserId` and `signal`.
+All request types accept optional `endUserId` and `signal`. Restaurant and
+food-analysis requests never send `January-End-User-ID`, so `endUserId` remains
+only for source compatibility.
 
 Prefer `january.forUser(...).restaurants` and
-`january.forUser(...).foodAnalysis`; their request types omit `endUserId` and
-reuse the configured identity automatically.
+`january.forUser(...).foodAnalysis`; their request types omit `endUserId`.
 
 ## Restaurants
 

@@ -1,7 +1,8 @@
 # January SDK for Web
 
 The official TypeScript SDK for January food discovery, restaurants, food
-analysis, food logs, and glucose prediction in browser applications.
+analysis, food, water, and weight logs, and glucose prediction in browser
+applications, with browser voice capture for spoken searches.
 
 ## Quick start: run the demo with client tokens
 

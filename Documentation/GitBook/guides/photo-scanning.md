@@ -25,5 +25,6 @@ const corrected = await january.foodAnalysis.correct({
 ```
 
 `preparePhotoScanImage` is browser-only; Node.js callers must prepare a supported
-base64 data URI with server-side image tooling before calling `scan`. Do not put
-meal images or inferred nutrition in analytics, crash reports, or general logs.
+base64 data URI with server-side image tooling before calling `analyzePhoto`. Do
+not put meal images or inferred nutrition in analytics, crash reports, or
+general logs.
