@@ -7,8 +7,8 @@
 
 ## Food values
 
-* `FoodCategory`: `general`, `branded`, `recipe`
-* `AutocompleteFoodCategory`: `general`, `branded`
+* `FoodCategory`: `generic`, `branded`, `recipe`; `general` is a deprecated alias of `generic`
+* `AutocompleteFoodCategory`: `generic`, `branded`; `general` is a deprecated alias of `generic`
 * `DietPreference`: vegetarian, vegan, keto, paleo, pescatarian, low
   carbohydrate, high protein, kosher, and halal constants.
 * `DietRestriction`: gluten, lactose, yeast, tree nuts, peanuts, dairy, eggs,
@@ -19,7 +19,7 @@
 calories, protein, carbohydrates, net carbohydrates, fats, fiber, sugars,
 cholesterol, calcium, iron, potassium, sodium, and vitamin D.
 
-`FoodSelection` is `{ id: number; serving: { id: number; quantity: number } }`
+`FoodSelection` is `{ id: string; serving: { id: string; quantity: number } }`
 and is accepted by Food Logs and Glucose.
 
 * `FoodLogSummaryGrouping`: `day`, `week`

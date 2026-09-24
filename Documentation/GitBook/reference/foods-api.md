@@ -26,16 +26,16 @@ suggestAlternatives(
 | --- | --- |
 | `AutocompleteFoodsRequest` | `query: string`; `category?: AutocompleteFoodCategory`; `limit?: number` (default 8, range 1–20) |
 | `SearchFoodsRequest` | `query: string` (trimmed, 1–256 characters); `category?: FoodCategory`; `limit?: number` (default 10, range 1–50); `offset?: number` (default 0, for paging) |
-| `GetFoodRequest` | `foodId: number` (positive safe integer) |
+| `GetFoodRequest` | `foodId: string` (nonblank) |
 | `LookupFoodByBarcodeRequest` | `upc: string` (trimmed, nonempty) |
-| `SuggestFoodAlternativesRequest` | `foodId: number`; `dietRestrictions: DietRestriction[]`; `dietPreferences: DietPreference[]` |
+| `SuggestFoodAlternativesRequest` | `foodId: string`; `dietRestrictions: DietRestriction[]`; `dietPreferences: DietPreference[]` |
 
 Autocomplete trims the query and permits an empty prefix, but rejects more than
 64 characters.
 
 ## Responses
 
-`AutocompleteFoodsResponse.items` contains `FoodSuggestion`: numeric `id`,
+`AutocompleteFoodsResponse.items` contains `FoodSuggestion`: string `id`,
 `name`, nullable `brandName`, nullable `photoUrl`, and nullable
 `NutritionFacts`.
 
@@ -55,7 +55,7 @@ meal descriptions are handled by `foodAnalysis.analyzeDescription`.
 ```ts
 FoodPortion.from(
   food: FoodSearchItem,
-  options: { servingId?: number; quantity?: number } = {},
+  options: { servingId?: string; quantity?: number } = {},
 ): FoodPortion
 ```
 

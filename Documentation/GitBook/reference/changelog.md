@@ -35,5 +35,5 @@
 * Browser voice transcription with live levels and duration, without retaining recorded audio
 * Typed imperial and metric glucose-profile measurements
 * Shared, white-label-ready React demo components
-* Paginated restaurant-menu lookup by restaurant ID, ready after backend deployment
+* Paginated restaurant-menu lookup by restaurant ID
 Pin pre-release integrations to the version supplied by January.
