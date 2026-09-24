@@ -40,7 +40,7 @@ first; the native suites pick up the same numbers when they gain the flow:
 | 26–29 | Water logs, weight logs, their recovery states, and the Tracking charts |
 | 30 | Food search loading, category, scope, and barcode mode (an unknown UPC is no match) |
 | 31 | Restaurant search and menu loading, empty, failure, retry, and location |
-| 32 | Food detail loading, failure, retry, and serving quantity |
+| 32 | Food detail loading, failure, retry, serving quantity, and the servings a prediction sends |
 | 33 | Photo scan from the library, camera, and sample; correction; meal glucose |
 | 34 | Description and UPC states, and the barcode camera |
 | 35 | Voice capture: transcript, cancel, nothing heard, blocked, unsupported |
@@ -49,8 +49,9 @@ first; the native suites pick up the same numbers when they gain the flow:
 | 38 | Glucose profile, food suggestions, and loading |
 | 39 | Token minting through the relay, and the active user |
 | 40 | Water in cups rejected by the API (400 `invalid_request`), shown and recovered from |
+| 44 | A food's default portion logged from its detail: one "6 oz" serving shows 100 cal in Tracking and Logs, not 600 |
 
-That makes 64 tests in 38 numbered specs plus 20 role-based ones, 84 in all.
+That makes 73 tests in 43 numbered specs plus 20 role-based ones, 93 in all.
 
 ## Every test ID is exercised
 

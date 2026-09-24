@@ -79,6 +79,52 @@ const alternativeFood = {
   glycemic_index: 15, glycemic_load: 2, image_url: null, barcode: null,
   servings: [{ id: '21', quantity: 1, unit: 'plate', scaling_factor: 1, weight_grams: 150, is_primary: true }],
 }
+// A food with calories and protein only, so its detail has no further nutrition facts.
+const soupFood = {
+  ...alternativeFood, id: 'food-3', name: 'Fixture Soup', brand_name: 'Fixture Kitchen', glycemic_index: null, glycemic_load: null,
+  servings: [{ id: '31', quantity: 1, unit: 'cup', scaling_factor: 1, weight_grams: null, is_primary: true }],
+}
+// Modeled on greek yogurt: nutrients are for one "6 oz" serving, and a "0.5 cup" serving is 0.75
+// of it. A portion's amount in the serving's unit has to be sent as a number of servings.
+const yogurtFood = {
+  id: 'food-4', type: 'generic', name: 'Fixture Yogurt', brand_name: null, nutrients,
+  glycemic_index: 11, glycemic_load: 1, image_url: null, barcode: null,
+  servings: [
+    { id: '41', quantity: 6, unit: 'oz', scaling_factor: 1, weight_grams: 170, is_primary: true },
+    { id: '42', quantity: 0.5, unit: 'cup', scaling_factor: 0.75, weight_grams: 127.5, is_primary: false },
+  ],
+}
+const catalog = new Map([food, alternativeFood, soupFood, yogurtFood].map((item) => [item.id, item]))
+
+// Meals logged since the last reset. As the API does, each food's nutrients are its per-serving
+// nutrients × the serving's scaling_factor × quantity, which is a number of servings.
+const createdLogs = []
+let loggedCount = 0
+function loggedFood({ food_id, serving_id, quantity }) {
+  const source = catalog.get(food_id)
+  const serving = source?.servings.find((item) => item.id === serving_id)
+  if (!source || !serving) return null
+  const scale = quantity * serving.scaling_factor
+  return {
+    food_id: source.id, name: source.name, brand_name: source.brand_name, image_url: null,
+    glycemic_index: source.glycemic_index,
+    glycemic_load: source.glycemic_load == null ? null : source.glycemic_load * scale,
+    nutrients: Object.fromEntries(Object.entries(source.nutrients).map(([key, amount]) => [key, { value: amount.value * scale, unit: amount.unit }])),
+    quantity,
+    serving: { id: serving.id, quantity: serving.quantity, unit: serving.unit, weight_grams: serving.weight_grams },
+  }
+}
+/** Whether a log's `created_at` falls on a day from `start` to `end` in the user's timezone. */
+function loggedWithin(log, start, end, timeZone) {
+  let day
+  try {
+    day = new Intl.DateTimeFormat('en-CA', { timeZone: timeZone || 'UTC', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(log.created_at))
+  } catch {
+    day = log.created_at.slice(0, 10)
+  }
+  return (!start || day >= start) && (!end || day <= end)
+}
+
 const alternatives = [
   { id: alternativeFood.id, name: alternativeFood.name, brand_name: null, nutrients: alternativeFood.nutrients,
     servings: [{ id: '21', quantity: 1, unit: 'plate', weight_grams: 150 }] },
@@ -122,7 +168,7 @@ function json(response, value, status = 200) {
 createServer(async (request, response) => {
   const url = new URL(request.url ?? '/', 'http://127.0.0.1:18767')
   if (url.pathname === '/__reset') {
-    rules.clear(); requests.length = 0; return json(response, {})
+    rules.clear(); requests.length = 0; createdLogs.length = 0; loggedCount = 0; return json(response, {})
   }
   if (url.pathname === '/__control') {
     rules.set(url.searchParams.get('route'), {
@@ -167,7 +213,9 @@ createServer(async (request, response) => {
   if (url.pathname === '/v1.2/foods/autocomplete') return json(response, { items: rule.empty ? [] : [{
     id: food.id, name: food.name, brand_name: null, image_url: null, nutrients,
   }] })
-  if (url.pathname === '/v1.2/foods') return json(response, { items: rule.empty ? [] : [food] })
+  if (url.pathname === '/v1.2/foods') return json(response, {
+    items: rule.empty ? [] : [/yogurt/i.test(url.searchParams.get('query') ?? '') ? yogurtFood : food],
+  })
   if (url.pathname === '/v1.2/foods/barcode/012345678905') return json(response, food)
   // Any other UPC is not in the catalog, as the API answers it.
   if (url.pathname.startsWith('/v1.2/foods/barcode/')) return json(response, {
@@ -175,11 +223,8 @@ createServer(async (request, response) => {
   }, 404)
   if (url.pathname === '/v1.2/foods/food-1') return json(response, food)
   if (url.pathname === '/v1.2/foods/food-2') return json(response, alternativeFood)
-  // A food with calories and protein only, so its detail has no further nutrition facts.
-  if (url.pathname === '/v1.2/foods/food-3') return json(response, {
-    ...alternativeFood, id: 'food-3', name: 'Fixture Soup', brand_name: 'Fixture Kitchen', glycemic_index: null, glycemic_load: null,
-    servings: [{ id: '31', quantity: 1, unit: 'cup', scaling_factor: 1, weight_grams: null, is_primary: true }],
-  })
+  if (url.pathname === '/v1.2/foods/food-3') return json(response, soupFood)
+  if (url.pathname === '/v1.2/foods/food-4') return json(response, yogurtFood)
   if (url.pathname === '/v1.2/foods/food-1/alternatives' && request.method === 'POST') {
     return json(response, { alternatives: rule.empty ? [] : alternatives })
   }
@@ -222,11 +267,29 @@ createServer(async (request, response) => {
     })
   }
   if (url.pathname === '/v1.2/food-logs' && request.method === 'GET') return json(response, {
-    items: rule.empty ? [] : [foodLog],
+    items: rule.empty ? [] : [foodLog, ...createdLogs.filter((log) => loggedWithin(
+      log, url.searchParams.get('start_date'), url.searchParams.get('end_date'), url.searchParams.get('timezone'),
+    ))],
   })
-  if (url.pathname === '/v1.2/food-logs' && request.method === 'POST') return json(response, foodLog, 201)
+  if (url.pathname === '/v1.2/food-logs' && request.method === 'POST') {
+    const foods = (body?.foods ?? []).map(loggedFood)
+    if (!foods.length || foods.includes(null)) {
+      return json(response, { code: 'invalid_request', message: 'Every food needs a food_id and serving_id from the catalog.' }, 400)
+    }
+    const log = {
+      id: `log-${(loggedCount += 1) + 1}`, name: body.name ?? null,
+      created_at: body.created_at ?? new Date().toISOString().replace(/\.\d{3}Z$/, 'Z'), foods,
+    }
+    createdLogs.push(log)
+    return json(response, log, 201)
+  }
   if (url.pathname === '/v1.2/food-logs/log-1' && request.method === 'PATCH') return json(response, foodLog)
   if (url.pathname === '/v1.2/food-logs/log-1' && request.method === 'DELETE') {
+    response.writeHead(204); return response.end()
+  }
+  const created = createdLogs.findIndex((log) => url.pathname === `/v1.2/food-logs/${log.id}`)
+  if (created >= 0 && request.method === 'DELETE') {
+    createdLogs.splice(created, 1)
     response.writeHead(204); return response.end()
   }
   if (url.pathname === '/v1.2/water-logs' && request.method === 'POST') {

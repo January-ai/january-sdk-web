@@ -3,7 +3,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { byId, demoCalls, freshRateWindow, observed, openDemo, rateWindowEnds, shown, step, verified } from './evidence'
 import {
-  allowanceUsedUp, api, cleanup, endUserId, evidenceDir, foodLog, foodLogs, foodLogSummary, localDay,
+  allowanceUsedUp, api, cleanup, deleteFoodLog, endUserId, evidenceDir, foodLog, foodLogs, foodLogSummary, localDay,
   rememberCreated, rememberDeleted, setLogContext, timezone, waterTotal, waterTotals, weightOn, weights,
 } from './live-api.mjs'
 
@@ -690,6 +690,61 @@ test.describe('Live demo @live', () => {
       rememberDeleted('food', lunchId, 'deleted in the demo')
       verified('Deleted lunch', 'gone from Logs', { status: server.status })
     })
+  })
+
+  // Food 70376084 ("greek yogurt") has a primary serving of 6 oz at about 100 kcal, so its detail's
+  // default portion is 6 oz. The API reads a logged quantity as a number of servings: the log has to
+  // record 1 serving (about 100 kcal), not 6 (about 600). Run it as its own QA user (see the README);
+  // it makes about 8 requests and deletes the log it creates.
+  test('A 6 oz greek yogurt portion logged from its detail is one serving: about 100 kcal, not 600 @logs @portion', async ({ page }) => {
+    const foodId = '70376084'
+    const since = Date.now()
+    let portionCalories = 0
+    let logId = ''
+    try {
+      await step(page, 'Portion', `Search "greek yogurt" and open food ${foodId}`, async () => {
+        await openDemo(page, `/search?${query({ q: 'greek yogurt' })}`)
+        // Its row reads "greek yogurt" and "… cal · 6 oz"; the URL confirms which food opened.
+        await page.getByTestId(/^food-result-\d+$/).filter({ hasText: /greek yogurt/i }).filter({ hasText: '· 6 oz' }).first().click()
+        await expect(page).toHaveURL(new RegExp(`/food/${foodId}(\\?|$)`))
+        await expect(byId(page, 'food-serving-controls')).toHaveText('6')
+        const macro = (await byId(page, 'food-macros').locator('.data-number').first().textContent())!.trim()
+        portionCalories = Number(macro.split(' ')[0].replaceAll(',', ''))
+        expect(Math.abs(portionCalories - 100)).toBeLessThanOrEqual(10)
+        verified('Default portion', { amount: await text(page, 'food-serving-controls'), calories: macro }, { foodId, serving: '6 oz', calories: 'about 100' })
+      }, () => byId(page, 'food-macros'))
+      await step(page, 'Portion', 'Log the default portion', async () => {
+        await byId(page, 'food-log-portion').click()
+        await expect(byId(page, 'food-log-portion-saved')).toContainText('Logged 6 oz')
+      }, () => byId(page, 'food-log-portion-saved'))
+      await step(page, 'Portion', 'Logs and the API read-back both show about 100 kcal, not 600', async () => {
+        await openDemo(page, '/food-logs')
+        await byId(page, 'food-logs-refresh').click()
+        const listed = await foodLogs(today)
+        const created = listed
+          .filter((log: { created_at: string; foods: Array<{ food_id: string }> }) => log.foods.some((food) => food.food_id === foodId) && Date.parse(log.created_at) >= since - 60_000)
+          .sort((a: { created_at: string }, b: { created_at: string }) => Date.parse(a.created_at) - Date.parse(b.created_at))
+          .at(-1)
+        expect(created, `a log of food ${foodId} created by this flow`).toBeTruthy()
+        logId = created.id
+        rememberCreated('food', logId, `food ${foodId}, logged from its detail`)
+        const logged = created.foods[0]
+        expect(logged.quantity).toBe(1)
+        expect(Math.abs(logged.nutrients.calories.value - portionCalories)).toBeLessThanOrEqual(1)
+        const row = byId(page, `food-log-${listed.findIndex((log: { id: string }) => log.id === logId)}`)
+        await expect(row).toContainText(`${shown(logged.nutrients.calories.value, 0)} cal · 1 × ${shown(logged.serving.quantity)} ${logged.serving.unit}`)
+        verified('Logged portion', await row.textContent(), { id: logId, quantity: logged.quantity, serving: logged.serving, calories: logged.nutrients.calories.value, detailShowed: portionCalories })
+      }, () => page.getByTestId(/^food-log-\d+$/).first())
+    } finally {
+      if (logId) {
+        await step(page, 'Portion', 'Delete the log', async () => {
+          const { status } = await deleteFoodLog(logId)
+          expect(status).toBeLessThan(300)
+          rememberDeleted('food', logId, 'deleted by the portion flow')
+          observed('Deleted', { id: logId, status })
+        })
+      }
+    }
   })
 
   test('Cleanup: delete what this run created and the demo did not @catalog @logs', async ({ page }) => {
