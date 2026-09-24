@@ -52,11 +52,12 @@ analyzeDescription(
 correct(request: CorrectPhotoScanRequest): Promise<FoodScan>
 ```
 
-`ScanFoodPhotoRequest.image` is a required nonblank base64 data URI. The API
-uses the reasoning-based analyzer unless `reasoningEffort: 'none'` asks for the
-standard one; the SDK sends the effort only when you set it. The result shape and
-cost are the same either way. `CorrectPhotoScanRequest` takes the prior
-`analysis` and an `instruction`.
+`ScanFoodPhotoRequest.image` is a required nonblank base64 data URI or publicly
+fetchable `http(s)` URL; an unreachable URL fails with `image_unreachable`. The
+API uses the reasoning-based analyzer unless `reasoningEffort: 'none'` asks for
+the standard one; the SDK sends the effort only when you set it. The result
+shape and cost are the same either way. `CorrectPhotoScanRequest` takes the
+prior `analysis` and an `instruction`.
 
 `FoodScan` contains `mealName`, `totalNutrients`, and `detections`. Each
 detection contains a `DetectedFood` and an optional confidence score.

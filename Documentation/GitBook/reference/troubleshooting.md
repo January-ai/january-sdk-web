@@ -43,8 +43,9 @@ objects are discovery data and are not guaranteed complete.
 
 ## `preparePhotoScanImage` fails in Node.js or SSR
 
-It requires browser DOM/canvas APIs. Call it only in browser code, or prepare a
-data URI with server-side image tooling.
+It requires browser DOM/canvas APIs. Call it only in browser code. On a server,
+pass `analyzePhoto` a publicly fetchable image URL or a data URI prepared with
+server-side image tooling.
 
 ## Cancellation appears as an error
 
