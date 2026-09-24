@@ -1,12 +1,11 @@
 # Foods API
 
 Every request accepts optional `endUserId?: string` and `signal?: AbortSignal`.
-Client-token mode removes the end-user header because the token identifies the
-user.
+Food requests never send `January-End-User-ID`: the foods endpoints don't depend
+on who is asking, so `endUserId` remains only for source compatibility.
 
 Prefer `january.forUser(...).foods`; it exposes the same operations without an
-`endUserId` field in each request. Direct request identity remains available for
-source compatibility.
+`endUserId` field in each request.
 
 ## Operations
 
@@ -26,16 +25,16 @@ suggestAlternatives(
 | --- | --- |
 | `AutocompleteFoodsRequest` | `query: string`; `category?: AutocompleteFoodCategory`; `limit?: number` (default 8, range 1–20) |
 | `SearchFoodsRequest` | `query: string` (trimmed, 1–256 characters); `category?: FoodCategory`; `limit?: number` (default 10, range 1–50); `offset?: number` (default 0, for paging) |
-| `GetFoodRequest` | `foodId: number` (positive safe integer) |
+| `GetFoodRequest` | `foodId: string` (nonblank) |
 | `LookupFoodByBarcodeRequest` | `upc: string` (trimmed, nonempty) |
-| `SuggestFoodAlternativesRequest` | `foodId: number`; `dietRestrictions: DietRestriction[]`; `dietPreferences: DietPreference[]` |
+| `SuggestFoodAlternativesRequest` | `foodId: string`; `dietRestrictions: DietRestriction[]`; `dietPreferences: DietPreference[]` |
 
 Autocomplete trims the query and permits an empty prefix, but rejects more than
 64 characters.
 
 ## Responses
 
-`AutocompleteFoodsResponse.items` contains `FoodSuggestion`: numeric `id`,
+`AutocompleteFoodsResponse.items` contains `FoodSuggestion`: string `id`,
 `name`, nullable `brandName`, nullable `photoUrl`, and nullable
 `NutritionFacts`.
 
@@ -47,7 +46,7 @@ nullable glycemic values/photo/UPC, complete nullable `nutrients`, and
 `ServingOption` fields are `id`, `quantity`, `unit`, `scalingFactor`, nullable
 `weightGrams`, and `isPrimary`.
 
-Alternatives returns `{ alternatives: FoodAlternative[] }`. Natural-language
+Alternatives returns `{ alternatives: AlternativeFood[] }`. Natural-language
 meal descriptions are handled by `foodAnalysis.analyzeDescription`.
 
 ## Portion helper
@@ -55,7 +54,7 @@ meal descriptions are handled by `foodAnalysis.analyzeDescription`.
 ```ts
 FoodPortion.from(
   food: FoodSearchItem,
-  options: { servingId?: number; quantity?: number } = {},
+  options: { servingId?: string; quantity?: number } = {},
 ): FoodPortion
 ```
 

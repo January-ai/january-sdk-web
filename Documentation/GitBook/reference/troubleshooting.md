@@ -6,9 +6,9 @@ Confirm the package is installed from npm and follow the [installation guide](..
 
 ## A GitHub dependency installs but cannot import `dist/index.js`
 
-Direct Git installation is not supported in the current preview because `dist`
-is generated and no `prepare` script builds it. Use `npm run build`, `npm pack`,
-and install the resulting tarball.
+Direct Git installation is not supported because `dist` is generated and no
+`prepare` script builds it. Install the package from npm, or run `npm run build`
+and `npm pack` and install the resulting tarball.
 
 ## Browser bundle contains server-side credentials
 
@@ -43,8 +43,9 @@ objects are discovery data and are not guaranteed complete.
 
 ## `preparePhotoScanImage` fails in Node.js or SSR
 
-It requires browser DOM/canvas APIs. Call it only in browser code, or prepare a
-data URI with server-side image tooling.
+It requires browser DOM/canvas APIs. Call it only in browser code. On a server,
+pass `analyzePhoto` a publicly fetchable image URL or a data URI prepared with
+server-side image tooling.
 
 ## Cancellation appears as an error
 
@@ -53,6 +54,6 @@ not convert it to `JanuaryError` or retry it.
 
 ## Support diagnostics
 
-Provide the pinned commit, runtime/framework version, operation,
+Provide the SDK version, runtime/framework version, operation,
 `JanuaryError.category`, status, code, request ID, and minimal reproduction.
 Exclude credentials, images, nutrition records, and health profiles.

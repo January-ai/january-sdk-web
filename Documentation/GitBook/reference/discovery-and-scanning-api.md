@@ -1,10 +1,11 @@
 # Restaurants and food analysis API
 
-All request types accept optional `endUserId` and `signal`.
+All request types accept optional `endUserId` and `signal`. Restaurant and
+food-analysis requests never send `January-End-User-ID`, so `endUserId` remains
+only for source compatibility.
 
 Prefer `january.forUser(...).restaurants` and
-`january.forUser(...).foodAnalysis`; their request types omit `endUserId` and
-reuse the configured identity automatically.
+`january.forUser(...).foodAnalysis`; their request types omit `endUserId`.
 
 ## Restaurants
 
@@ -15,7 +16,7 @@ searchMenuItems(
 ): Promise<SearchRestaurantMenuItemsResponse>
 getMenuItems(
   request: GetRestaurantMenuItemsRequest,
-): Promise<SearchRestaurantMenuItemsResponse>
+): Promise<GetRestaurantMenuItemsResponse>
 ```
 
 `SearchRestaurantsRequest` fields:
@@ -25,7 +26,7 @@ getMenuItems(
 | `query` | `string`, required, trimmed, 1–256 characters |
 | `latitude` | `number`, required, −90…90 |
 | `longitude` | `number`, required, −180…180 |
-| `radius` | `number?`; server default when omitted, otherwise 1…17,000 |
+| `radius` | `number?`, in meters; 8,000 when omitted, otherwise 1…50,000 |
 | `limit` | `number?`; server default when omitted, otherwise integer 1…100 |
 
 `SearchRestaurantsResponse` contains `totalCount` and `Restaurant[]`. Restaurant
@@ -35,9 +36,11 @@ nutrition/distance/photo values, and servings.
 
 `GetRestaurantMenuItemsRequest` accepts `restaurantId`, optional `limit`
 (default `100`, integer 1–100), optional `offset` (default `0`), optional
-`endUserId`, and optional `signal`. Advance the offset by the returned item
-count until it reaches `totalCount` or a page is empty. Unknown restaurants
-return `404`; restaurants without menus return an empty response.
+`endUserId`, and optional `signal`. `GetRestaurantMenuItemsResponse` contains
+only `items: RestaurantMenuEntry[]`, with no `totalCount`: advance the offset by
+the returned item count while a full page comes back. An empty page ends the
+menu, including for a restaurant with no menu on record. Unknown restaurants
+return `404`.
 
 ## Food analysis
 
@@ -49,11 +52,12 @@ analyzeDescription(
 correct(request: CorrectPhotoScanRequest): Promise<FoodScan>
 ```
 
-`ScanFoodPhotoRequest.image` is a required nonblank base64 data URI. The API
-uses the reasoning-based analyzer unless `reasoningEffort: 'none'` asks for the
-standard one; the SDK sends the effort only when you set it. The result shape and
-cost are the same either way. `CorrectPhotoScanRequest` takes the prior
-`analysis` and an `instruction`.
+`ScanFoodPhotoRequest.image` is a required nonblank base64 data URI or publicly
+fetchable `http(s)` URL; an unreachable URL fails with `image_unreachable`. The
+API uses the reasoning-based analyzer unless `reasoningEffort: 'none'` asks for
+the standard one; the SDK sends the effort only when you set it. The result
+shape and cost are the same either way. `CorrectPhotoScanRequest` takes the
+prior `analysis` and an `instruction`.
 
 `FoodScan` contains `mealName`, `totalNutrients`, and `detections`. Each
 detection contains a `DetectedFood` and an optional confidence score.

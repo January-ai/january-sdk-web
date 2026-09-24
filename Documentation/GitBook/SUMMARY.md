@@ -30,8 +30,8 @@
 
 * [Client and authentication API](reference/client-and-resources.md)
 * [Foods API](reference/foods-api.md)
-* [Restaurants and scanning API](reference/discovery-and-scanning-api.md)
-* [Food, Water, Weight Logs and Glucose API](reference/user-resources-api.md)
+* [Restaurants and food analysis API](reference/discovery-and-scanning-api.md)
+* [Food, Water, and Weight Logs and Glucose API](reference/user-resources-api.md)
 * [Models and enums](reference/models-and-enums.md)
 * [Retries, refresh, and cancellation](reference/retries-and-lifecycle.md)
 * [Error handling](reference/error-handling.md)

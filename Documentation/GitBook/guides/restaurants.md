@@ -35,13 +35,15 @@ while (true) {
   consume(page.items);
   offset += page.items.length;
 
-  if (page.items.length === 0 || offset >= page.totalCount) break;
+  if (page.items.length < limit) break;
 }
 ```
 
-An unknown restaurant returns `404`. An existing restaurant with no menu
-returns an empty `items` array.
+The response contains only `items`, with no `totalCount`; keep paging while a
+full page comes back. An empty page ends the menu, including for a restaurant
+with no menu on record. An unknown restaurant returns `404`.
 
-Queries contain 1–256 characters, radius is 1–17,000, limit is 1–100, and
-coordinates must be valid latitude and longitude values. Menu items can include
-nutrition, serving choices, photos, restaurant name, and distance.
+Queries contain 1–256 characters, radius is 1–50,000 meters (8,000 when
+omitted), limit is 1–100, and coordinates must be valid latitude and longitude
+values. Menu items can include nutrition, serving choices, photos, restaurant
+name, and distance.

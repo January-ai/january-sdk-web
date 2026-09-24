@@ -7,8 +7,8 @@
 
 ## Food values
 
-* `FoodCategory`: `general`, `branded`, `recipe`
-* `AutocompleteFoodCategory`: `general`, `branded`
+* `FoodCategory`: `generic`, `branded`, `recipe`; `general` is a deprecated alias of `generic`
+* `AutocompleteFoodCategory`: `generic`, `branded`; `general` is a deprecated alias of `generic`
 * `DietPreference`: vegetarian, vegan, keto, paleo, pescatarian, low
   carbohydrate, high protein, kosher, and halal constants.
 * `DietRestriction`: gluten, lactose, yeast, tree nuts, peanuts, dairy, eggs,
@@ -19,7 +19,7 @@
 calories, protein, carbohydrates, net carbohydrates, fats, fiber, sugars,
 cholesterol, calcium, iron, potassium, sodium, and vitamin D.
 
-`FoodSelection` is `{ id: number; serving: { id: number; quantity: number } }`
+`FoodSelection` is `{ id: string; serving: { id: string; quantity: number } }`
 and is accepted by Food Logs and Glucose.
 
 * `FoodLogSummaryGrouping`: `day`, `week`
@@ -27,7 +27,8 @@ and is accepted by Food Logs and Glucose.
 * `AnalysisEffort`: `none`, `xhigh`
 
 `ServingSummary` (`{ id: string; quantity: number; unit: string | null; weightGrams: number | null }`)
-is the catalog serving a detected, alternative, or logged food refers to;
+is the catalog serving a detected or alternative food refers to
+(`LoggedFood.servingDetails` is a `ServingDetails` with the same shape);
 `quantity` is the size of one serving and `weightGrams` is null when unknown.
 
 ## Water and weight logs

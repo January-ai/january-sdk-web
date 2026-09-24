@@ -1,4 +1,4 @@
-# Food, Water, Weight Logs and Glucose API
+# Food, Water, and Weight Logs and Glucose API
 
 Prefer `january.forUser(...)` so identity and timezone are applied consistently
 across all SDK resources, including the Food Logs, Water Logs, Weight Logs, and
@@ -45,9 +45,13 @@ delete(request: {
 ```
 
 Timestamps must be ISO-8601 date-times. `start` and `end` must be ISO dates
-(`YYYY-MM-DD`) and are inclusive calendar boundaries in the scoped timezone.
+(`YYYY-MM-DD`) and are inclusive calendar boundaries in the scoped timezone (UTC
+when none is set). They must be real calendar dates: an impossible date such as
+`2026-02-31` throws a `TypeError` instead of rolling into the next month. Food-log
+`list` spans at most 60 days.
 `FoodLog` contains `id`, `foods`, `timestampUtc`, and optional `name`; list
-returns `totalCount` and items; delete returns `status`.
+returns `totalCount` and items; delete returns nothing and succeeds for an
+unknown or already-deleted log.
 
 `getSummary` aggregates the logs in the inclusive range (at most 366 days) into
 `buckets`, one per local calendar day or per week, each with `logsCount`,
@@ -86,8 +90,8 @@ delete(request: {
 `WaterLog` has `id`, `amount` (`{ value, unit }` as logged), and `consumedAt` in
 UTC. `ListWaterLogsResponse.items` holds one `{ date, total }` per local day
 with water logged, oldest first, in the requested `unit`; `total.value` is
-rounded to one decimal place. `delete` returns nothing and succeeds for an
-unknown log.
+rounded to one decimal place. At most 100 days are returned, the most recent
+100 when more match. `delete` returns nothing and succeeds for an unknown log.
 
 ## Scoped Weight Logs
 
@@ -107,11 +111,14 @@ list(request: {
 
 `WeightLog` has `weight` (`{ value, unit }` as logged) and `measuredAt` in UTC.
 `ListWeightLogsResponse.items` holds one `{ date, weight }` per local day that
-has a measurement, the latest of that day, oldest first.
+has a measurement, the latest of that day, oldest first. At most 100 days are
+returned, the most recent 100 when more match.
 
-The unscoped `january.waterLogs` and `january.weightLogs` methods add required
-`endUserId: string` and optional `endUserTimezone: string`. Units are closed on
-input (`VolumeUnit`, `WeightUnit`) and passed through as strings in responses.
+Water and weight `start` and `end` follow the same date rules as food logs,
+without the 60-day span limit; instead, `start` may be at most five years ago. The unscoped `january.waterLogs` and
+`january.weightLogs` methods add required `endUserId: string` and optional
+`endUserTimezone: string`. Units are closed on input (`VolumeUnit`,
+`WeightUnit`) and passed through as strings in responses.
 
 ## Glucose
 
