@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.1 - 2026-09-24
+
+* Fixed: `FoodPortion.selection` sent the portion's amount in the serving's unit as the number of servings, so a portion of a serving whose quantity isn't 1 (such as 6 oz or 100 g) was logged that many times over. It now sends the number of servings.
+* Fixed: a request cancelled through its `signal` rejects with an `AbortError`, as documented, instead of a `JanuaryError` with category `transport`.
+* Fixed: the React demo's food detail predicts glucose for the amount shown; it sent one 6 oz serving as six servings.
+* The React demo logs the portion shown on a food's detail, and Tracking and Logs show each logged food as servings of its serving size, such as "1 × 6 oz".
+
 ## 0.3.0 - 2026-09-23
 
 * Water logs with `waterLogs.create`, `list` (daily totals in a chosen unit), and `delete`, plus `VolumeUnit` (`fl_oz`, `ml`, and `cup`); the API accepts 0.1–101.4 cups
