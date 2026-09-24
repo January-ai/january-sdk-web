@@ -1,7 +1,7 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { byId, freshRateWindow, observed, openDemo, rateWindowEnds, shown, step, verified } from './evidence'
+import { byId, demoCalls, freshRateWindow, observed, openDemo, rateWindowEnds, shown, step, verified } from './evidence'
 import {
   allowanceUsedUp, api, cleanup, endUserId, evidenceDir, foodLog, foodLogs, foodLogSummary, localDay,
   rememberCreated, rememberDeleted, setLogContext, timezone, waterTotal, waterTotals, weightOn, weights,
@@ -745,7 +745,14 @@ test.describe('Live demo @live', () => {
       await byId(page, 'logs-day-previous').click()
       await byId(page, 'logs-day-today').click()
       await expect(byId(page, 'logs-day-label')).toHaveText('Today')
+      // Reload asks again for the day's meals, summary, water, and weight, and both charts. The
+      // flow waits for the answers, so the page isn't closed with the requests still in flight.
+      const reloaded = demoCalls(page, 6)
       await byId(page, 'logs-day-refresh').click()
+      const calls = await reloaded
+      observed('Reload day', calls)
+      expect(calls.map(({ call }) => call).sort()).toEqual(['getFoodLogSummary', 'listFoodLogs', 'listWaterLogs', 'listWaterLogs', 'listWeightLogs', 'listWeightLogs'])
+      expect(calls.every(({ status }) => status === 200)).toBe(true)
       await expect(byId(page, 'food-day-totals')).toBeVisible()
     }, () => byId(page, 'logs-day-card'))
   })

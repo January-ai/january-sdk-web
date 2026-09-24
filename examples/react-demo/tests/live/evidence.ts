@@ -1,4 +1,4 @@
-import { expect, test, type Locator, type Page } from '@playwright/test'
+import { expect, test, type Locator, type Page, type Response } from '@playwright/test'
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { evidenceDir, noteAllowanceUsedUp, setLogContext } from './live-api.mjs'
@@ -83,6 +83,39 @@ export async function freshRateWindow(page: Page) {
 /** Notes that a flow's requests may have run until now. */
 export function rateWindowEnds() {
   writeFileSync(windowFile, JSON.stringify({ lastRequestAt: Date.now() }))
+}
+
+/**
+ * The demo's next `count` API calls, as `{ call, status }` once each is answered: its server
+ * functions, less the configuration check that never leaves the machine. Fails after `timeout`.
+ */
+export function demoCalls(page: Page, count: number, timeout = 45_000): Promise<Array<{ call: string; status: number }>> {
+  const calls: Array<{ call: string; status: number }> = []
+  let listener: (response: Response) => void = () => undefined
+  return new Promise<Array<{ call: string; status: number }>>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`Expected ${count} demo API calls within ${timeout} ms; got ${JSON.stringify(calls)}`)), timeout)
+    listener = (response) => {
+      const call = serverFunction(response.url())
+      if (!call || call === 'getDemoConfiguration') return
+      calls.push({ call, status: response.status() })
+      if (calls.length === count) {
+        clearTimeout(timer)
+        resolve(calls)
+      }
+    }
+    page.on('response', listener)
+  }).finally(() => page.off('response', listener))
+}
+
+/** The server function a demo request calls, e.g. `listWaterLogs`, from the ID in its URL. */
+function serverFunction(url: string): string | null {
+  const id = /\/_serverFn\/([^/?]+)/.exec(url)?.[1]
+  if (!id) return null
+  try {
+    return String(JSON.parse(Buffer.from(id, 'base64url').toString('utf8')).export).replace(/_createServerFn_handler$/, '')
+  } catch {
+    return null
+  }
 }
 
 export function byId(page: Page, id: string | RegExp): Locator {

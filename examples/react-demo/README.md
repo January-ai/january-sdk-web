@@ -95,12 +95,14 @@ Use a dedicated test user: the run creates meals and water logs for it and
 deletes them at the end, and it logs two weights for today, which the API does
 not delete. It uses the relay at `http://127.0.0.1:8787` unless
 `PARTNER_TOKEN_URL` says otherwise (with `PARTNER_APP_SESSION_TOKEN` for a hosted
-relay). The API allows 60 requests a minute per end user, so each flow starts
-in a fresh minute and the run takes about 20 minutes.
+relay). The API allows 60 requests a minute per end user, so each flow waits
+until a minute after the previous flow's last request, and the run takes about
+20 minutes.
 
-A complete run makes about 220 API requests between the demo and the checks.
-Your account's allowance also caps requests in any rolling 24 hours; if that cap
-is smaller, run the two halves on different days:
+A complete run makes about 215 API requests between the demo and the checks,
+about 155 of them in the `@logs` half. Your account's allowance also caps
+requests in any rolling 24 hours; if that cap is smaller, run the two halves on
+different days:
 
 ```sh
 LIVE_END_USER_ID=your-test-user npm run test:ui:live -- --grep @catalog   # search, scans, restaurants, glucose
