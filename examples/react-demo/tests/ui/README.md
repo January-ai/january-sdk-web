@@ -3,7 +3,8 @@
 Playwright specs that drive the React demo against the local fixture server,
 one spec per user journey, mirroring the React Native, iOS and Android SDK
 suites (same flow names, same kebab-case `data-testid`s). They run on every
-pull request, split across three jobs, and locally in one command.
+pull request that changes more than documentation, split across three jobs,
+and locally in one command.
 
 ## Run locally
 
@@ -156,3 +157,10 @@ Logs keeps its original ids: `logs-range-today`, `logs-range-week`,
 (`--shard=N/3`). A failed test is retried once and marked flaky in the JUnit
 report; each shard uploads `test-results` (report, traces and screenshots of
 failures) as `playwright-web-N`. The `ui-tests` job summarizes the shards.
+
+A pull request that changes only documentation (Markdown files,
+`Documentation/`, `docs/`, `LICENSE`, issue templates) skips the SDK build, the
+example build, and the shards; the documentation check still runs, and
+`ui-tests` passes without the shards. The workflow also runs nightly on `main`
+at 07:17 UTC, where it adds the live suite (`tests/live`) when the repository
+has a `JANUARY_API_KEY` secret.
