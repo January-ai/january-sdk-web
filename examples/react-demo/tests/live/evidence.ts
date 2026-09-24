@@ -1,7 +1,7 @@
-import { expect, test, type Locator, type Page } from '@playwright/test'
+import { expect, test, type Locator, type Page, type Response } from '@playwright/test'
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { evidenceDir, setLogContext } from './live-api.mjs'
+import { evidenceDir, noteAllowanceUsedUp, setLogContext } from './live-api.mjs'
 
 /**
  * Evidence for the live suite, under LIVE_EVIDENCE_DIR: a screenshot for every step
@@ -39,6 +39,9 @@ export async function step<T>(page: Page, feature: string, title: string, body: 
       return await body()
     } catch (error) {
       failure = error
+      // When the demo's own request was the one the allowance refused, stop the run here too.
+      const refusal = page.getByText(/rolling 24-hour window/i).first()
+      if (await refusal.isVisible().catch(() => false)) noteAllowanceUsedUp({ message: await refusal.textContent(), seenIn: 'the demo' })
       throw error
     } finally {
       const screenshot = `screenshots/${number}-${slug(feature)}-${slug(title)}${failure ? '-FAILED' : ''}.png`
@@ -65,14 +68,54 @@ export function observed(what: string, detail: unknown) {
 const windowFile = join(evidenceDir, 'rate-window.json')
 /**
  * Starts a test in a fresh rate-limit window: the API allows 60 requests a minute per end
- * user, and the demo's screens and these checks share that budget. The start of the last
- * window is kept on disk so a restarted worker waits too.
+ * user, counted from the first request in the window, and the demo's screens and these
+ * checks share that budget. A window opened during the previous flow closes at most a minute
+ * after that flow's last request, so each flow waits until then (see `rateWindowEnds`). The
+ * time is kept on disk so a restarted worker waits too.
  */
 export async function freshRateWindow(page: Page) {
-  const startedAt = existsSync(windowFile) ? JSON.parse(readFileSync(windowFile, 'utf8')).startedAt as number : 0
-  const wait = startedAt + 62_000 - Date.now()
+  const lastRequestAt = existsSync(windowFile) ? JSON.parse(readFileSync(windowFile, 'utf8')).lastRequestAt as number : 0
+  const wait = lastRequestAt + 62_000 - Date.now()
   if (wait > 0) await page.waitForTimeout(wait)
-  writeFileSync(windowFile, JSON.stringify({ startedAt: Date.now() }))
+  rateWindowEnds()
+}
+
+/** Notes that a flow's requests may have run until now. */
+export function rateWindowEnds() {
+  writeFileSync(windowFile, JSON.stringify({ lastRequestAt: Date.now() }))
+}
+
+/**
+ * The demo's next `count` API calls, as `{ call, status }` once each is answered: its server
+ * functions, less the configuration check that never leaves the machine. Fails after `timeout`.
+ */
+export function demoCalls(page: Page, count: number, timeout = 45_000): Promise<Array<{ call: string; status: number }>> {
+  const calls: Array<{ call: string; status: number }> = []
+  let listener: (response: Response) => void = () => undefined
+  return new Promise<Array<{ call: string; status: number }>>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`Expected ${count} demo API calls within ${timeout} ms; got ${JSON.stringify(calls)}`)), timeout)
+    listener = (response) => {
+      const call = serverFunction(response.url())
+      if (!call || call === 'getDemoConfiguration') return
+      calls.push({ call, status: response.status() })
+      if (calls.length === count) {
+        clearTimeout(timer)
+        resolve(calls)
+      }
+    }
+    page.on('response', listener)
+  }).finally(() => page.off('response', listener))
+}
+
+/** The server function a demo request calls, e.g. `listWaterLogs`, from the ID in its URL. */
+function serverFunction(url: string): string | null {
+  const id = /\/_serverFn\/([^/?]+)/.exec(url)?.[1]
+  if (!id) return null
+  try {
+    return String(JSON.parse(Buffer.from(id, 'base64url').toString('utf8')).export).replace(/_createServerFn_handler$/, '')
+  } catch {
+    return null
+  }
 }
 
 export function byId(page: Page, id: string | RegExp): Locator {
