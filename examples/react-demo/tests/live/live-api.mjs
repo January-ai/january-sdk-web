@@ -6,7 +6,7 @@
 //
 // As a script, for the same end user and the local calendar day:
 //   node tests/live/live-api.mjs state [YYYY-MM-DD]   # water, weight, meals with their created_at, and totals
-//   node tests/live/live-api.mjs cleanup             # delete the logs a live run created
+//   node tests/live/live-api.mjs cleanup             # delete the logs a live run created and left behind
 //
 // Environment: PARTNER_TOKEN_URL (the token relay; default the local relay),
 // LIVE_END_USER_ID (default e2e-qa-web), PARTNER_APP_SESSION_TOKEN for a hosted relay,
@@ -80,6 +80,12 @@ export function allowanceUsedUp() {
   return existsSync(quotaFile) ? JSON.parse(readFileSync(quotaFile, 'utf8')) : null
 }
 
+/** Notes that the allowance is used up, e.g. when the demo's own request was the one refused. */
+export function noteAllowanceUsedUp(detail) {
+  mkdirSync(evidenceDir, { recursive: true })
+  writeFileSync(quotaFile, `${JSON.stringify({ at: new Date().toISOString(), ...detail }, null, 2)}\n`)
+}
+
 /**
  * One API call as the live end user. Resolves with the status and parsed body; never throws
  * on an HTTP error. The API allows 60 requests a minute per end user, counting the demo's own
@@ -105,8 +111,7 @@ export async function api(method, path, requestBody) {
     if (response.status !== 429 || attempt === 5) return { status: response.status, body: responseBody }
     const retryAfter = Number(response.headers.get('retry-after'))
     if (Number.isFinite(retryAfter) && retryAfter > 120) {
-      mkdirSync(evidenceDir, { recursive: true })
-      writeFileSync(quotaFile, `${JSON.stringify({ at: new Date().toISOString(), retryAfterSeconds: retryAfter, message: responseBody?.message ?? null }, null, 2)}\n`)
+      noteAllowanceUsedUp({ retryAfterSeconds: retryAfter, message: responseBody?.message ?? null })
       return { status: response.status, body: responseBody }
     }
     await sleep(Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1_000 + 500 : 20_000)
@@ -173,12 +178,31 @@ export function rememberCreated(kind, logId, note = '') {
   writeFileSync(ledgerFile, `${JSON.stringify(ledger, null, 2)}\n`)
 }
 
-/** Deletes every water and food log in the ledger. Weight logs have no delete in the API. */
+/**
+ * Marks a ledger entry as gone, once the API confirms it, so cleanup doesn't spend a request
+ * deleting it again.
+ */
+export function rememberDeleted(kind, logId, how) {
+  const ledger = readLedger()
+  const entry = ledger[kind].find((item) => item.id === logId)
+  if (entry) entry.deleted = { how, at: new Date().toISOString() }
+  writeFileSync(ledgerFile, `${JSON.stringify(ledger, null, 2)}\n`)
+}
+
+/**
+ * Deletes the water and food logs in the ledger that are not gone yet. Weight logs have no
+ * delete in the API. Deleted water logs answer 204 again, and deleted food logs 404.
+ */
 export async function cleanup() {
   const ledger = readLedger()
   const results = []
-  for (const entry of ledger.water) results.push({ kind: 'water', id: entry.id, status: (await deleteWaterLog(entry.id)).status })
-  for (const entry of ledger.food) results.push({ kind: 'food', id: entry.id, status: (await deleteFoodLog(entry.id)).status })
+  for (const kind of ['water', 'food']) {
+    for (const entry of ledger[kind].filter((item) => !item.deleted)) {
+      const { status } = kind === 'water' ? await deleteWaterLog(entry.id) : await deleteFoodLog(entry.id)
+      results.push({ kind, id: entry.id, note: entry.note, status })
+      if (status < 300 || (kind === 'food' && status === 404)) entry.deleted = { how: 'cleanup', at: new Date().toISOString(), status }
+    }
+  }
   writeFileSync(ledgerFile, `${JSON.stringify({ ...ledger, cleanedUpAt: new Date().toISOString(), results }, null, 2)}\n`)
   return results
 }
