@@ -272,6 +272,30 @@ test('AbortError cancellation is never retried', async () => {
   assert.equal(providerCalls, 1);
 });
 
+test('a request aborted in flight rejects with an AbortError, not a transport JanuaryError', async () => {
+  const controller = new AbortController();
+  let fetchStarted;
+  const started = new Promise((resolve) => { fetchStarted = resolve; });
+  const client = new JanuaryPartnerClient({
+    apiKey: 'fixture',
+    // Rejects the way fetch does when its signal is aborted.
+    fetch: (_input, init) => new Promise((_resolve, reject) => {
+      init.signal.addEventListener('abort', () => reject(init.signal.reason), { once: true });
+      fetchStarted();
+    }),
+  });
+
+  const request = client.foods.search({ query: 'banana', signal: controller.signal });
+  await started;
+  controller.abort();
+
+  await assert.rejects(request, (error) => {
+    assert.equal(error.name, 'AbortError');
+    assert.equal(error instanceof JanuaryError, false);
+    return true;
+  });
+});
+
 test('invalid retry policy fails at client construction', () => {
   assert.throws(
     () => new JanuaryPartnerClient({

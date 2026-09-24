@@ -1,4 +1,4 @@
-import { ResponseError } from './internal/transport/runtime.js';
+import { FetchError, ResponseError } from './internal/transport/runtime.js';
 
 export type JanuaryErrorCategory =
   | 'authentication'
@@ -69,11 +69,18 @@ export async function executeRequest<T>(operation: () => Promise<T>): Promise<T>
       });
     }
 
-    if (error instanceof Error && error.name === 'AbortError') throw error;
+    // The generated transport wraps a rejected fetch, cancellation included, in a FetchError.
+    // A cancelled request rejects with the fetch's own AbortError instead.
+    if (error instanceof FetchError && isAbortError(error.cause)) throw error.cause;
+    if (isAbortError(error)) throw error;
     throw new JanuaryError(
       'transport',
       error instanceof Error ? error.message : 'January API request failed.',
       { cause: error },
     );
   }
+}
+
+function isAbortError(error: unknown): error is Error {
+  return error instanceof Error && error.name === 'AbortError';
 }
