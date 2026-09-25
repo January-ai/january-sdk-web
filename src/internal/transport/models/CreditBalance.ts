@@ -38,7 +38,7 @@ export interface CreditBalance {
      */
     periodEnd: Date;
     /**
-     * When the allowance resets and `used_credits` returns to 0.
+     * When the billing period ends and the next begins: `used_credits` and the free-call count return to 0 and the request allowance reopens.
      * @type {Date}
      * @memberof CreditBalance
      */
@@ -50,7 +50,7 @@ export interface CreditBalance {
      */
     includedCredits: number | null;
     /**
-     * Credits used so far this period. Billable operations consume credits — how many depends on the operation and your plan — while failed calls cost nothing.
+     * Credits used so far this period. Each successful call costs the credits on the price list; failed calls cost nothing.
      * @type {number}
      * @memberof CreditBalance
      */

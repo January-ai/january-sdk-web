@@ -76,7 +76,7 @@ export class GlucoseApi extends runtime.BaseAPI {
     }
 
     /**
-     * **API key or client token.**  Predicts the glucose curve a meal will produce for the given profile and body.timezone (required — the IANA timezone the end user is in; the prediction depends on the meal\'s local time of day). Optionally personalize by sending cgm_data with the consumed_foods eaten during it (both together; the upstream needs at least five complete days of paired history). Nothing is stored, so there is no end-user identity to send: the request acts as the partner itself.  Callable with a client token carrying the `glucose:read` scope.
+     * **API key or client token.**  **Costs 3 credits per successful call.**  Predicts the glucose curve a meal will produce for the given profile and body.timezone (required — the IANA timezone the end user is in; the prediction depends on the meal\'s local time of day). Optionally personalize by sending cgm_data with the consumed_foods eaten during it (both together; the upstream needs at least five complete days of paired history). Nothing is stored, so there is no end-user identity to send: the request acts as the partner itself.  Callable with a client token carrying the `glucose:read` scope.
      * Predict the glucose response to a meal
      */
     async predictGlucoseRaw(requestParameters: PredictGlucoseRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GlucosePrediction>> {
@@ -87,7 +87,7 @@ export class GlucoseApi extends runtime.BaseAPI {
     }
 
     /**
-     * **API key or client token.**  Predicts the glucose curve a meal will produce for the given profile and body.timezone (required — the IANA timezone the end user is in; the prediction depends on the meal\'s local time of day). Optionally personalize by sending cgm_data with the consumed_foods eaten during it (both together; the upstream needs at least five complete days of paired history). Nothing is stored, so there is no end-user identity to send: the request acts as the partner itself.  Callable with a client token carrying the `glucose:read` scope.
+     * **API key or client token.**  **Costs 3 credits per successful call.**  Predicts the glucose curve a meal will produce for the given profile and body.timezone (required — the IANA timezone the end user is in; the prediction depends on the meal\'s local time of day). Optionally personalize by sending cgm_data with the consumed_foods eaten during it (both together; the upstream needs at least five complete days of paired history). Nothing is stored, so there is no end-user identity to send: the request acts as the partner itself.  Callable with a client token carrying the `glucose:read` scope.
      * Predict the glucose response to a meal
      */
     async predictGlucose(requestParameters: PredictGlucoseRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GlucosePrediction> {

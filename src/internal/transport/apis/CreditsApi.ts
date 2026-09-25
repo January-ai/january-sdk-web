@@ -57,7 +57,7 @@ export class CreditsApi extends runtime.BaseAPI {
     }
 
     /**
-     * **API key only.**  Your API credit allowance and consumption for the current calendar month (UTC). Each successful billable data operation consumes credits — how many depends on the operation and your plan — while requests that fail cost nothing and v1.1 calls are not counted. Checking your balance, creating client tokens, and revoking client tokens never consume credits. Reading your balance is also exempt from the request limits that bound the rest of the API, so it keeps answering once your allowance is spent or your request limit is reached — it carries only a cap of its own, 60 reads per minute unless we have agreed a different one with you. Read your balance when a request is rejected or on a schedule rather than before every call, and treat that balance — not a fixed per-call price — as the source of truth. When credits run out, v1.2 endpoints return `429` with code `credit_limit_exceeded` until the allowance resets — retrying does not help before then.
+     * **API key only.**  **Never consumes credits.**  Your API credit allowance and consumption for the current **billing period**. `period_start`, `period_end` and `resets_at` state it.  Each successful call costs the credits on the [price list](https://docs.january.ai/rest-api/credits-and-pricing). A call that costs more than you have left is refused before it runs, and once your credits are spent every v1.2 endpoint — the free ones included — returns `429` with code `credit_limit_exceeded` until `resets_at`; retrying does not help before then.
      * Get your credit balance
      */
     async getCreditsRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<CreditBalance>> {
@@ -68,7 +68,7 @@ export class CreditsApi extends runtime.BaseAPI {
     }
 
     /**
-     * **API key only.**  Your API credit allowance and consumption for the current calendar month (UTC). Each successful billable data operation consumes credits — how many depends on the operation and your plan — while requests that fail cost nothing and v1.1 calls are not counted. Checking your balance, creating client tokens, and revoking client tokens never consume credits. Reading your balance is also exempt from the request limits that bound the rest of the API, so it keeps answering once your allowance is spent or your request limit is reached — it carries only a cap of its own, 60 reads per minute unless we have agreed a different one with you. Read your balance when a request is rejected or on a schedule rather than before every call, and treat that balance — not a fixed per-call price — as the source of truth. When credits run out, v1.2 endpoints return `429` with code `credit_limit_exceeded` until the allowance resets — retrying does not help before then.
+     * **API key only.**  **Never consumes credits.**  Your API credit allowance and consumption for the current **billing period**. `period_start`, `period_end` and `resets_at` state it.  Each successful call costs the credits on the [price list](https://docs.january.ai/rest-api/credits-and-pricing). A call that costs more than you have left is refused before it runs, and once your credits are spent every v1.2 endpoint — the free ones included — returns `429` with code `credit_limit_exceeded` until `resets_at`; retrying does not help before then.
      * Get your credit balance
      */
     async getCredits(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<CreditBalance> {

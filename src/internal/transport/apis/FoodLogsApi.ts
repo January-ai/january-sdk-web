@@ -128,7 +128,7 @@ export class FoodLogsApi extends runtime.BaseAPI {
     }
 
     /**
-     * **API key or client token.**  Creates a food log from food + serving ids (from search or food-analysis results). The response echoes the log hydrated with full nutrition — save its `id` to update or delete the log, or fetch it again with GET /v1.2/food-logs/{log_id}. Not idempotent: verify with the list or get endpoint before retrying a timed-out create.  Callable with a client token carrying the `food_logs:write` scope.
+     * **API key or client token.**  **Free up to your plan\'s free-call limit, then 1 credit per 100 calls.**  Creates a food log from food + serving ids (from search or food-analysis results). The response echoes the log hydrated with full nutrition — save its `id` to update or delete the log, or fetch it again with GET /v1.2/food-logs/{log_id}. Not idempotent: verify with the list or get endpoint before retrying a timed-out create.  Callable with a client token carrying the `food_logs:write` scope.
      * Log foods for a user
      */
     async createFoodLogRaw(requestParameters: CreateFoodLogRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FoodLog>> {
@@ -139,7 +139,7 @@ export class FoodLogsApi extends runtime.BaseAPI {
     }
 
     /**
-     * **API key or client token.**  Creates a food log from food + serving ids (from search or food-analysis results). The response echoes the log hydrated with full nutrition — save its `id` to update or delete the log, or fetch it again with GET /v1.2/food-logs/{log_id}. Not idempotent: verify with the list or get endpoint before retrying a timed-out create.  Callable with a client token carrying the `food_logs:write` scope.
+     * **API key or client token.**  **Free up to your plan\'s free-call limit, then 1 credit per 100 calls.**  Creates a food log from food + serving ids (from search or food-analysis results). The response echoes the log hydrated with full nutrition — save its `id` to update or delete the log, or fetch it again with GET /v1.2/food-logs/{log_id}. Not idempotent: verify with the list or get endpoint before retrying a timed-out create.  Callable with a client token carrying the `food_logs:write` scope.
      * Log foods for a user
      */
     async createFoodLog(requestParameters: CreateFoodLogRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<FoodLog> {
@@ -187,7 +187,7 @@ export class FoodLogsApi extends runtime.BaseAPI {
     }
 
     /**
-     * **API key or client token.**  Idempotent: deleting an unknown or already-deleted log answers the same 204, so it is safe to retry.  Callable with a client token carrying the `food_logs:write` scope.
+     * **API key or client token.**  **Free up to your plan\'s free-call limit, then 1 credit per 100 calls.**  Idempotent: deleting an unknown or already-deleted log answers the same 204, so it is safe to retry.  Callable with a client token carrying the `food_logs:write` scope.
      * Delete a food log
      */
     async deleteFoodLogRaw(requestParameters: DeleteFoodLogRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
@@ -198,7 +198,7 @@ export class FoodLogsApi extends runtime.BaseAPI {
     }
 
     /**
-     * **API key or client token.**  Idempotent: deleting an unknown or already-deleted log answers the same 204, so it is safe to retry.  Callable with a client token carrying the `food_logs:write` scope.
+     * **API key or client token.**  **Free up to your plan\'s free-call limit, then 1 credit per 100 calls.**  Idempotent: deleting an unknown or already-deleted log answers the same 204, so it is safe to retry.  Callable with a client token carrying the `food_logs:write` scope.
      * Delete a food log
      */
     async deleteFoodLog(requestParameters: DeleteFoodLogRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
@@ -245,7 +245,7 @@ export class FoodLogsApi extends runtime.BaseAPI {
     }
 
     /**
-     * **API key or client token.**  Fetches one food log by the id returned when it was created.  Callable with a client token carrying the `food_logs:read` scope.
+     * **API key or client token.**  **Free up to your plan\'s free-call limit, then 1 credit per 100 calls.**  Fetches one food log by the id returned when it was created.  Callable with a client token carrying the `food_logs:read` scope.
      * Get a food log
      */
     async getFoodLogRaw(requestParameters: GetFoodLogRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FoodLog>> {
@@ -256,7 +256,7 @@ export class FoodLogsApi extends runtime.BaseAPI {
     }
 
     /**
-     * **API key or client token.**  Fetches one food log by the id returned when it was created.  Callable with a client token carrying the `food_logs:read` scope.
+     * **API key or client token.**  **Free up to your plan\'s free-call limit, then 1 credit per 100 calls.**  Fetches one food log by the id returned when it was created.  Callable with a client token carrying the `food_logs:read` scope.
      * Get a food log
      */
     async getFoodLog(requestParameters: GetFoodLogRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<FoodLog> {
@@ -421,7 +421,7 @@ export class FoodLogsApi extends runtime.BaseAPI {
     }
 
     /**
-     * **API key or client token.**  Returns the logs between `start_date` and `end_date` (both inclusive local calendar dates in `timezone`; the range spans at most 60 days), ordered by timestamp. An empty list is a valid result.  Callable with a client token carrying the `food_logs:read` scope.
+     * **API key or client token.**  **Free up to your plan\'s free-call limit, then 1 credit per 100 calls.**  Returns the logs between `start_date` and `end_date` (both inclusive local calendar dates in `timezone`; the range spans at most 60 days), ordered by timestamp. An empty list is a valid result.  Callable with a client token carrying the `food_logs:read` scope.
      * List a user\'s food logs in a date range
      */
     async listFoodLogsRaw(requestParameters: ListFoodLogsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ListFoodLogsResponse>> {
@@ -432,7 +432,7 @@ export class FoodLogsApi extends runtime.BaseAPI {
     }
 
     /**
-     * **API key or client token.**  Returns the logs between `start_date` and `end_date` (both inclusive local calendar dates in `timezone`; the range spans at most 60 days), ordered by timestamp. An empty list is a valid result.  Callable with a client token carrying the `food_logs:read` scope.
+     * **API key or client token.**  **Free up to your plan\'s free-call limit, then 1 credit per 100 calls.**  Returns the logs between `start_date` and `end_date` (both inclusive local calendar dates in `timezone`; the range spans at most 60 days), ordered by timestamp. An empty list is a valid result.  Callable with a client token carrying the `food_logs:read` scope.
      * List a user\'s food logs in a date range
      */
     async listFoodLogs(requestParameters: ListFoodLogsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ListFoodLogsResponse> {
@@ -490,7 +490,7 @@ export class FoodLogsApi extends runtime.BaseAPI {
     }
 
     /**
-     * **API key or client token.**  Replaces any subset of the log: `foods`, `created_at`, `name`. Omitted fields are left unchanged.  Callable with a client token carrying the `food_logs:write` scope.
+     * **API key or client token.**  **Free up to your plan\'s free-call limit, then 1 credit per 100 calls.**  Replaces any subset of the log: `foods`, `created_at`, `name`. Omitted fields are left unchanged.  Callable with a client token carrying the `food_logs:write` scope.
      * Update a food log
      */
     async updateFoodLogRaw(requestParameters: UpdateFoodLogRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FoodLog>> {
@@ -501,7 +501,7 @@ export class FoodLogsApi extends runtime.BaseAPI {
     }
 
     /**
-     * **API key or client token.**  Replaces any subset of the log: `foods`, `created_at`, `name`. Omitted fields are left unchanged.  Callable with a client token carrying the `food_logs:write` scope.
+     * **API key or client token.**  **Free up to your plan\'s free-call limit, then 1 credit per 100 calls.**  Replaces any subset of the log: `foods`, `created_at`, `name`. Omitted fields are left unchanged.  Callable with a client token carrying the `food_logs:write` scope.
      * Update a food log
      */
     async updateFoodLog(requestParameters: UpdateFoodLogRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<FoodLog> {
