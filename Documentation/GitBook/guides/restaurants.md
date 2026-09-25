@@ -38,6 +38,6 @@ if (restaurant) {
 }
 ```
 
-A restaurant with no menu on record returns an empty first page. An unknown restaurant fails with category `notFound`; in a discovery UI, fall back to `searchMenuItems` with the user's query and location.
+A restaurant with no menu on record returns an empty first page. An unknown restaurant fails with category `notFound`; in a discovery UI, fall back to `searchMenuItems` with the user's query and location when the first page is empty or the restaurant is not found.
 
 Menu items use short nutrition names: `energy`, `protein`, `carbs`, `netCarbs`, `fat`, `fiber`, `sugars`, `addedSugars`, `gi`, and `gl`, not the `calories`, `carbohydrates`, and `totalFat` of foods.

@@ -34,7 +34,7 @@ try {
 | `authentication` | 401, or none | `unauthorized`, `token_invalid`, `token_revoked`. With no status: the token provider ran out of retries or returned an unusable token. | Check your token endpoint and the app session. The SDK already handles `token_expired`. |
 | `authorization` | 403 | `scope_insufficient`, `end_user_id_mismatch`, `forbidden` | Mint the token with the scopes the call needs ([scopes](../getting-started/backend-token-endpoint.md#what-the-web-sdk-needs)). |
 | `notFound` | 404 | `not_found` | Fall back, for example to text search after a barcode miss. |
-| `rateLimit` | 429 | `rate_limited`, `request_limit_exceeded`, `credit_limit_exceeded` | Back off on `rate_limited`. The other two last until your monthly allowance resets ([Credits](https://docs.january.ai/rest-api/credits)). |
+| `rateLimit` | 429 | `rate_limited`, `request_limit_exceeded`, `credit_limit_exceeded` | Back off on `rate_limited`. The other two last until your billing period resets ([Credits](https://docs.january.ai/rest-api/credits)). |
 | `server` | 500–599 | `internal_error`, `upstream_error`, `service_unavailable`, `upstream_timeout` | Retry reads with backoff. Before retrying a create, list the day to check it didn't go through. |
 | `transport` | none | none | The request didn't complete or never started: a network failure, an origin January hasn't enabled, a failing token provider, or invalid log input. Check `cause`. |
 | `unknown` | Any other, including 409 and 413 | `conflict`, `payload_too_large` | Show a generic error and log `requestId`. |
