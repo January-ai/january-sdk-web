@@ -80,7 +80,7 @@ demo. The first run takes about ten minutes.
    ```
 
 10. Open [http://localhost:3000](http://localhost:3000) and search for
-    `banana`. Terminal 1 prints `minted=true status=200` the first time the
+    `banana`. Terminal 1 prints `minted=true status=201` the first time the
     page asks for a token. Neither the API key nor a long-lived credential is
     in the browser bundle.
 
@@ -137,7 +137,7 @@ const january = new JanuaryClient({
 
 const user = january.forUser({
   endUserId: session.user.id,
-  endUserTimezone: 'America/New_York',
+  endUserTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
 });
 
 const foods = await user.foods.search({ query: 'banana' });
@@ -156,11 +156,11 @@ Direct browser calls also require January to enable the exact browser origin.
 If that origin is not enabled, make January API calls from your authenticated
 backend instead.
 
-Your production endpoint returns `{ "token": "ct-…", "expiresIn": 1800 }`
-(the SDK also accepts `expires_in`),
-derives the stable end-user ID from the verified app session, and chooses scopes
-on the server. See the
+Your production endpoint authenticates the app session, takes the end-user ID
+from that session (never from the request), mints the token with the scopes
+your app uses, and returns January's response unchanged. See the
 [backend token endpoint guide](Documentation/GitBook/getting-started/backend-token-endpoint.md)
+and [Your token endpoint](https://docs.january.ai/docs/authentication#your-token-endpoint)
 for the complete contract.
 
 ## Common tasks
