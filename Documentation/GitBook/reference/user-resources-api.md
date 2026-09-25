@@ -2,7 +2,7 @@
 
 The signatures below are for a scoped client, `user.foodLogs`, `user.waterLogs`,
 `user.weightLogs`, and `user.glucose`, which applies the end-user ID and timezone
-([Client and authentication API](client-and-resources.md#scoped-clients)).
+([Client and resources](client-and-resources.md#scoped-clients)).
 
 ## Food logs
 

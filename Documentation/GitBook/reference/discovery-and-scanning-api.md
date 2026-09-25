@@ -1,6 +1,6 @@
 # Restaurants and food analysis API
 
-Use these through a scoped client, `user.restaurants` and `user.foodAnalysis` ([Client and authentication API](client-and-resources.md#scoped-clients)). Every request accepts an optional `signal: AbortSignal`.
+Use these through a scoped client, `user.restaurants` and `user.foodAnalysis` ([Client and resources](client-and-resources.md#scoped-clients)). Every request accepts an optional `signal: AbortSignal`.
 
 ## Restaurants
 
