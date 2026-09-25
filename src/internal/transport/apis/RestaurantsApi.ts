@@ -105,7 +105,7 @@ export class RestaurantsApi extends runtime.BaseAPI {
     }
 
     /**
-     * **API key or client token.**  The menu of one restaurant, by the `id` a `GET /v1.2/restaurants` result carries — a listing, not a search. Items come ordered by name with the nutrition their menu source publishes; each carries one serving, and `GET /v1.2/foods/{food_id}` returns the complete list. Page a long menu with `limit` and `offset`: a page shorter than `limit` is the last one. To find dishes across restaurants near a location, use `GET /v1.2/menu-items`.  Callable with a client token carrying the `restaurants:read` scope.
+     * **API key or client token.**  **Costs 2 credits per successful call.**  The menu of one restaurant, by the `id` a `GET /v1.2/restaurants` result carries — a listing, not a search. Items come ordered by name with the nutrition their menu source publishes; each carries one serving, and `GET /v1.2/foods/{food_id}` returns the complete list. Page a long menu with `limit` and `offset`: a page shorter than `limit` is the last one. To find dishes across restaurants near a location, use `GET /v1.2/menu-items`.  Callable with a client token carrying the `restaurants:read` scope.
      * List a restaurant\'s menu items
      */
     async getRestaurantMenuItemsRaw(requestParameters: GetRestaurantMenuItemsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GetRestaurantMenuItemsResponse>> {
@@ -116,7 +116,7 @@ export class RestaurantsApi extends runtime.BaseAPI {
     }
 
     /**
-     * **API key or client token.**  The menu of one restaurant, by the `id` a `GET /v1.2/restaurants` result carries — a listing, not a search. Items come ordered by name with the nutrition their menu source publishes; each carries one serving, and `GET /v1.2/foods/{food_id}` returns the complete list. Page a long menu with `limit` and `offset`: a page shorter than `limit` is the last one. To find dishes across restaurants near a location, use `GET /v1.2/menu-items`.  Callable with a client token carrying the `restaurants:read` scope.
+     * **API key or client token.**  **Costs 2 credits per successful call.**  The menu of one restaurant, by the `id` a `GET /v1.2/restaurants` result carries — a listing, not a search. Items come ordered by name with the nutrition their menu source publishes; each carries one serving, and `GET /v1.2/foods/{food_id}` returns the complete list. Page a long menu with `limit` and `offset`: a page shorter than `limit` is the last one. To find dishes across restaurants near a location, use `GET /v1.2/menu-items`.  Callable with a client token carrying the `restaurants:read` scope.
      * List a restaurant\'s menu items
      */
     async getRestaurantMenuItems(requestParameters: GetRestaurantMenuItemsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GetRestaurantMenuItemsResponse> {
@@ -193,7 +193,7 @@ export class RestaurantsApi extends runtime.BaseAPI {
     }
 
     /**
-     * **API key or client token.**  Search dishes across restaurants near (`latitude`, `longitude`), with the nutrition each menu source publishes. Use `radius_meters` to widen or narrow the search, e.g. `radius_meters=5000` for 5 kilometers; each result reports its own `distance_meters`. To find the restaurants themselves, use `GET /v1.2/restaurants`.  Callable with a client token carrying the `restaurants:read` scope.
+     * **API key or client token.**  **Costs 2 credits per successful call.**  Search dishes across restaurants near (`latitude`, `longitude`), with the nutrition each menu source publishes. Use `radius_meters` to widen or narrow the search, e.g. `radius_meters=5000` for 5 kilometers; each result reports its own `distance_meters`. To find the restaurants themselves, use `GET /v1.2/restaurants`.  Callable with a client token carrying the `restaurants:read` scope.
      * Search menu items near a location
      */
     async searchRestaurantMenuItemsRaw(requestParameters: SearchRestaurantMenuItemsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SearchRestaurantMenuItemsResponse>> {
@@ -204,7 +204,7 @@ export class RestaurantsApi extends runtime.BaseAPI {
     }
 
     /**
-     * **API key or client token.**  Search dishes across restaurants near (`latitude`, `longitude`), with the nutrition each menu source publishes. Use `radius_meters` to widen or narrow the search, e.g. `radius_meters=5000` for 5 kilometers; each result reports its own `distance_meters`. To find the restaurants themselves, use `GET /v1.2/restaurants`.  Callable with a client token carrying the `restaurants:read` scope.
+     * **API key or client token.**  **Costs 2 credits per successful call.**  Search dishes across restaurants near (`latitude`, `longitude`), with the nutrition each menu source publishes. Use `radius_meters` to widen or narrow the search, e.g. `radius_meters=5000` for 5 kilometers; each result reports its own `distance_meters`. To find the restaurants themselves, use `GET /v1.2/restaurants`.  Callable with a client token carrying the `restaurants:read` scope.
      * Search menu items near a location
      */
     async searchRestaurantMenuItems(requestParameters: SearchRestaurantMenuItemsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SearchRestaurantMenuItemsResponse> {
@@ -281,7 +281,7 @@ export class RestaurantsApi extends runtime.BaseAPI {
     }
 
     /**
-     * **API key or client token.**  Search restaurants matching `query` around (`latitude`, `longitude`), ranked by proximity. Every result is a restaurant — `type` is always `restaurant`. To search the dishes those restaurants serve, use `GET /v1.2/menu-items`.  Callable with a client token carrying the `restaurants:read` scope.
+     * **API key or client token.**  **Costs 2 credits per successful call.**  Search restaurants matching `query` around (`latitude`, `longitude`), ranked by proximity. Every result is a restaurant — `type` is always `restaurant`. To search the dishes those restaurants serve, use `GET /v1.2/menu-items`.  Callable with a client token carrying the `restaurants:read` scope.
      * Search restaurants near a location
      */
     async searchRestaurantsRaw(requestParameters: SearchRestaurantsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SearchRestaurantsResponse>> {
@@ -292,7 +292,7 @@ export class RestaurantsApi extends runtime.BaseAPI {
     }
 
     /**
-     * **API key or client token.**  Search restaurants matching `query` around (`latitude`, `longitude`), ranked by proximity. Every result is a restaurant — `type` is always `restaurant`. To search the dishes those restaurants serve, use `GET /v1.2/menu-items`.  Callable with a client token carrying the `restaurants:read` scope.
+     * **API key or client token.**  **Costs 2 credits per successful call.**  Search restaurants matching `query` around (`latitude`, `longitude`), ranked by proximity. Every result is a restaurant — `type` is always `restaurant`. To search the dishes those restaurants serve, use `GET /v1.2/menu-items`.  Callable with a client token carrying the `restaurants:read` scope.
      * Search restaurants near a location
      */
     async searchRestaurants(requestParameters: SearchRestaurantsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SearchRestaurantsResponse> {
