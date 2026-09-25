@@ -1,6 +1,6 @@
 # Foods API
 
-Use these through a scoped client, `user.foods` ([Client and authentication API](client-and-resources.md#scoped-clients)). Every request accepts an optional `signal: AbortSignal`.
+Use these through a scoped client, `user.foods` ([Client and resources](client-and-resources.md#scoped-clients)). Every request accepts an optional `signal: AbortSignal`.
 
 ## Operations
 
