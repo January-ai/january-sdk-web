@@ -16,7 +16,7 @@ dishes.items.forEach((dish) => console.log(dish.restaurantName, dish.name, dish.
 
 ## Load one restaurant's menu
 
-`getMenuItems` loads a restaurant's menu by the ID from `search`, without repeating the query or location. It returns pages of up to 100 items with no total count, so keep paging while a full page comes back:
+`getMenuItems` loads a restaurant's menu by the ID from `search`, without repeating the query or location. It returns pages of up to 500 items (100 by default) with no total count, so keep paging while a full page comes back:
 
 ```ts
 import type { RestaurantMenuEntry } from '@januaryai/web-sdk';
@@ -38,7 +38,7 @@ if (restaurant) {
 }
 ```
 
-A restaurant with no menu on record returns an empty first page. An unknown restaurant fails with category `notFound`; in a discovery UI, fall back to `searchMenuItems` with the user's query and location when the first page is empty or the restaurant is not found.
+A restaurant with no menu on record returns an empty first page. An unknown restaurant fails with category `notFound`. Show the lookup error or empty state while keeping the selected restaurant.
 
 Menu items use short nutrition names: `energy`, `protein`, `carbs`, `netCarbs`, `fat`, `fiber`, `sugars`, `addedSugars`, `gi`, and `gl`, not the `calories`, `carbohydrates`, and `totalFat` of foods.
 
