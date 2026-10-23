@@ -352,46 +352,29 @@ export const getRestaurantMenuItems = createServerFn({ method: 'GET' })
   .validator(z.object({
     restaurantId: restaurantIdSchema,
     restaurantName: z.string().trim().min(1).max(256),
+    query: z.string().max(256).optional(),
     latitude: z.number().min(-90).max(90),
     longitude: z.number().min(-180).max(180),
     endUserId: optionalUserId,
   }))
   .handler(async ({ data }) => {
     const client = getJanuaryClient(data.endUserId)
-    try {
-      const items: import('@januaryai/web-sdk').RestaurantMenuItem[] = []
-      while (true) {
-        const page = await client.restaurants.getMenuItems({
-          restaurantId: data.restaurantId,
-          endUserId: data.endUserId,
-          limit: 100,
-          offset: items.length,
-        })
-        items.push(...page.items.flatMap((item) => item.id ? [{
-          ...item,
-          id: item.id,
-          type: 'menu_item' as const,
-          restaurantName: data.restaurantName,
-        }] : []))
-        if (page.items.length < 100) return { totalCount: items.length, items }
-      }
-    } catch (error) {
-      const menuIsUnavailable = error instanceof JanuaryError && error.status === 404
-      if (!menuIsUnavailable) throw error
-      const page = await client.restaurants.searchMenuItems({
-        query: data.restaurantName,
-        latitude: data.latitude,
-        longitude: data.longitude,
-        radius: 8_000,
-        limit: 20,
+    const items: import('@januaryai/web-sdk').RestaurantMenuItem[] = []
+    let offset = 0
+    while (true) {
+      const page = await client.restaurants.getMenuItems({
+        restaurantId: data.restaurantId,
+        query: data.query,
         endUserId: data.endUserId,
+        limit: 100,
+        offset,
       })
-      const normalize = (value: string) => value
-        .split('(', 1)[0]!
-        .toLocaleLowerCase()
-        .replace(/[^a-z0-9]+/g, ' ')
-        .trim()
-      const items = page.items.filter((item) => item.restaurantName && normalize(item.restaurantName) === normalize(data.restaurantName))
-      return { totalCount: items.length, items }
+      items.push(...page.items.map((item) => ({
+        ...item,
+        type: 'menu_item' as const,
+        restaurantName: data.restaurantName,
+      })))
+      offset += page.items.length
+      if (page.items.length < 100) return { totalCount: items.length, items }
     }
   })

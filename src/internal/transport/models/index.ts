@@ -48,6 +48,7 @@ export * from './ListFoodLogsResponse.js';
 export * from './ListWaterLogsResponse.js';
 export * from './ListWeightLogsResponse.js';
 export * from './LoggedFood.js';
+export * from './LoggedServing.js';
 export * from './MedicalCondition.js';
 export * from './NutrientAmount.js';
 export * from './NutritionFacts.js';

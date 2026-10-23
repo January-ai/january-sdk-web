@@ -32,23 +32,29 @@ test('loads the selected restaurant menu by ID', async ({ page }) => {
   expect(calls.some(({ path }) => path === '/v1.2/menu-items')).toBe(false)
 })
 
-test('silently falls back to menu search for a production-style 404', async ({ page }) => {
-  await control('/v1.2/restaurants/cafe/menu-items', { status: 404 })
+test('searches within a restaurant and resets to the full menu', async ({ page }) => {
   await openRestaurant(page)
-  await expect(page.getByText('Fixture bowl')).toBeVisible()
-  await expect(page.getByText(/couldn.t complete/i)).toHaveCount(0)
-  const calls = await (await fetch(`${fixtureApi}/__requests`)).json() as Array<{ path: string }>
-  expect(calls.map(({ path }) => path)).toEqual(expect.arrayContaining([
-    '/v1.2/restaurants/cafe/menu-items',
-    '/v1.2/menu-items',
-  ]))
+  await page.getByRole('searchbox', { name: 'Search this menu' }).fill('SOUP')
+  await page.getByRole('button', { name: 'Search menu', exact: true }).click()
+  await expect(page.getByText('Fixture soup', { exact: true })).toBeVisible()
+  await expect(page.getByText('Fixture bowl', { exact: true })).toHaveCount(0)
+  const calls = await (await fetch(`${fixtureApi}/__requests`)).json() as Array<{ path: string; query: Record<string, string> }>
+  expect(calls.some(({ path, query }) => path === '/v1.2/restaurants/cafe/menu-items' && query.query === 'SOUP' && query.offset === '0')).toBe(true)
+  expect(calls.some(({ path }) => path === '/v1.2/menu-items')).toBe(false)
+  await page.getByRole('searchbox', { name: 'Search this menu' }).fill('unavailable dish')
+  await page.getByRole('button', { name: 'Search menu', exact: true }).click()
+  await expect(page.getByTestId('menu-empty')).toContainText('No dishes match')
+  await page.getByRole('button', { name: 'Show full menu' }).click()
+  await expect(page.getByText('Fixture bowl', { exact: true })).toBeVisible()
+  await expect(page.getByText('Fixture soup', { exact: true })).toBeVisible()
 })
 
-test('shows the empty state when the 404 fallback has no matching menu', async ({ page }) => {
+test('shows restaurant-not-found errors without searching other restaurants', async ({ page }) => {
   await control('/v1.2/restaurants/cafe/menu-items', { status: 404 })
-  await control('/v1.2/menu-items', { empty: true })
   await openRestaurant(page)
-  await expect(page.getByText('No matching menu items were returned for this restaurant.')).toBeVisible()
+  await expect(page.getByTestId('menu-error')).toBeVisible()
+  const calls = await (await fetch(`${fixtureApi}/__requests`)).json() as Array<{ path: string }>
+  expect(calls.some(({ path }) => path === '/v1.2/menu-items')).toBe(false)
 })
 
 test('shows an error for 500 and recovers on retry', async ({ page }) => {

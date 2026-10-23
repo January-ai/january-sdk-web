@@ -86,7 +86,7 @@ export interface GlucosePredictionProfile {
      */
     activityLevel?: ActivityLevel;
     /**
-     * Omit it (or send []) if none apply. Type 1 diabetes is not supported by the prediction model.
+     * Send [] (or omit it) when none of these apply; the prediction is then for a person without these conditions. Type 1 diabetes is not supported by the prediction model.
      * @type {Array<MedicalCondition>}
      * @memberof GlucosePredictionProfile
      */

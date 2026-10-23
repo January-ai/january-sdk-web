@@ -319,7 +319,13 @@ createServer(async (request, response) => {
     type: 'restaurant', id: 'cafe', name: 'Fixture Cafe', is_chain: false,
     distance_meters: 100, city: 'San Francisco', address1: '123 Test Street', address2: null,
   }] })
-  if (url.pathname === '/v1.2/restaurants/cafe/menu-items') return json(response, { items: rule.empty ? [] : directItems })
+  if (url.pathname === '/v1.2/restaurants/cafe/menu-items') {
+    const query = (url.searchParams.get('query') ?? '').trim().toLowerCase()
+    const matches = rule.empty ? [] : directItems.filter((item) => item.name?.toLowerCase().includes(query))
+    const offset = Number(url.searchParams.get('offset') ?? 0)
+    const limit = Number(url.searchParams.get('limit') ?? 100)
+    return json(response, { items: matches.slice(offset, offset + limit) })
+  }
   if (url.pathname === '/v1.2/menu-items') return json(response, { items: rule.empty ? [] : searchItems })
   return json(response, { code: 'not_found', message: `Unmapped fixture route ${url.pathname}` }, 404)
 }).listen(18767, '127.0.0.1')

@@ -26,7 +26,7 @@ export interface CreditBalance {
      */
     plan: string;
     /**
-     * First day of the current billing period (UTC), inclusive.
+     * First day of the current billing period (UTC), inclusive. In the month of a plan change that starts no new billing period (a move to Free, say), the day of the change, when the allowance restarted.
      * @type {Date}
      * @memberof CreditBalance
      */

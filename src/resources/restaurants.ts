@@ -14,16 +14,18 @@ const MAX_RESTAURANT_RADIUS_METERS = 50_000;
 export class RestaurantsResource {
   constructor(private readonly api: RestaurantsApi) {}
 
-  /** Loads one page by restaurant ID, independently of text search or location. */
+  /** Loads one page by restaurant ID, optionally filtered by dish name. */
   async getMenuItems(request: GetRestaurantMenuItemsRequest): Promise<GetRestaurantMenuItemsResponse> {
     const limit = request.limit ?? 100;
     const offset = request.offset ?? 0;
-    if (!/^[A-Za-z0-9_-]{1,256}$/.test(request.restaurantId) || !Number.isInteger(limit) || limit < 1 || limit > 100
+    if (!/^[A-Za-z0-9_-]{1,64}$/.test(request.restaurantId) || !Number.isInteger(limit) || limit < 1 || limit > 500
+      || (request.query !== undefined && (typeof request.query !== 'string' || [...request.query].length > 256))
       || !Number.isInteger(offset) || offset < 0 || offset > 2_147_483_647) {
       throw new TypeError('A restaurant id and valid menu pagination are required.');
     }
     const response = await executeRequest(() => this.api.getRestaurantMenuItems({
       restaurantId: request.restaurantId, limit, offset,
+      ...(request.query !== undefined ? { query: request.query } : {}),
     }, init(request.signal)));
     return { items: response.items.map(mapMenuEntry) };
   }
