@@ -195,6 +195,8 @@ export interface SuggestFoodAlternativesResponse { alternatives: AlternativeFood
 
 export interface GetRestaurantMenuItemsRequest {
   restaurantId: ContractRestaurant['id'];
+  /** Optional case-insensitive dish-name filter; blank lists the whole menu. */
+  query?: string;
   limit?: number;
   offset?: number;
   endUserId?: string;
@@ -391,7 +393,7 @@ export interface FoodLogSummary {
 export interface DeleteFoodLogRequest extends PartnerUserContext { logId: string; signal?: AbortSignal }
 export interface ConsumedServing { id: string; quantity: number | null }
 /** The catalog serving a logged food refers to; `weightGrams` is null when unknown. */
-export interface ServingDetails { id: string; quantity: number; unit: string | null; weightGrams: number | null }
+export interface ServingDetails { id: string; quantity: number | null; unit: string | null; weightGrams: number | null }
 export interface LoggedFood {
   id: string;
   name: string | null;

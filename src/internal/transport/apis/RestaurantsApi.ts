@@ -36,6 +36,7 @@ import {
 
 export interface GetRestaurantMenuItemsRequest {
     restaurantId: string;
+    query?: string;
     limit?: number;
     offset?: number;
 }
@@ -74,6 +75,10 @@ export class RestaurantsApi extends runtime.BaseAPI {
 
         const queryParameters: any = {};
 
+        if (requestParameters['query'] != null) {
+            queryParameters['query'] = requestParameters['query'];
+        }
+
         if (requestParameters['limit'] != null) {
             queryParameters['limit'] = requestParameters['limit'];
         }
@@ -105,7 +110,7 @@ export class RestaurantsApi extends runtime.BaseAPI {
     }
 
     /**
-     * **API key or client token.**  **Costs 2 credits per successful call.**  The menu of one restaurant, by the `id` a `GET /v1.2/restaurants` result carries — a listing, not a search. Items come ordered by name with the nutrition their menu source publishes; each carries one serving, and `GET /v1.2/foods/{food_id}` returns the complete list. Page a long menu with `limit` and `offset`: a page shorter than `limit` is the last one. To find dishes across restaurants near a location, use `GET /v1.2/menu-items`.  Callable with a client token carrying the `restaurants:read` scope.
+     * **API key or client token.**  **Costs 2 credits per successful call.**  The menu of one restaurant, by the `id` a `GET /v1.2/restaurants` result carries. Items come ordered by name with the nutrition their menu source publishes; each carries one serving, and `GET /v1.2/foods/{food_id}` returns the complete list. Pass `query` to keep only the dishes whose name contains it, ignoring case, e.g. `query=burger` on a diner\'s menu. Page a long menu, or a long list of matches, with `limit` and `offset`: a page shorter than `limit` is the last one. To find dishes across restaurants near a location, use `GET /v1.2/menu-items`.  Callable with a client token carrying the `restaurants:read` scope.
      * List a restaurant\'s menu items
      */
     async getRestaurantMenuItemsRaw(requestParameters: GetRestaurantMenuItemsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GetRestaurantMenuItemsResponse>> {
@@ -116,7 +121,7 @@ export class RestaurantsApi extends runtime.BaseAPI {
     }
 
     /**
-     * **API key or client token.**  **Costs 2 credits per successful call.**  The menu of one restaurant, by the `id` a `GET /v1.2/restaurants` result carries — a listing, not a search. Items come ordered by name with the nutrition their menu source publishes; each carries one serving, and `GET /v1.2/foods/{food_id}` returns the complete list. Page a long menu with `limit` and `offset`: a page shorter than `limit` is the last one. To find dishes across restaurants near a location, use `GET /v1.2/menu-items`.  Callable with a client token carrying the `restaurants:read` scope.
+     * **API key or client token.**  **Costs 2 credits per successful call.**  The menu of one restaurant, by the `id` a `GET /v1.2/restaurants` result carries. Items come ordered by name with the nutrition their menu source publishes; each carries one serving, and `GET /v1.2/foods/{food_id}` returns the complete list. Pass `query` to keep only the dishes whose name contains it, ignoring case, e.g. `query=burger` on a diner\'s menu. Page a long menu, or a long list of matches, with `limit` and `offset`: a page shorter than `limit` is the last one. To find dishes across restaurants near a location, use `GET /v1.2/menu-items`.  Callable with a client token carrying the `restaurants:read` scope.
      * List a restaurant\'s menu items
      */
     async getRestaurantMenuItems(requestParameters: GetRestaurantMenuItemsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GetRestaurantMenuItemsResponse> {

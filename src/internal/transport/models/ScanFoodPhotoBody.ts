@@ -39,6 +39,12 @@ export interface ScanFoodPhotoBody {
      * @memberof ScanFoodPhotoBody
      */
     reasoning?: AnalysisReasoning;
+    /**
+     * **Beta.** A note about the meal from the person or app that took the photo: details the image may not show, such as how it was cooked, oils and sauces, hidden ingredients, how many items, or the brand or restaurant. The analysis takes it into account alongside the photo.
+     * @type {string}
+     * @memberof ScanFoodPhotoBody
+     */
+    context?: string | null;
 }
 
 /**
@@ -61,6 +67,7 @@ export function ScanFoodPhotoBodyFromJSONTyped(json: any, ignoreDiscriminator: b
 
         'image': json['image'],
         'reasoning': json['reasoning'] == null ? undefined : AnalysisReasoningFromJSON(json['reasoning']),
+        'context': json['context'] === undefined ? undefined : json['context'] === null ? null : json['context'],
     };
 }
 
@@ -77,5 +84,6 @@ export function ScanFoodPhotoBodyToJSONTyped(value?: ScanFoodPhotoBody | null, i
 
         'image': value['image'],
         'reasoning': AnalysisReasoningToJSON(value['reasoning']),
+        'context': value['context'],
     };
 }

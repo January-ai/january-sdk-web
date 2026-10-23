@@ -60,6 +60,7 @@ function SearchPage() {
   const [locationSource, setLocationSource] = useState<CityID | 'current'>(defaultCity.id)
   const [isLocating, setIsLocating] = useState(false)
   const [locationError, setLocationError] = useState<string | null>(null)
+  const [menuQuery, setMenuQuery] = useState('')
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null)
   const [debouncedDraft, setDebouncedDraft] = useState(draft.trim())
   const [acceptedSuggestion, setAcceptedSuggestion] = useState<string | null>(null)
@@ -102,9 +103,10 @@ function SearchPage() {
   })
 
   const menuItems = useQuery({
-    queryKey: ['restaurant-menu-items', { restaurant: selectedRestaurant?.id, coordinates }],
+    queryKey: ['restaurant-menu-items', { restaurant: selectedRestaurant?.id, query: menuQuery, coordinates }],
     queryFn: () => getRestaurantMenuItems({ data: {
       restaurantId: selectedRestaurant!.id,
+      query: menuQuery,
       restaurantName: selectedRestaurant!.name ?? 'Unnamed restaurant',
       ...coordinates!,
     } }),
@@ -295,13 +297,13 @@ function SearchPage() {
                     key={restaurant.id}
                     media={<Building2 aria-hidden="true" className="size-6 text-stone-600" />}
                     meta={[restaurant.city, restaurant.distance != null ? formatDistance(restaurant.distance) : null].filter(Boolean).join(' · ')}
-                    onClick={() => setSelectedRestaurant(restaurant)}
+                    onClick={() => { setMenuQuery(''); setSelectedRestaurant(restaurant) }}
                     testId={`restaurant-result-${index}`}
                     title={restaurant.name ?? 'Unnamed restaurant'}
                   />
                 ))}
               </Card>
-              <RestaurantInspector menuItems={menuItems} restaurant={selectedRestaurant} />
+              <RestaurantInspector key={selectedRestaurant?.id} menuItems={menuItems} restaurant={selectedRestaurant} query={menuQuery} onSearch={setMenuQuery} />
             </div>
           ) : null}
         </section>

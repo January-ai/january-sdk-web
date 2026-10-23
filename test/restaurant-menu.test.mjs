@@ -51,3 +51,24 @@ test('restaurant searches accept a 50000-meter radius and reject 50001 locally',
     }
   }
 });
+
+
+test('menu query stays scoped to the restaurant and supports full-menu reset and pagination', async () => {
+  const urls = [];
+  const client = new JanuaryClient({ developmentApiKey: 'fixture-key', fetch: async (url) => {
+    urls.push(new URL(url));
+    return new Response('{"items":[]}', { headers: { 'content-type': 'application/json' } });
+  }});
+  const scoped = client.forUser({ endUserId: 'fixture-user' });
+  await scoped.restaurants.getMenuItems({ restaurantId: 'cafe-123', query: 'Burger & fries', limit: 500, offset: 100 });
+  await client.restaurants.getMenuItems({ restaurantId: 'cafe-123', query: '' });
+  await client.restaurants.getMenuItems({ restaurantId: 'cafe-123' });
+  assert.equal(urls[0].pathname, '/v1.2/restaurants/cafe-123/menu-items');
+  assert.deepEqual(Object.fromEntries(urls[0].searchParams), { query: 'Burger & fries', limit: '500', offset: '100' });
+  assert.equal(urls[1].searchParams.get('query'), '');
+  assert.equal(urls[2].searchParams.has('query'), false);
+  for (const request of [{ query: 'x'.repeat(257) }, { limit: 501 }, { offset: -1 }, { restaurantId: 'x'.repeat(65) }]) {
+    await assert.rejects(client.restaurants.getMenuItems({ restaurantId: 'cafe-123', ...request }), TypeError);
+  }
+  assert.equal(urls.length, 3);
+});

@@ -41,3 +41,14 @@ if (restaurant) {
 A restaurant with no menu on record returns an empty first page. An unknown restaurant fails with category `notFound`; in a discovery UI, fall back to `searchMenuItems` with the user's query and location when the first page is empty or the restaurant is not found.
 
 Menu items use short nutrition names: `energy`, `protein`, `carbs`, `netCarbs`, `fat`, `fiber`, `sugars`, `addedSugars`, `gi`, and `gl`, not the `calories`, `carbohydrates`, and `totalFat` of foods.
+
+## Search this restaurant’s menu
+
+```typescript
+const dishes = await client.restaurants.getMenuItems({ restaurantId, query: "burger" });
+```
+
+Omit `query` or pass an empty string to show the full menu. Dish-name matching
+is case insensitive and accepts up to 256 characters. Pagination (`limit` 1–500,
+default 100; `offset` starting at zero) applies to the matching dishes. Stop at
+a page shorter than the requested limit; restart at offset zero for a new query.

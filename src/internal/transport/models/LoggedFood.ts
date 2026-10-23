@@ -13,13 +13,13 @@
  */
 
 import { mapValues } from '../runtime.js';
-import type { ServingSummary } from './ServingSummary.js';
+import type { LoggedServing } from './LoggedServing.js';
 import {
-    ServingSummaryFromJSON,
-    ServingSummaryFromJSONTyped,
-    ServingSummaryToJSON,
-    ServingSummaryToJSONTyped,
-} from './ServingSummary.js';
+    LoggedServingFromJSON,
+    LoggedServingFromJSONTyped,
+    LoggedServingToJSON,
+    LoggedServingToJSONTyped,
+} from './LoggedServing.js';
 import type { NutritionFacts } from './NutritionFacts.js';
 import {
     NutritionFactsFromJSON,
@@ -77,17 +77,17 @@ export interface LoggedFood {
      */
     nutrients: NutritionFacts;
     /**
-     * Number of selected servings consumed. Consumed amount = food.quantity × food.serving.quantity, in food.serving.unit (4 × 0.5 cup = 2 cups). Nutrients are already scaled to this portion. Null when unavailable.
+     * Number of selected servings consumed. Consumed amount = food.quantity × food.serving.quantity, in food.serving.unit (4 × 0.5 cup = 2 cups), when food.serving.quantity is known. Nutrients are already scaled to this portion. Null when unavailable.
      * @type {number}
      * @memberof LoggedFood
      */
     quantity: number | null;
     /**
      *
-     * @type {ServingSummary}
+     * @type {LoggedServing}
      * @memberof LoggedFood
      */
-    serving: ServingSummary;
+    serving: LoggedServing;
 }
 
 /**
@@ -124,7 +124,7 @@ export function LoggedFoodFromJSONTyped(json: any, ignoreDiscriminator: boolean)
         'glycemicLoad': json['glycemic_load'],
         'nutrients': NutritionFactsFromJSON(json['nutrients']),
         'quantity': json['quantity'],
-        'serving': ServingSummaryFromJSON(json['serving']),
+        'serving': LoggedServingFromJSON(json['serving']),
     };
 }
 
@@ -147,6 +147,6 @@ export function LoggedFoodToJSONTyped(value?: LoggedFood | null, ignoreDiscrimin
         'glycemic_load': value['glycemicLoad'],
         'nutrients': NutritionFactsToJSON(value['nutrients']),
         'quantity': value['quantity'],
-        'serving': ServingSummaryToJSON(value['serving']),
+        'serving': LoggedServingToJSON(value['serving']),
     };
 }

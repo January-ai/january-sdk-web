@@ -28,7 +28,7 @@ import {
  */
 export interface GetRestaurantMenuItemsResponse {
     /**
-     * The menu items, by name. Empty when the restaurant has no menu on record.
+     * The menu items, by name. Empty when the restaurant has no menu on record or nothing on it matches `query`.
      * @type {Array<RestaurantMenuItem>}
      * @memberof GetRestaurantMenuItemsResponse
      */
